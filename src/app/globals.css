@@ -1,0 +1,242 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Primary - Education Blue */
+    --primary: 210 84% 40%;
+    --primary-light: 217 91% 60%;
+    --primary-dark: 221 83% 32%;
+
+    /* Secondary - Success Green */
+    --secondary: 160 84% 39%;
+    --secondary-light: 160 84% 45%;
+    --secondary-dark: 160 84% 30%;
+
+    /* Accent - Energy Orange */
+    --accent: 38 92% 50%;
+    --accent-light: 43 96% 56%;
+    --accent-dark: 32 95% 44%;
+
+    /* Neutrals */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 210 84% 40%;
+
+    --radius: 0.5rem;
+
+    /* Semantic Colors */
+    --success: 160 84% 45%;
+    --warning: 38 92% 50%;
+    --error: 0 84% 60%;
+    --info: 217 91% 60%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+  }
+}
+
+@layer components {
+
+  /* Typography Scale */
+  .heading-1 {
+    @apply text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight;
+  }
+
+  .heading-2 {
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.15] tracking-tight;
+  }
+
+  .heading-3 {
+    @apply text-3xl md:text-4xl lg:text-5xl font-bold leading-snug tracking-tight;
+  }
+
+  .heading-4 {
+    @apply text-2xl md:text-3xl lg:text-4xl font-semibold leading-snug;
+  }
+
+  .heading-5 {
+    @apply text-xl md:text-2xl lg:text-3xl font-semibold leading-normal;
+  }
+
+  .body-large {
+    @apply text-lg md:text-xl leading-relaxed;
+  }
+
+  .body {
+    @apply text-base md:text-lg leading-normal;
+  }
+
+  .body-small {
+    @apply text-sm md:text-base leading-normal;
+  }
+
+  .caption {
+    @apply text-xs md:text-sm leading-tight;
+  }
+
+  /* Container */
+  .container-custom {
+    @apply max-w-7xl mx-auto px-5 sm:px-6 lg:px-8;
+  }
+
+  /* Section Spacing */
+  .section-spacing {
+    @apply py-20 md:py-28 lg:py-32;
+  }
+
+  /* Card Styles */
+  .card-default {
+    @apply bg-white border border-gray-200 rounded-2xl p-8 shadow-soft hover:shadow-strong transition-all duration-300;
+  }
+
+  .card-featured {
+    @apply bg-white border-2 border-primary rounded-2xl p-8 shadow-strong hover:scale-[1.02] hover:shadow-extra transition-all duration-300;
+  }
+
+  /* Button Base */
+  .btn-base {
+    @apply inline-flex items-center justify-center font-bold rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply btn-base bg-gradient-to-r from-primary to-primary-dark text-white hover:from-primary-dark hover:to-primary focus:ring-primary px-8 py-3.5 shadow-lg hover:shadow-xl;
+  }
+
+  .btn-secondary {
+    @apply btn-base bg-transparent border-2 border-primary text-primary hover:bg-primary hover:text-white focus:ring-primary px-8 py-3.5 shadow-sm hover:shadow-md;
+  }
+
+  .btn-accent {
+    @apply btn-base bg-gradient-to-r from-accent via-accent-dark to-orange-600 hover:from-orange-600 hover:via-accent-dark hover:to-accent text-white focus:ring-accent px-10 py-4 text-lg shadow-xl hover:shadow-2xl;
+  }
+
+  .btn-ghost {
+    @apply btn-base bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:ring-gray-300 px-6 py-2.5;
+  }
+
+  /* Form Elements */
+  .input-default {
+    @apply w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none transition-all;
+  }
+
+  .label-default {
+    @apply block text-sm font-semibold text-gray-700 mb-2;
+  }
+
+  /* Animations */
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-in-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.6s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.4s ease-out;
+  }
+}
+
+@layer utilities {
+
+  /* Custom Shadows */
+  .shadow-soft {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  }
+
+  .shadow-strong {
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .shadow-extra {
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Gradient Overlays */
+  .overlay-dark {
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 100%);
+  }
+
+  .overlay-primary {
+    background: linear-gradient(135deg, rgba(30, 64, 175, 0.9) 0%, rgba(30, 58, 138, 0.95) 100%);
+  }
+}
+
+/* Keyframe Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection */
+::selection {
+  background-color: hsl(var(--primary) / 0.2);
+  color: hsl(var(--primary-dark));
+}

@@ -1,0 +1,3 @@
+﻿src/app/(admin)/admin/certificates/page.tsx(6,31): error TS2307: Cannot find module '@/services/StudentService' or its corresponding type declarations.
+src/app/(admin)/admin/certificates/page.tsx(10,24): error TS2307: Cannot find module 'date-fns' or its corresponding type declarations.
+src/app/verify/[certNumber]/page.tsx(3,24): error TS2307: Cannot find module 'date-fns' or its corresponding type declarations.

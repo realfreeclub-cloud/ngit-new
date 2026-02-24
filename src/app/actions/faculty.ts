@@ -1,0 +1,41 @@
+"use server";
+
+import connectDB from "@/lib/db";
+import Faculty from "@/models/Faculty";
+import { revalidatePath } from "next/cache";
+
+export async function createFaculty(data: any) {
+    try {
+        await connectDB();
+
+        const faculty = await Faculty.create(data);
+
+        revalidatePath("/admin/faculty");
+        return { success: true, faculty: JSON.parse(JSON.stringify(faculty)) };
+    } catch (error: any) {
+        console.error("Create Faculty Error:", error);
+        return { success: false, error: error.message || "Failed to add faculty" };
+    }
+}
+
+export async function deleteFaculty(id: string) {
+    try {
+        await connectDB();
+        await Faculty.findByIdAndDelete(id);
+        revalidatePath("/admin/faculty");
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: "Failed to delete faculty" };
+    }
+}
+
+export async function getFaculty() {
+    try {
+        await connectDB();
+        const faculty = await Faculty.find().sort({ createdAt: -1 }).lean();
+        return { success: true, faculty: JSON.parse(JSON.stringify(faculty)) };
+    } catch (error) {
+        console.error("Failed to load faculty", error);
+        return { success: false, error: "Failed to fetch faculty" };
+    }
+}

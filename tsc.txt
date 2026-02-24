@@ -1,0 +1,9 @@
+﻿src/app/(admin)/admin/page.tsx(48,28): error TS18048: 's' is possibly 'undefined'.
+src/app/(admin)/admin/page.tsx(54,28): error TS18048: 's' is possibly 'undefined'.
+src/app/(admin)/admin/page.tsx(60,32): error TS18048: 's' is possibly 'undefined'.
+src/app/(admin)/admin/page.tsx(66,28): error TS18048: 's' is possibly 'undefined'.
+src/app/(admin)/admin/page.tsx(84,26): error TS18048: 's' is possibly 'undefined'.
+src/app/(admin)/admin/page.tsx(90,29): error TS18048: 's' is possibly 'undefined'.
+src/app/(admin)/admin/page.tsx(132,26): error TS18048: 's' is possibly 'undefined'.
+src/app/(admin)/admin/page.tsx(137,29): error TS18048: 's' is possibly 'undefined'.
+src/app/(student)/student/page.tsx(17,10): error TS2305: Module '"@/app/actions/dashboard"' has no exported member 'getStudentDashboardData'.

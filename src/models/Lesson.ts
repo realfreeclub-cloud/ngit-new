@@ -1,0 +1,58 @@
+import mongoose, { Schema, Document, Model } from "mongoose";
+
+export enum LessonType {
+    VIDEO = "VIDEO",
+    PDF = "PDF",
+    QUIZ = "QUIZ",
+}
+
+export interface ILesson extends Document {
+    courseId: mongoose.Types.ObjectId;
+    title: string;
+    description?: string;
+    type: LessonType;
+    contentUrl?: string;     // YouTube URL / direct video / PDF URL
+    quizId?: mongoose.Types.ObjectId; // for QUIZ type — references Quiz collection
+    isFree: boolean;
+    order: number;
+    duration?: string;
+    attachments?: {
+        title: string;
+        url: string;
+        type: string;
+        size: string;
+    }[];
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+const LessonSchema = new Schema<ILesson>(
+    {
+        courseId: { type: Schema.Types.ObjectId, ref: "Course", required: true },
+        title: { type: String, required: true },
+        description: { type: String },
+        type: {
+            type: String,
+            enum: Object.values(LessonType),
+            default: LessonType.VIDEO,
+        },
+        contentUrl: { type: String },
+        quizId: { type: Schema.Types.ObjectId, ref: "Quiz" },
+        isFree: { type: Boolean, default: false },
+        order: { type: Number, default: 0 },
+        duration: { type: String },
+        attachments: [
+            {
+                title: { type: String, required: true },
+                url: { type: String, required: true },
+                type: { type: String },
+                size: { type: String },
+            }
+        ],
+    },
+    { timestamps: true }
+);
+
+const Lesson: Model<ILesson> = mongoose.models.Lesson || mongoose.model<ILesson>("Lesson", LessonSchema);
+
+export default Lesson;

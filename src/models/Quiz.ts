@@ -1,0 +1,72 @@
+import mongoose, { Schema, Document, Model } from "mongoose";
+
+export interface IQuiz extends Document {
+    title: string;
+    courseId: mongoose.Types.ObjectId;
+    batchIds?: mongoose.Types.ObjectId[];
+    settings: {
+        timeLimit: number; // in minutes
+        totalMarks: number;
+        passingMarks: number;
+        shuffleQuestions: boolean;
+        shuffleOptions: boolean;
+        availableLanguages: string[]; // e.g., ["en", "hi"]
+    };
+    schedule: {
+        startDate: Date;
+        endDate: Date;
+        gracePeriodMinutes: number;
+    };
+    security: {
+        maxAttempts: number;
+        preventTabSwitch: boolean;
+        requireFullscreen: boolean;
+        trackIpDevice: boolean;
+    };
+    questions: mongoose.Types.ObjectId[]; // References to Question model
+    instructions: {
+        en: string;
+        hi?: string;
+    };
+    isPublished: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+const QuizSchema = new Schema<IQuiz>(
+    {
+        title: { type: String, required: true },
+        courseId: { type: Schema.Types.ObjectId, ref: "Course", required: true },
+        batchIds: [{ type: Schema.Types.ObjectId, ref: "Batch" }],
+        settings: {
+            timeLimit: { type: Number, required: true },
+            totalMarks: { type: Number, required: true },
+            passingMarks: { type: Number, required: true },
+            shuffleQuestions: { type: Boolean, default: false },
+            shuffleOptions: { type: Boolean, default: false },
+            availableLanguages: [{ type: String, default: "en" }],
+        },
+        schedule: {
+            startDate: { type: Date, required: true },
+            endDate: { type: Date, required: true },
+            gracePeriodMinutes: { type: Number, default: 0 },
+        },
+        security: {
+            maxAttempts: { type: Number, default: 1 },
+            preventTabSwitch: { type: Boolean, default: false },
+            requireFullscreen: { type: Boolean, default: false },
+            trackIpDevice: { type: Boolean, default: true },
+        },
+        questions: [{ type: Schema.Types.ObjectId, ref: "Question" }],
+        instructions: {
+            en: { type: String },
+            hi: { type: String },
+        },
+        isPublished: { type: Boolean, default: false },
+    },
+    { timestamps: true }
+);
+
+const Quiz: Model<IQuiz> = mongoose.models.Quiz || mongoose.model<IQuiz>("Quiz", QuizSchema);
+
+export default Quiz;
