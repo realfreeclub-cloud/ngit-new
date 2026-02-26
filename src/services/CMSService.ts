@@ -18,9 +18,11 @@ export async function updateCMSContent(key: string, data: any) {
             { upsert: true, new: true }
         );
 
-        revalidatePath("/");
-        revalidatePath("/(public)");
+        revalidatePath("/", "layout");
+        revalidatePath("/(public)", "layout");
+        revalidatePath("/(admin)", "layout");
         return { success: true };
+
     } catch (error) {
         console.error("CMS Update Error:", error);
         return { success: false, error: "Failed to update content" };

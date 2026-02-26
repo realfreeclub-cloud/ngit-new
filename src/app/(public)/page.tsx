@@ -1,4 +1,6 @@
+export const dynamic = "force-dynamic";
 import HeroSlider from "@/components/public/HeroSlider";
+
 import TrustIndicators from "@/components/public/TrustIndicators";
 import AboutSection from "@/components/public/AboutSection";
 import InfrastructureSection from "@/components/public/InfrastructureSection";
