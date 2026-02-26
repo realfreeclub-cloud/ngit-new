@@ -10,6 +10,8 @@ services:
     env_file:
       - .env.production
 
+    volumes:
+      - ./public/uploads:/app/public/uploads
     networks:
       - app-network
 
