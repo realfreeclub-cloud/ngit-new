@@ -11,6 +11,7 @@ import GallerySection from "@/components/public/GallerySection";
 import EventsSection from "@/components/public/EventsSection";
 import RegistrationCTA from "@/components/public/RegistrationCTA";
 import ContactSection from "@/components/public/ContactSection";
+import NotificationScroller from "@/components/public/NotificationScroller";
 
 import { getCMSContent } from "@/services/CMSService";
 import { getFaculty } from "@/app/actions/faculty";
@@ -19,14 +20,15 @@ import { getEvents } from "@/app/actions/events";
 import { getGalleryImages } from "@/app/actions/upload";
 
 export default async function PublicHomePage() {
-    const [slides, stats, about, facultyRes, coursesRes, eventsRes, galleryRes] = await Promise.all([
+    const [slides, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, notifications] = await Promise.all([
         getCMSContent("HOME_SLIDER"),
         getCMSContent("HOME_STATS"),
         getCMSContent("HOME_ABOUT"),
         getFaculty(),
         getPublicCourses(),
         getEvents(),
-        getGalleryImages()
+        getGalleryImages(),
+        getCMSContent("HOME_NOTIFICATIONS")
     ]);
 
     const facultyMembers = facultyRes.success ? facultyRes.faculty : [];
@@ -38,6 +40,9 @@ export default async function PublicHomePage() {
         <div className="min-h-screen">
             {/* Hero Slider */}
             <HeroSlider slides={slides} />
+
+            {/* Notification Scroller */}
+            <NotificationScroller notifications={notifications} />
 
             {/* Trust Indicators */}
             <TrustIndicators stats={stats} />

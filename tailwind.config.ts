@@ -70,6 +70,15 @@ const config: Config = {
                 'strong': '0 10px 15px rgba(0, 0, 0, 0.1)',
                 'extra': '0 20px 25px rgba(0, 0, 0, 0.15)',
             },
+            keyframes: {
+                marquee: {
+                    '0%': { transform: 'translateX(0)' },
+                    '100%': { transform: 'translateX(-50%)' },
+                }
+            },
+            animation: {
+                marquee: 'marquee 25s linear infinite',
+            }
         },
     },
     plugins: [require("tailwindcss-animate")],
