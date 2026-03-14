@@ -29,6 +29,7 @@ const menuItems = [
         icon: BrainCircuit,
         subItems: [
             { label: "Manage Exams", href: "/admin/quizzes" },
+            { label: "Exam Results", href: "/admin/results" },
             { label: "Question Bank", href: "/admin/questions" }
         ]
     },

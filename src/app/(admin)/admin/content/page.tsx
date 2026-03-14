@@ -28,6 +28,9 @@ export default function AdvancedCmsPage() {
         "PublicResultsGrid": { label: "Exam Results", link: "/admin/quizzes" }
     };
 
+    const HIDDEN_PAGES = ["courses", "faculty"];
+    const visiblePages = pages.filter(p => !HIDDEN_PAGES.includes(p.page_name));
+
     useEffect(() => {
         loadPages();
     }, []);
@@ -37,8 +40,11 @@ export default function AdvancedCmsPage() {
         const res = await getCmsPages();
         if (res.success && res.pages.length > 0) {
             setPages(res.pages);
-            setActivePageId(res.pages[0]._id);
-            loadSections(res.pages[0]._id);
+            const initialVisible = res.pages.filter((p: any) => !HIDDEN_PAGES.includes(p.page_name));
+            if (initialVisible.length > 0) {
+                setActivePageId(initialVisible[0]._id);
+                loadSections(initialVisible[0]._id);
+            }
         } else {
             // Seed default pages if none exist
             const defaults = ["home", "about", "courses", "faculty", "gallery", "results", "contact"];
@@ -48,8 +54,11 @@ export default function AdvancedCmsPage() {
             const res2 = await getCmsPages();
             if (res2.success && res2.pages.length > 0) {
                 setPages(res2.pages);
-                setActivePageId(res2.pages[0]._id);
-                loadSections(res2.pages[0]._id);
+                const secondVisible = res2.pages.filter((p: any) => !HIDDEN_PAGES.includes(p.page_name));
+                if (secondVisible.length > 0) {
+                    setActivePageId(secondVisible[0]._id);
+                    loadSections(secondVisible[0]._id);
+                }
             }
         }
         setLoading(false);
@@ -227,7 +236,7 @@ export default function AdvancedCmsPage() {
                             <Button size="icon" variant="ghost" onClick={handleCreatePage} className="h-8 w-8 hover:bg-blue-50"><Plus className="w-4 h-4 text-blue-600" /></Button>
                         </div>
                         <div className="space-y-1">
-                            {pages.map(page => (
+                            {visiblePages.map(page => (
                                 <div key={page._id} className="group relative">
                                     <button 
                                         onClick={() => {

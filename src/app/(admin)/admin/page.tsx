@@ -77,7 +77,7 @@ export default async function AdminDashboard() {
                         <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
                             <TrendingUp className="w-5 h-5 text-indigo-500" /> Recent Exam Submissions
                         </h2>
-                        <Link href="/admin/quizzes"><Button variant="outline" size="sm">View All</Button></Link>
+                        <Link href="/admin/results"><Button variant="outline" size="sm">View All</Button></Link>
                     </div>
 
                     <div className="flex-1 overflow-y-auto space-y-4 pr-2">

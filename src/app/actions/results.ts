@@ -107,3 +107,47 @@ export async function getPublicResults() {
         return { success: false, error: error.message };
     }
 }
+
+export async function getAdminResults(filters: { 
+    courseType?: "ONLINE" | "OFFLINE", 
+    quizId?: string, 
+    date?: string 
+}) {
+    try {
+        await connectDB();
+        const session = await getServerSession(authOptions);
+        if (!session || session.user.role !== "ADMIN") return { success: false, error: "Unauthorized" };
+
+        let query: any = {};
+
+        if (filters.quizId) {
+            query.quizId = filters.quizId;
+        }
+
+        if (filters.date) {
+            const startOfDay = new Date(filters.date);
+            startOfDay.setHours(0, 0, 0, 0);
+            const endOfDay = new Date(filters.date);
+            endOfDay.setHours(23, 59, 59, 999);
+            query.endTime = { $gte: startOfDay, $lte: endOfDay };
+        }
+
+        let attempts = await Attempt.find(query)
+            .populate({ path: "studentId", select: "name email image photoUrl" })
+            .populate({ path: "quizId", populate: { path: "courseId", select: "title type" } })
+            .sort({ endTime: -1 })
+            .lean();
+
+        if (filters.courseType) {
+            attempts = attempts.filter((a: any) => a.quizId?.courseId?.type === filters.courseType);
+        }
+
+        return { 
+            success: true, 
+            results: JSON.parse(JSON.stringify(attempts)) 
+        };
+    } catch (error: any) {
+        console.error("Get Admin Results Error:", error);
+        return { success: false, error: error.message };
+    }
+}
