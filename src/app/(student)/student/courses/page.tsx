@@ -34,24 +34,38 @@ export default function StudentCoursesPage() {
 
     if (courses.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4">
-                <BookOpen className="w-16 h-16 text-slate-300" />
-                <h2 className="text-2xl font-bold text-slate-900">No Active Courses</h2>
-                <p className="text-slate-500 max-w-md">
-                    You haven't enrolled in any courses yet. Explore our catalog to start learning.
-                </p>
-                <Link href="/courses">
-                    <Button className="mt-4">Browse Courses</Button>
-                </Link>
+            <div className="space-y-8 animate-in fade-in duration-500">
+                <div>
+                    <h1 className="text-3xl font-black text-slate-900">My Courses</h1>
+                    <p className="text-slate-500 mt-2">Your enrolled courses will appear here</p>
+                </div>
+                {/* Empty state */}
+                <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-[2.5rem] border border-slate-100 shadow-sm">
+                    <BookOpen className="w-16 h-16 text-slate-200 mb-4" />
+                    <h2 className="text-xl font-black text-slate-900">No Active Courses Yet</h2>
+                    <p className="text-slate-500 max-w-sm mt-2 font-medium text-sm">
+                        You haven't enrolled in any courses yet. Explore our catalog to start learning.
+                    </p>
+                </div>
+                {/* Explore banner */}
+                <ExploreCoursesBanner />
             </div>
         );
     }
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
-            <div>
-                <h1 className="text-3xl font-black text-slate-900">My Courses</h1>
-                <p className="text-slate-500 mt-2">Continue where you left off</p>
+            <div className="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                    <h1 className="text-3xl font-black text-slate-900">My Courses</h1>
+                    <p className="text-slate-500 mt-1 font-medium">Continue where you left off</p>
+                </div>
+                <Link href="/courses">
+                    <button className="flex items-center gap-2 border-2 border-primary/20 text-primary font-black px-5 py-2.5 rounded-xl hover:bg-primary hover:text-white transition-all text-sm">
+                        <BookOpen className="w-4 h-4" />
+                        Browse More Courses
+                    </button>
+                </Link>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -114,6 +128,39 @@ export default function StudentCoursesPage() {
                         </div>
                     </div>
                 ))}
+            </div>
+
+            {/* ── Explore More Banner ── */}
+            <ExploreCoursesBanner />
+        </div>
+    );
+}
+
+function ExploreCoursesBanner() {
+    return (
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-indigo-600 via-primary to-violet-600 p-8 md:p-10 shadow-2xl shadow-primary/25">
+            <div className="absolute -top-10 -right-10 w-56 h-56 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-violet-400/20 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="text-white text-center md:text-left">
+                    <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur px-4 py-1.5 rounded-full mb-4 text-xs font-black uppercase tracking-widest">
+                        <BookOpen className="w-3.5 h-3.5" /> Course Catalog
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-black tracking-tight">
+                        Want to Learn Something New?
+                    </h2>
+                    <p className="text-indigo-100 font-medium mt-2 max-w-md text-sm md:text-base">
+                        Browse our full catalog — ADCA, O Level, Tally, Programming & more. Find your next course and enrol today.
+                    </p>
+                </div>
+                <Link href="/courses" className="shrink-0">
+                    <button className="group flex items-center gap-3 bg-white text-primary font-black px-8 py-4 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all hover:shadow-2xl text-base whitespace-nowrap">
+                        <BookOpen className="w-5 h-5" />
+                        Explore All Courses
+                        <PlayCircle className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                </Link>
             </div>
         </div>
     );
