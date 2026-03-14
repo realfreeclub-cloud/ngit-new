@@ -15,6 +15,7 @@ import {
     DropdownMenuSeparator, 
     DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 type NavLink = {
     label: string;
