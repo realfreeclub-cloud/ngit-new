@@ -5,352 +5,310 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, RefreshCcw, LayoutTemplate, Share2, Phone, Plus, Trash2, ChevronDown, ChevronUp, User, Info, Trophy, BarChart, Bell } from "lucide-react";
-import { updateCMSContent, getCMSContent } from "@/services/CMSService";
+import { Plus, Trash2, Edit2, Play, Settings, SwitchCamera, List, Save, ChevronDown, ChevronRight, Menu, LayoutTemplate } from "lucide-react";
 
-export default function AdminContentPage() {
-    const [loading, setLoading] = useState(false);
-    const [initialLoading, setInitialLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState("HERO");
+import { getCmsPages, createCmsPage, getCmsSections, createCmsSection, updateCmsSection, deleteCmsSection, getCmsContentBlocks, createCmsContentBlock, updateCmsContentBlock, deleteCmsContentBlock } from "@/app/actions/cms";
 
-    // --- State Management ---
-    const [heroSlides, setHeroSlides] = useState<any[]>([]);
-    const [notifications, setNotifications] = useState<any[]>([]);
+export default function AdvancedCmsPage() {
+    const [pages, setPages] = useState<any[]>([]);
+    const [activePageId, setActivePageId] = useState<string | null>(null);
+    const [sections, setSections] = useState<any[]>([]);
+    const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+    const [blocks, setBlocks] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const [aboutData, setAboutData] = useState({
-        title: "Building Future Leaders Since 2009",
-        subtitle: "About NGIT",
-        description: "National Genius Institute of Technology (NGIT) has been at the forefront of competitive exam preparation...",
-        highlights: [
-            "Established in 2009 with a vision for excellence",
-            "Expert faculty from IITs and premier institutions",
-            "Proven track record of top ranks every year"
-        ]
-    });
+    const sectionTypes = ["HeroSection", "CourseGrid", "FacultyGrid", "GalleryGrid", "TestimonialSlider", "CTASection", "AboutSection", "WhyChooseSection", "ContactSection"];
 
-    const [statsData, setStatsData] = useState([
-        { label: "Years of Excellence", value: "15+" },
-        { label: "Students Trained", value: "5000+" },
-        { label: "Success Rate", value: "98%" },
-        { label: "Top 100 Ranks", value: "45" }
-    ]);
-
-    const [socialData, setSocialData] = useState({
-        facebook: "", instagram: "", youtube: "", linkedin: ""
-    });
-
-    const [contactData, setContactData] = useState({
-        email: "", phone: "", address: ""
-    });
-
-    // --- Fetch Data ---
     useEffect(() => {
-        async function load() {
-            try {
-                const [slider, about, stats, social, contact, notify] = await Promise.all([
-                    getCMSContent("HOME_SLIDER"),
-                    getCMSContent("HOME_ABOUT"),
-                    getCMSContent("HOME_STATS"),
-                    getCMSContent("SOCIAL_LINKS"),
-                    getCMSContent("CONTACT_INFO"),
-                    getCMSContent("HOME_NOTIFICATIONS")
-                ]);
-
-                if (slider && Array.isArray(slider)) setHeroSlides(slider);
-                if (notify && Array.isArray(notify)) setNotifications(notify);
-                if (about) setAboutData(prev => ({ ...prev, ...about }));
-                if (stats && Array.isArray(stats)) setStatsData(stats);
-                if (social) setSocialData(prev => ({ ...prev, ...social }));
-                if (contact) setContactData(prev => ({ ...prev, ...contact }));
-            } catch (err) {
-                console.error(err);
-                toast.error("Failed to load content");
-            } finally {
-                setInitialLoading(false);
-            }
-        }
-        load();
+        loadPages();
     }, []);
 
-    // --- Save Data ---
-    const handleSave = async () => {
+    const loadPages = async () => {
         setLoading(true);
-        try {
-            const results = await Promise.all([
-                updateCMSContent("HOME_SLIDER", heroSlides),
-                updateCMSContent("HOME_ABOUT", aboutData),
-                updateCMSContent("HOME_STATS", statsData),
-                updateCMSContent("SOCIAL_LINKS", socialData),
-                updateCMSContent("CONTACT_INFO", contactData),
-                updateCMSContent("HOME_NOTIFICATIONS", notifications)
-            ]);
-
-            if (results.every(r => r.success)) {
-                toast.success("All content updated successfully!");
-            } else {
-                toast.error("Some sections failed to save.");
+        const res = await getCmsPages();
+        if (res.success && res.pages.length > 0) {
+            setPages(res.pages);
+            setActivePageId(res.pages[0]._id);
+            loadSections(res.pages[0]._id);
+        } else {
+            // Seed default pages if none exist
+            const defaults = ["home", "about", "courses", "faculty", "gallery", "results", "contact"];
+            for (let p of defaults) {
+                await createCmsPage({ page_name: p, title: p.charAt(0).toUpperCase() + p.slice(1) });
             }
-        } catch (error) {
-            toast.error("Error saving content.");
-        } finally {
-            setLoading(false);
+            const res2 = await getCmsPages();
+            if (res2.success && res2.pages.length > 0) {
+                setPages(res2.pages);
+                setActivePageId(res2.pages[0]._id);
+                loadSections(res2.pages[0]._id);
+            }
+        }
+        setLoading(false);
+    };
+
+    const loadSections = async (pageId: string) => {
+        setLoading(true);
+        const res = await getCmsSections(pageId);
+        if (res.success) {
+            setSections(res.sections);
+            if (res.sections.length > 0) {
+                setActiveSectionId(res.sections[0]._id);
+                loadBlocks(res.sections[0]._id);
+            } else {
+                setBlocks([]);
+                setActiveSectionId(null);
+            }
+        }
+        setLoading(false);
+    };
+
+    const loadBlocks = async (sectionId: string) => {
+        setLoading(true);
+        const res = await getCmsContentBlocks(sectionId);
+        if (res.success) {
+            setBlocks(res.blocks);
+        }
+        setLoading(false);
+    };
+
+    const handleCreateSection = async () => {
+        if (!activePageId) return toast.error("Select a page first");
+        const name = prompt("Enter section name (e.g., Hero Header):");
+        if (!name) return;
+        
+        const typeStr = sectionTypes.join(", ");
+        const type = prompt(`Enter section type (${typeStr}):`, "HeroSection");
+        if (!type || !sectionTypes.includes(type)) return toast.error("Invalid section type");
+
+        const res = await createCmsSection({
+            page_id: activePageId,
+            section_name: name,
+            section_type: type,
+            sort_order: sections.length,
+            is_active: true
+        });
+
+        if (res.success) {
+            toast.success("Section created");
+            loadSections(activePageId);
         }
     };
 
-    // --- Helpers ---
-    const addSlide = () => {
-        setHeroSlides([...heroSlides, {
-            id: Date.now(), title: "New Slide", subtitle: "", description: "", image: "",
-            cta1Text: "Learn More", cta1Link: "#", cta2Text: "Contact", cta2Link: "#"
-        }]);
+    const handleUpdateSection = async (id: string, updates: any) => {
+        const res = await updateCmsSection(id, updates);
+        if (res.success) {
+            toast.success("Section updated");
+            setSections(sections.map(s => s._id === id ? res.section : s));
+        }
     };
 
-    const updateSlide = (index: number, field: string, value: string) => {
-        const newSlides = [...heroSlides];
-        newSlides[index] = { ...newSlides[index], [field]: value };
-        setHeroSlides(newSlides);
+    const handleDeleteSection = async (id: string) => {
+        if (!confirm("Are you sure? This will delete all blocks inside.")) return;
+        const res = await deleteCmsSection(id);
+        if (res.success) {
+            toast.success("Section removed");
+            loadSections(activePageId!);
+        }
     };
 
-    const removeSlide = (index: number) => {
-        if (heroSlides.length <= 1) return toast.error("Keep at least one slide");
-        const newSlides = [...heroSlides];
-        newSlides.splice(index, 1);
-        setHeroSlides(newSlides);
+    const handleCreateBlock = async () => {
+        if (!activeSectionId) return toast.error("Select a section first");
+        const res = await createCmsContentBlock({
+            section_id: activeSectionId,
+            title: "New Block",
+            sort_order: blocks.length
+        });
+        if (res.success) {
+            toast.success("Block created");
+            loadBlocks(activeSectionId);
+        }
     };
 
-    const addNotification = () => {
-        setNotifications([...notifications, { id: Date.now(), text: "New Notification", link: "" }]);
+    const handleUpdateBlockFields = (id: string, field: string, value: string) => {
+        setBlocks(blocks.map(b => b._id === id ? { ...b, [field]: value } : b));
     };
 
-    const updateNotification = (index: number, field: string, value: string) => {
-        const newNotifs = [...notifications];
-        newNotifs[index] = { ...newNotifs[index], [field]: value };
-        setNotifications(newNotifs);
+    const handleSaveBlock = async (id: string, blockData: any) => {
+        const res = await updateCmsContentBlock(id, blockData);
+        if (res.success) {
+            toast.success("Block saved");
+        } else {
+            toast.error("Error saving block");
+        }
     };
 
-    const removeNotification = (index: number) => {
-        const newNotifs = [...notifications];
-        newNotifs.splice(index, 1);
-        setNotifications(newNotifs);
+    const handleDeleteBlock = async (id: string) => {
+        if (!confirm("Remove this block?")) return;
+        const res = await deleteCmsContentBlock(id);
+        if (res.success) {
+            toast.success("Block removed");
+            loadBlocks(activeSectionId!);
+        }
     };
-
-    const updateAboutHighlight = (index: number, value: string) => {
-        const newHighlights = [...aboutData.highlights];
-        newHighlights[index] = value;
-        setAboutData({ ...aboutData, highlights: newHighlights });
-    };
-
-    const addHighlight = () => {
-        setAboutData({ ...aboutData, highlights: [...aboutData.highlights, "New Highlight"] });
-    };
-
-    const removeHighlight = (index: number) => {
-        const newHighlights = [...aboutData.highlights];
-        newHighlights.splice(index, 1);
-        setAboutData({ ...aboutData, highlights: newHighlights });
-    };
-
-    const updateStat = (index: number, field: string, value: string) => {
-        const newStats = [...statsData];
-        newStats[index] = { ...newStats[index], [field]: value };
-        setStatsData(newStats);
-    };
-
-    if (initialLoading) return <div className="p-20 text-center"><RefreshCcw className="w-8 h-8 animate-spin mx-auto text-slate-400" /></div>;
-
-    const tabs = [
-        { id: "HERO", label: "Hero Slider", icon: LayoutTemplate },
-        { id: "NOTIFICATIONS", label: "Notifications", icon: Bell },
-        { id: "STATS", label: "Trust Stats", icon: BarChart },
-        { id: "ABOUT", label: "About Section", icon: Info },
-        { id: "SOCIAL", label: "Social", icon: Share2 },
-        { id: "CONTACT", label: "Contact", icon: Phone },
-    ];
 
     return (
-        <div className="space-y-8 max-w-6xl mx-auto pb-20">
-            {/* Header */}
+        <div className="space-y-8 max-w-7xl mx-auto pb-20">
             <div className="flex items-center justify-between sticky top-0 bg-slate-50/95 backdrop-blur z-20 py-4 border-b border-white/50">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900">CMS & Page Editor</h1>
-                    <p className="text-slate-500 font-medium text-sm">Manage website content in real-time.</p>
+                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Dynamic CMS Builder</h1>
+                    <p className="text-slate-500 font-medium text-sm">Design pages. Add sections. Insert content dynamically.</p>
                 </div>
-                <Button onClick={handleSave} disabled={loading} size="lg" className="rounded-xl shadow-lg shadow-primary/20 gap-2 font-bold">
-                    {loading ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    {loading ? "Saving..." : "Publish All Changes"}
-                </Button>
             </div>
 
-            {/* Tabs */}
-            <div className="flex flex-wrap gap-2">
-                {tabs.map(tab => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === tab.id
-                            ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20"
-                            : "bg-white text-slate-500 hover:bg-slate-100"
-                            }`}
-                    >
-                        <tab.icon className="w-4 h-4" />
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
-
-            {/* Content Area */}
-            <div className="bg-white border border-slate-200 rounded-[2.5rem] p-4 md:p-8 shadow-sm min-h-[500px]">
-
-                {/* HERO TAB */}
-                {activeTab === "HERO" && (
-                    <div className="space-y-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-bold">Hero Slider Configuration</h2>
-                            <Button onClick={addSlide} size="sm" variant="secondary" className="gap-2 font-bold rounded-lg">
-                                <Plus className="w-4 h-4" /> Add Slide
-                            </Button>
-                        </div>
-                        <div className="space-y-8">
-                            {heroSlides.map((slide, index) => (
-                                <div key={slide.id || index} className="relative bg-slate-50 rounded-2xl p-6 border border-slate-200">
-                                    <div className="absolute top-4 right-4"><Button variant="destructive" size="icon" onClick={() => removeSlide(index)} className="h-8 w-8 rounded-full"><Trash2 className="w-4 h-4" /></Button></div>
-                                    <span className="bg-slate-200 text-[10px] font-bold px-2 py-1 rounded uppercase mb-4 inline-block">Slide {index + 1}</span>
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <div className="col-span-2 md:col-span-1"><label className="text-xs font-bold text-slate-400">Title</label><Input value={slide.title} onChange={e => updateSlide(index, 'title', e.target.value)} className="font-bold bg-white" /></div>
-                                        <div className="col-span-2 md:col-span-1"><label className="text-xs font-bold text-slate-400">Subtitle</label><Input value={slide.subtitle} onChange={e => updateSlide(index, 'subtitle', e.target.value)} className="bg-white" /></div>
-                                        <div className="col-span-2"><label className="text-xs font-bold text-slate-400">Description</label><Textarea value={slide.description} onChange={e => updateSlide(index, 'description', e.target.value)} className="bg-white h-20" /></div>
-                                        <div className="col-span-2"><label className="text-xs font-bold text-slate-400">Image URL</label><Input value={slide.image} onChange={e => updateSlide(index, 'image', e.target.value)} className="bg-white font-mono text-xs" /></div>
-                                        <div className="col-span-1"><label className="text-xs font-bold text-slate-400">Btn 1 Text</label><Input value={slide.cta1Text} onChange={e => updateSlide(index, 'cta1Text', e.target.value)} className="bg-white" /></div>
-                                        <div className="col-span-1"><label className="text-xs font-bold text-slate-400">Btn 1 Link</label><Input value={slide.cta1Link} onChange={e => updateSlide(index, 'cta1Link', e.target.value)} className="bg-white font-mono text-xs" /></div>
-                                    </div>
-                                </div>
+            <div className="grid lg:grid-cols-4 gap-8 items-start">
+                
+                {/* Sidebar Navigation */}
+                <div className="lg:col-span-1 space-y-4">
+                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Pages</h3>
+                        <div className="space-y-1">
+                            {pages.map(page => (
+                                <button 
+                                    key={page._id}
+                                    onClick={() => {
+                                        setActivePageId(page._id);
+                                        loadSections(page._id);
+                                    }}
+                                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${activePageId === page._id ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50"}`}
+                                >
+                                    <Menu className="w-4 h-4 opacity-50" />
+                                    <span className="capitalize flex-1 text-left">{page.page_name}</span>
+                                    {activePageId === page._id && <ChevronRight className="w-4 h-4 opacity-50" />}
+                                </button>
                             ))}
                         </div>
                     </div>
-                )}
 
-                {/* NOTIFICATIONS TAB */}
-                {activeTab === "NOTIFICATIONS" && (
-                    <div className="space-y-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-bold">Homepage Notifications Scroller</h2>
-                            <Button onClick={addNotification} size="sm" variant="secondary" className="gap-2 font-bold rounded-lg">
-                                <Plus className="w-4 h-4" /> Add Notification
-                            </Button>
+                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sections</h3>
+                            <Button size="icon" variant="ghost" onClick={handleCreateSection} className="h-6 w-6"><Plus className="w-4 h-4 text-slate-600" /></Button>
                         </div>
-                        <div className="space-y-4">
-                            {notifications.length === 0 && (
-                                <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                                    <Bell className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                                    <p className="text-slate-500 font-medium">No notifications added yet. Click 'Add Notification' to start.</p>
-                                </div>
-                            )}
-                            {notifications.map((notif, index) => (
-                                <div key={notif.id || index} className="flex gap-4 items-end bg-slate-50 p-6 rounded-2xl border border-slate-200 relative group">
-                                    <div className="flex-1 space-y-4">
-                                        <div className="grid md:grid-cols-3 gap-4">
-                                            <div className="md:col-span-2">
-                                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Notification Text</label>
-                                                <Input
-                                                    value={notif.text}
-                                                    onChange={e => updateNotification(index, 'text', e.target.value)}
-                                                    className="bg-white font-medium"
-                                                    placeholder="Enter notification text..."
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Link (Optional)</label>
-                                                <Input
-                                                    value={notif.link}
-                                                    onChange={e => updateNotification(index, 'link', e.target.value)}
-                                                    className="bg-white font-mono text-xs"
-                                                    placeholder="/courses or https://..."
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <Button
-                                        variant="destructive"
-                                        size="icon"
-                                        onClick={() => removeNotification(index)}
-                                        className="mb-0.5 rounded-xl opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity"
+                        <div className="space-y-2">
+                            {sections.map(section => (
+                                <div key={section._id} className="flex flex-col">
+                                    <button 
+                                        onClick={() => {
+                                            setActiveSectionId(section._id);
+                                            loadBlocks(section._id);
+                                        }}
+                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all border ${activeSectionId === section._id ? "border-blue-500 bg-blue-50 shadow-sm" : "border-slate-100 hover:border-slate-300"}`}
                                     >
-                                        <Trash2 className="w-4 h-4" />
+                                        <div className="flex flex-col text-left">
+                                            <span className="font-bold text-slate-900">{section.section_name}</span>
+                                            <span className="text-[10px] uppercase font-bold text-slate-400">{section.section_type}</span>
+                                        </div>
+                                    </button>
+                                </div>
+                            ))}
+                            {sections.length === 0 && <p className="text-xs text-slate-400">No sections found.</p>}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Main Content Area Editor */}
+                <div className="lg:col-span-3 bg-white rounded-[2.5rem] border border-slate-100 shadow-xl overflow-hidden min-h-[600px] flex flex-col">
+                    {activeSectionId && sections.find(s => s._id === activeSectionId) ? (
+                        <>
+                            <div className="bg-slate-900 text-white p-6 md:p-8 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-10">
+                                <div>
+                                    <span className="bg-blue-600 font-bold uppercase tracking-wider text-[10px] px-3 py-1 rounded-full mb-3 inline-block">Editing Section</span>
+                                    <h2 className="text-2xl font-black">{sections.find(s => s._id === activeSectionId)?.section_name}</h2>
+                                    <p className="text-sm font-medium text-slate-400 font-mono mt-1">Component: {sections.find(s => s._id === activeSectionId)?.section_type}</p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <Button variant="secondary" onClick={() => handleUpdateSection(activeSectionId, { is_active: !sections.find(s => s._id === activeSectionId)?.is_active })}>
+                                        {sections.find(s => s._id === activeSectionId)?.is_active ? "Disable" : "Enable"}
+                                    </Button>
+                                    <Button variant="destructive" onClick={() => handleDeleteSection(activeSectionId)}>
+                                        <Trash2 className="w-4 h-4 mr-2" /> Delete Section
                                     </Button>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
+                            </div>
 
-                {/* STATS TAB */}
-                {activeTab === "STATS" && (
-                    <div className="space-y-6">
-                        <h2 className="text-xl font-bold mb-6">Trust Indicators (Homepage Stats)</h2>
-                        <div className="grid md:grid-cols-2 gap-6">
-                            {statsData.map((stat, index) => (
-                                <div key={index} className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                                    <h3 className="text-sm font-bold text-slate-400 uppercase mb-4">Stat Block {index + 1}</h3>
-                                    <div className="space-y-4">
-                                        <div><label className="text-xs font-bold text-slate-400">Value (e.g. 500+)</label><Input value={stat.value} onChange={e => updateStat(index, 'value', e.target.value)} className="font-black text-xl bg-white" /></div>
-                                        <div><label className="text-xs font-bold text-slate-400">Label (e.g. Students)</label><Input value={stat.label} onChange={e => updateStat(index, 'label', e.target.value)} className="bg-white" /></div>
-                                    </div>
+                            <div className="p-6 md:p-8 flex-1 bg-slate-50/50">
+                                <div className="flex items-center justify-between mb-8">
+                                    <h3 className="text-xl font-bold text-slate-900">Content Blocks</h3>
+                                    <Button onClick={handleCreateBlock} className="font-bold shadow-lg shadow-blue-500/20 bg-blue-600 hover:bg-blue-700">
+                                        <Plus className="w-4 h-4 mr-2" /> Add Content Block
+                                    </Button>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
 
-                {/* ABOUT TAB */}
-                {activeTab === "ABOUT" && (
-                    <div className="space-y-6">
-                        <h2 className="text-xl font-bold mb-6">About Section Content</h2>
-                        <div className="space-y-4 max-w-2xl">
-                            <div><label className="text-xs font-bold text-slate-400">Section Title</label><Input value={aboutData.title} onChange={e => setAboutData({ ...aboutData, title: e.target.value })} className="font-bold text-lg" /></div>
-                            <div><label className="text-xs font-bold text-slate-400">Small Tagline</label><Input value={aboutData.subtitle} onChange={e => setAboutData({ ...aboutData, subtitle: e.target.value })} /></div>
-                            <div><label className="text-xs font-bold text-slate-400">Main Description</label><Textarea value={aboutData.description} onChange={e => setAboutData({ ...aboutData, description: e.target.value })} className="h-32" /></div>
+                                <div className="space-y-6">
+                                    {blocks.length === 0 && (
+                                        <div className="text-center py-20 bg-white border border-dashed border-slate-300 rounded-3xl">
+                                            <List className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                                            <p className="text-slate-500 font-medium text-lg">Empty Section.</p>
+                                            <p className="text-slate-400">Add a content block to populate this component with data.</p>
+                                        </div>
+                                    )}
 
-                            <div className="pt-4">
-                                <div className="flex justify-between items-center mb-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase">Highlights Points</label>
-                                    <Button size="sm" variant="ghost" onClick={addHighlight}><Plus className="w-4 h-4" /></Button>
+                                    {blocks.map((block, index) => (
+                                        <div key={block._id} className="bg-white border text-sm border-slate-200 rounded-3xl p-6 relative group hover:shadow-lg transition-all">
+                                            <div className="absolute -top-3 -left-3 w-8 h-8 bg-slate-900 text-white flex items-center justify-center font-bold font-mono text-xs rounded-full shadow-lg border-4 border-white">
+                                                {index + 1}
+                                            </div>
+                                            <div className="absolute top-4 right-4 flex gap-2">
+                                                <Button size="icon" variant="outline" className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200" onClick={() => handleSaveBlock(block._id, block)}>
+                                                    <Save className="w-4 h-4" />
+                                                </Button>
+                                                <Button size="icon" variant="destructive" className="h-8 w-8" onClick={() => handleDeleteBlock(block._id)}>
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                            <div className="grid md:grid-cols-2 gap-5 mt-4">
+                                                <div>
+                                                    <label className="text-xs font-bold text-slate-500 uppercase">Title / Name</label>
+                                                    <Input className="mt-1 bg-slate-50" value={block.title || ""} onChange={(e) => handleUpdateBlockFields(block._id, "title", e.target.value)} />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs font-bold text-slate-500 uppercase">Subtitle / Category</label>
+                                                    <Input className="mt-1 bg-slate-50" value={block.subtitle || ""} onChange={(e) => handleUpdateBlockFields(block._id, "subtitle", e.target.value)} />
+                                                </div>
+                                                <div className="md:col-span-2">
+                                                    <label className="text-xs font-bold text-slate-500 uppercase">Description / Details</label>
+                                                    <Textarea className="mt-1 bg-slate-50 h-24" value={block.description || ""} onChange={(e) => handleUpdateBlockFields(block._id, "description", e.target.value)} />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs font-bold text-slate-500 uppercase">Image/Media URL</label>
+                                                    <Input className="mt-1 bg-slate-50 font-mono text-xs" value={block.image || ""} onChange={(e) => handleUpdateBlockFields(block._id, "image", e.target.value)} />
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label className="text-xs font-bold text-slate-500 uppercase">Button Text</label>
+                                                        <Input className="mt-1 bg-slate-50" value={block.button_text || ""} onChange={(e) => handleUpdateBlockFields(block._id, "button_text", e.target.value)} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-xs font-bold text-slate-500 uppercase">Button Link</label>
+                                                        <Input className="mt-1 bg-slate-50 font-mono text-xs" value={block.button_link || ""} onChange={(e) => handleUpdateBlockFields(block._id, "button_link", e.target.value)} />
+                                                    </div>
+                                                </div>
+                                                <div className="md:col-span-2">
+                                                    <label className="text-xs font-bold text-slate-500 uppercase">Extra Details (JSON)</label>
+                                                    <Input className="mt-1 bg-slate-50 font-mono text-xs" placeholder='e.g., {"color": "bg-blue-500", "icon": "GraduationCap"}' value={typeof block.extra_data === 'object' ? JSON.stringify(block.extra_data) : block.extra_data || ""} onChange={(e) => handleUpdateBlockFields(block._id, "extra_data", e.target.value)} onBlur={(e) => {
+                                                        try {
+                                                            if (e.target.value) JSON.parse(e.target.value);
+                                                        } catch (err) {
+                                                            toast.error("Invalid JSON format in extra details");
+                                                        }
+                                                    }} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                                {aboutData.highlights.map((h, i) => (
-                                    <div key={i} className="flex gap-2 mb-2">
-                                        <Input value={h} onChange={e => updateAboutHighlight(i, e.target.value)} />
-                                        <Button variant="ghost" size="icon" onClick={() => removeHighlight(i)}><Trash2 className="w-4 h-4 text-red-400" /></Button>
-                                    </div>
-                                ))}
+                            </div>
+                        </>
+                    ) : (
+                        <div className="flex-1 flex items-center justify-center p-12 text-center text-slate-400 max-w-sm mx-auto">
+                            <div>
+                                <LayoutTemplate className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                                <h3 className="text-xl font-bold mb-2 text-slate-600">No Section Selected</h3>
+                                <p>Select a section from the left sidebar or create a new one to manage its content blocks here.</p>
                             </div>
                         </div>
-                    </div>
-                )}
-
-                {/* SOCIAL TAB */}
-                {activeTab === "SOCIAL" && (
-                    <div className="space-y-6">
-                        <h2 className="text-xl font-bold mb-6">Social Media Links</h2>
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div><label className="text-xs font-bold text-slate-400">Facebook</label><Input value={socialData.facebook} onChange={e => setSocialData({ ...socialData, facebook: e.target.value })} placeholder="https://" /></div>
-                            <div><label className="text-xs font-bold text-slate-400">Instagram</label><Input value={socialData.instagram} onChange={e => setSocialData({ ...socialData, instagram: e.target.value })} placeholder="https://" /></div>
-                            <div><label className="text-xs font-bold text-slate-400">YouTube</label><Input value={socialData.youtube} onChange={e => setSocialData({ ...socialData, youtube: e.target.value })} placeholder="https://" /></div>
-                            <div><label className="text-xs font-bold text-slate-400">LinkedIn</label><Input value={socialData.linkedin} onChange={e => setSocialData({ ...socialData, linkedin: e.target.value })} placeholder="https://" /></div>
-                        </div>
-                    </div>
-                )}
-
-                {/* CONTACT TAB */}
-                {activeTab === "CONTACT" && (
-                    <div className="space-y-6">
-                        <h2 className="text-xl font-bold mb-6">Contact Information</h2>
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div><label className="text-xs font-bold text-slate-400">Email Address</label><Input value={contactData.email} onChange={e => setContactData({ ...contactData, email: e.target.value })} /></div>
-                            <div><label className="text-xs font-bold text-slate-400">Phone</label><Input value={contactData.phone} onChange={e => setContactData({ ...contactData, phone: e.target.value })} /></div>
-                            <div className="col-span-2"><label className="text-xs font-bold text-slate-400">Address</label><Textarea value={contactData.address} onChange={e => setContactData({ ...contactData, address: e.target.value })} /></div>
-                        </div>
-                    </div>
-                )}
-
+                    )}
+                </div>
             </div>
         </div>
     );

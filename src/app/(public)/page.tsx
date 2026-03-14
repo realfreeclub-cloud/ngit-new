@@ -13,15 +13,17 @@ import EventsSection from "@/components/public/EventsSection";
 import RegistrationCTA from "@/components/public/RegistrationCTA";
 import ContactSection from "@/components/public/ContactSection";
 import NotificationScroller from "@/components/public/NotificationScroller";
+import DynamicRenderer from "@/components/public/DynamicRenderer";
 
 import { getCMSContent } from "@/services/CMSService";
+import { getDynamicPageData } from "@/app/actions/cms";
 import { getFaculty } from "@/app/actions/faculty";
 import { getPublicCourses } from "@/app/actions/courses";
 import { getEvents } from "@/app/actions/events";
 import { getGalleryImages } from "@/app/actions/upload";
 
 export default async function PublicHomePage() {
-    const [slides, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, notifications] = await Promise.all([
+    const [slides, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, notifications, dynamicData] = await Promise.all([
         getCMSContent("HOME_SLIDER"),
         getCMSContent("HOME_STATS"),
         getCMSContent("HOME_ABOUT"),
@@ -29,7 +31,8 @@ export default async function PublicHomePage() {
         getPublicCourses(),
         getEvents(),
         getGalleryImages(),
-        getCMSContent("HOME_NOTIFICATIONS")
+        getCMSContent("HOME_NOTIFICATIONS"),
+        getDynamicPageData("home")
     ]);
 
     const facultyMembers = facultyRes.success ? facultyRes.faculty : [];
@@ -37,46 +40,55 @@ export default async function PublicHomePage() {
     const publicEvents = eventsRes.success ? eventsRes.events : [];
     const galleryImages = galleryRes.success ? galleryRes.images : [];
 
+    const cmsSections = dynamicData.success && dynamicData.sections ? dynamicData.sections : [];
+
     return (
         <div className="min-h-screen">
-            {/* Hero Section */}
-            <HeroSection />
+            <DynamicRenderer 
+                sections={cmsSections} 
+                staticFallback={
+                    <>
+                        {/* Hero Section */}
+                        <HeroSection />
 
-            {/* Notification Scroller */}
-            <NotificationScroller notifications={notifications} />
+                        {/* Notification Scroller */}
+                        <NotificationScroller notifications={notifications} />
 
-            {/* Trust Indicators */}
-            <TrustIndicators stats={stats} />
+                        {/* Trust Indicators */}
+                        <TrustIndicators stats={stats} />
 
-            {/* About Section */}
-            <AboutSection data={about} />
+                        {/* About Section */}
+                        <AboutSection data={about} />
 
-            {/* Why Choose NGIT Section */}
-            <WhyChooseSection />
+                        {/* Why Choose NGIT Section */}
+                        <WhyChooseSection />
 
-            {/* Infrastructure Section */}
-            <InfrastructureSection />
+                        {/* Infrastructure Section */}
+                        <InfrastructureSection />
 
-            {/* Faculty Section */}
-            <FacultySection members={facultyMembers} />
+                        {/* Faculty Section */}
+                        <FacultySection members={facultyMembers} />
 
-            {/* Achievements Section */}
-            <AchievementsSection />
+                        {/* Achievements Section */}
+                        <AchievementsSection />
 
-            {/* Courses Section */}
-            <CoursesSection courses={publicCourses} />
+                        {/* Courses Section */}
+                        <CoursesSection courses={publicCourses} />
 
-            {/* Gallery Section */}
-            <GallerySection images={galleryImages} />
+                        {/* Gallery Section */}
+                        <GallerySection images={galleryImages} />
 
-            {/* Events Section */}
-            <EventsSection events={publicEvents} />
+                        {/* Events Section */}
+                        <EventsSection events={publicEvents} />
 
-            {/* Registration CTA */}
-            <RegistrationCTA />
+                        {/* Registration CTA */}
+                        <RegistrationCTA />
 
-            {/* Contact Section */}
-            <ContactSection />
+                        {/* Contact Section */}
+                        <ContactSection />
+                    </>
+                }
+            />
         </div>
     );
 }
