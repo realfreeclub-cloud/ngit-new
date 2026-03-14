@@ -2,6 +2,9 @@ import { Suspense } from "react";
 import VerifyContent from "./VerifyContent";
 import { Loader2 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
+
 export default function VerifyAttendancePage() {
     return (
         <Suspense fallback={
