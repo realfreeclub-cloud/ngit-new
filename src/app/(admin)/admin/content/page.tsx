@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Trash2, Edit2, Play, Settings, SwitchCamera, List, Save, ChevronDown, ChevronRight, Menu, LayoutTemplate } from "lucide-react";
-
-import { getCmsPages, createCmsPage, getCmsSections, createCmsSection, updateCmsSection, deleteCmsSection, getCmsContentBlocks, createCmsContentBlock, updateCmsContentBlock, deleteCmsContentBlock } from "@/app/actions/cms";
+import { getCmsPages, createCmsPage, deleteCmsPage, getCmsSections, createCmsSection, updateCmsSection, deleteCmsSection, getCmsContentBlocks, createCmsContentBlock, updateCmsContentBlock, deleteCmsContentBlock } from "@/app/actions/cms";
+import { ArrowUp, ArrowDown, ExternalLink, Plus, Trash2, Save, Menu, ChevronRight, LayoutTemplate, List } from "lucide-react";
 
 export default function AdvancedCmsPage() {
     const [pages, setPages] = useState<any[]>([]);
@@ -111,6 +110,44 @@ export default function AdvancedCmsPage() {
         }
     };
 
+    const handleCreatePage = async () => {
+        const name = prompt("Enter page name/slug (e.g., services):");
+        if (!name) return;
+        const title = prompt("Enter page display title:", name.charAt(0).toUpperCase() + name.slice(1));
+        if (!title) return;
+
+        const res = await createCmsPage({ page_name: name.toLowerCase(), title });
+        if (res.success) {
+            toast.success("Page created");
+            const resPages = await getCmsPages();
+            if (resPages.success) setPages(resPages.pages);
+        }
+    };
+
+    const handleDeletePage = async (id: string) => {
+        if (!confirm("Are you sure? This will delete the entire page and all its content!")) return;
+        const res = await deleteCmsPage(id);
+        if (res.success) {
+            toast.success("Page deleted");
+            loadPages();
+        }
+    };
+
+    const handleMoveSection = async (id: string, direction: "up" | "down") => {
+        const index = sections.findIndex(s => s._id === id);
+        if (direction === "up" && index === 0) return;
+        if (direction === "down" && index === sections.length - 1) return;
+
+        const newIndex = direction === "up" ? index - 1 : index + 1;
+        const currentSection = sections[index];
+        const swapSection = sections[newIndex];
+
+        await updateCmsSection(currentSection._id, { sort_order: swapSection.sort_order });
+        await updateCmsSection(swapSection._id, { sort_order: currentSection.sort_order });
+        
+        loadSections(activePageId!);
+    };
+
     const handleCreateBlock = async () => {
         if (!activeSectionId) return toast.error("Select a section first");
         const res = await createCmsContentBlock({
@@ -146,6 +183,21 @@ export default function AdvancedCmsPage() {
         }
     };
 
+    const handleMoveBlock = async (id: string, direction: "up" | "down") => {
+        const index = blocks.findIndex(b => b._id === id);
+        if (direction === "up" && index === 0) return;
+        if (direction === "down" && index === blocks.length - 1) return;
+
+        const newIndex = direction === "up" ? index - 1 : index + 1;
+        const current = blocks[index];
+        const swap = blocks[newIndex];
+
+        await updateCmsContentBlock(current._id, { sort_order: swap.sort_order });
+        await updateCmsContentBlock(swap._id, { sort_order: current.sort_order });
+        
+        loadBlocks(activeSectionId!);
+    };
+
     return (
         <div className="space-y-8 max-w-7xl mx-auto pb-20">
             <div className="flex items-center justify-between sticky top-0 bg-slate-50/95 backdrop-blur z-20 py-4 border-b border-white/50">
@@ -158,50 +210,70 @@ export default function AdvancedCmsPage() {
             <div className="grid lg:grid-cols-4 gap-8 items-start">
                 
                 {/* Sidebar Navigation */}
-                <div className="lg:col-span-1 space-y-4">
-                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Pages</h3>
+                <div className="lg:col-span-1 space-y-6">
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+                        <div className="flex items-center justify-between mb-4 px-2">
+                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Pages</h3>
+                            <Button size="icon" variant="ghost" onClick={handleCreatePage} className="h-8 w-8 hover:bg-blue-50"><Plus className="w-4 h-4 text-blue-600" /></Button>
+                        </div>
                         <div className="space-y-1">
                             {pages.map(page => (
-                                <button 
-                                    key={page._id}
-                                    onClick={() => {
-                                        setActivePageId(page._id);
-                                        loadSections(page._id);
-                                    }}
-                                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${activePageId === page._id ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50"}`}
-                                >
-                                    <Menu className="w-4 h-4 opacity-50" />
-                                    <span className="capitalize flex-1 text-left">{page.page_name}</span>
-                                    {activePageId === page._id && <ChevronRight className="w-4 h-4 opacity-50" />}
-                                </button>
+                                <div key={page._id} className="group relative">
+                                    <button 
+                                        onClick={() => {
+                                            setActivePageId(page._id);
+                                            loadSections(page._id);
+                                        }}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activePageId === page._id ? "bg-slate-900 text-white shadow-lg" : "text-slate-600 hover:bg-slate-50"}`}
+                                    >
+                                        <Menu className="w-4 h-4 opacity-40" />
+                                        <span className="capitalize flex-1 text-left">{page.page_name}</span>
+                                        {activePageId === page._id && <ChevronRight className="w-4 h-4 text-blue-400" />}
+                                    </button>
+                                    {activePageId === page._id && !["home", "about", "contact"].includes(page.page_name) && (
+                                        <button onClick={() => handleDeletePage(page._id)} className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-opacity">
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                    )}
+                                </div>
                             ))}
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sections</h3>
-                            <Button size="icon" variant="ghost" onClick={handleCreateSection} className="h-6 w-6"><Plus className="w-4 h-4 text-slate-600" /></Button>
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+                        <div className="flex items-center justify-between mb-4 px-2">
+                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Sections</h3>
+                            <Button size="icon" variant="ghost" onClick={handleCreateSection} className="h-8 w-8 hover:bg-blue-50"><Plus className="w-4 h-4 text-blue-600" /></Button>
                         </div>
-                        <div className="space-y-2">
-                            {sections.map(section => (
-                                <div key={section._id} className="flex flex-col">
-                                    <button 
-                                        onClick={() => {
-                                            setActiveSectionId(section._id);
-                                            loadBlocks(section._id);
-                                        }}
-                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all border ${activeSectionId === section._id ? "border-blue-500 bg-blue-50 shadow-sm" : "border-slate-100 hover:border-slate-300"}`}
-                                    >
-                                        <div className="flex flex-col text-left">
-                                            <span className="font-bold text-slate-900">{section.section_name}</span>
-                                            <span className="text-[10px] uppercase font-bold text-slate-400">{section.section_type}</span>
+                        <div className="space-y-3">
+                            {sections.map((section, idx) => (
+                                <div key={section._id} className="flex flex-col group/item">
+                                    <div className="flex items-center gap-2">
+                                        <button 
+                                            onClick={() => {
+                                                setActiveSectionId(section._id);
+                                                loadBlocks(section._id);
+                                            }}
+                                            className={`flex-1 flex items-center justify-between px-4 py-3 rounded-2xl text-sm transition-all border ${activeSectionId === section._id ? "border-blue-500 bg-blue-50 shadow-md ring-2 ring-blue-500/20" : "border-slate-100 hover:border-slate-300"}`}
+                                        >
+                                            <div className="flex flex-col text-left">
+                                                <span className="font-bold text-slate-900">{section.section_name}</span>
+                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider font-mono">{section.section_type}</span>
+                                            </div>
+                                            {!section.is_active && <span className="text-[10px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded font-bold">HIDDEN</span>}
+                                        </button>
+                                        <div className="flex flex-col opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                            <button disabled={idx === 0} onClick={() => handleMoveSection(section._id, "up")} className="p-1 hover:text-blue-600 disabled:opacity-30"><ArrowUp className="w-3 h-3" /></button>
+                                            <button disabled={idx === sections.length - 1} onClick={() => handleMoveSection(section._id, "down")} className="p-1 hover:text-blue-600 disabled:opacity-30"><ArrowDown className="w-3 h-3" /></button>
                                         </div>
-                                    </button>
+                                    </div>
                                 </div>
                             ))}
-                            {sections.length === 0 && <p className="text-xs text-slate-400">No sections found.</p>}
+                            {sections.length === 0 && (
+                                <div className="text-center py-8 border-2 border-dashed border-slate-100 rounded-2xl">
+                                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">No Sections yet</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -249,6 +321,10 @@ export default function AdvancedCmsPage() {
                                                 {index + 1}
                                             </div>
                                             <div className="absolute top-4 right-4 flex gap-2">
+                                                <div className="flex flex-col gap-1 mr-2 bg-slate-100 rounded-lg p-1">
+                                                    <button disabled={index === 0} onClick={() => handleMoveBlock(block._id, "up")} className="p-1 hover:text-blue-600 disabled:opacity-20"><ArrowUp className="w-3.5 h-3.5" /></button>
+                                                    <button disabled={index === blocks.length - 1} onClick={() => handleMoveBlock(block._id, "down")} className="p-1 hover:text-blue-600 disabled:opacity-20"><ArrowDown className="w-3.5 h-3.5" /></button>
+                                                </div>
                                                 <Button size="icon" variant="outline" className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200" onClick={() => handleSaveBlock(block._id, block)}>
                                                     <Save className="w-4 h-4" />
                                                 </Button>

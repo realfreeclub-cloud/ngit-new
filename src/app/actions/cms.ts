@@ -27,6 +27,34 @@ export async function createCmsPage(data: any) {
     }
 }
 
+export async function updateCmsPage(id: string, data: any) {
+    try {
+        await connectDB();
+        const page = await CmsPage.findByIdAndUpdate(id, data, { new: true }).lean();
+        revalidatePath("/");
+        return { success: true, page: JSON.parse(JSON.stringify(page)) };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function deleteCmsPage(id: string) {
+    try {
+        await connectDB();
+        // Delete all sections and blocks for this page
+        const sections = await CmsSection.find({ page_id: id });
+        for (const section of sections) {
+            await CmsContentBlock.deleteMany({ section_id: section._id });
+        }
+        await CmsSection.deleteMany({ page_id: id });
+        await CmsPage.findByIdAndDelete(id);
+        revalidatePath("/");
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
 export async function getCmsSections(pageId: string) {
     try {
         await connectDB();
