@@ -24,13 +24,17 @@ const menuItems = [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "Content Mgmt", href: "/admin/content", icon: FileText },
     {
-        label: "Exams & Quizzes",
-        href: "/admin/quizzes",
+        label: "Mock Test Manager",
+        href: "/admin/mock-tests",
         icon: BrainCircuit,
         subItems: [
-            { label: "Manage Exams", href: "/admin/quizzes" },
-            { label: "Exam Results", href: "/admin/results" },
-            { label: "Question Bank", href: "/admin/questions" }
+            { label: "Dashboard", href: "/admin/mock-tests" },
+            { label: "Question Bank", href: "/admin/questions" },
+            { label: "Paper Sets", href: "/admin/mock-tests/papers" },
+            { label: "Mock Tests", href: "/admin/quizzes" },
+            { label: "Paid Test Requests", href: "/admin/mock-tests/requests" },
+            { label: "Mock Test Results", href: "/admin/results" },
+            { label: "Analytics", href: "/admin/mock-tests/analytics" }
         ]
     },
     { label: "Header & Footer", href: "/admin/layout", icon: Layout },

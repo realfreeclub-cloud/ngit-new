@@ -1,66 +1,50 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { getMockTestResultsAdmin, deleteMockTestResult, publishMockTestResults } from "@/app/actions/mockTestResults";
 import { 
-    Search, 
-    Filter, 
-    Calendar, 
-    BookOpen, 
-    User, 
-    ChevronRight, 
-    Download, 
-    CheckCircle2, 
-    XCircle,
-    Info,
-    LayoutGrid,
-    Table as TableIcon
-} from "lucide-react";
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
-    Select, 
-    SelectContent, 
-    SelectItem, 
-    SelectTrigger, 
-    SelectValue 
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
-import { getAdminResults } from "@/app/actions/results";
-import { getAdminQuizzes } from "@/app/actions/admin-quizzes";
-import { format } from "date-fns";
+    Search, Filter, Download, Trash2, 
+    CheckCircle2, XCircle, Clock, Eye, MoreVertical,
+    Send, Settings as SettingsIcon
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { 
+    DropdownMenu, 
+    DropdownMenuContent, 
+    DropdownMenuItem, 
+    DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { 
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
+} from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
-export default function AdminResultsPage() {
+export default function MockTestResultsAdminPage() {
     const [results, setResults] = useState<any[]>([]);
-    const [quizzes, setQuizzes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filters, setFilters] = useState({
-        courseType: "ALL" as "ALL" | "ONLINE" | "OFFLINE",
-        quizId: "ALL",
-        date: ""
+    const [searchTerm, setSearchTerm] = useState("");
+    const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
+    const [selectedQuizId, setSelectedQuizId] = useState("");
+    const [publishSettings, setPublishSettings] = useState({
+        publishToStudentPanel: true,
+        publishToPublicWebsite: false,
+        customHeading: ""
     });
-    const [viewMode, setViewMode] = useState<"table" | "grid">("table");
 
     useEffect(() => {
-        loadQuizzes();
-        fetchResults();
+        loadResults();
     }, []);
 
-    const loadQuizzes = async () => {
-        const res = await getAdminQuizzes();
-        if (res.success) {
-            setQuizzes(res.quizzes);
-        }
-    };
-
-    const fetchResults = async () => {
+    const loadResults = async () => {
         setLoading(true);
-        const res = await getAdminResults({
-            courseType: filters.courseType === "ALL" ? undefined : filters.courseType,
-            quizId: filters.quizId === "ALL" ? undefined : filters.quizId,
-            date: filters.date || undefined
-        });
+        const res = await getMockTestResultsAdmin();
         if (res.success) {
             setResults(res.results);
         } else {
@@ -69,297 +53,238 @@ export default function AdminResultsPage() {
         setLoading(false);
     };
 
-    const handleFilterChange = (key: string, value: string) => {
-        setFilters(prev => ({ ...prev, [key]: value }));
+    const handleDelete = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this result?")) return;
+        const res = await deleteMockTestResult(id);
+        if (res.success) {
+            toast.success("Result deleted");
+            loadResults();
+        } else {
+            toast.error(res.error);
+        }
     };
 
-    useEffect(() => {
-        fetchResults();
-    }, [filters]);
-
-    const exportToCsv = () => {
-        if (results.length === 0) return toast.error("No data to export");
-        
-        const headers = ["Student", "Email", "Quiz", "Course", "Type", "Score", "Total", "Percentage", "Status", "Date"];
-        const rows = results.map(r => [
-            r.studentId?.name,
-            r.studentId?.email,
-            r.quizId?.title,
-            r.quizId?.courseId?.title,
-            r.quizId?.courseId?.type,
-            r.totalScore,
-            r.totalMarks,
-            Math.round((r.totalScore / r.totalMarks) * 100) + "%",
-            r.isPassed ? "Pass" : "Fail",
-            format(new Date(r.endTime), "PPpp")
-        ]);
-
-        const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", `results_${format(new Date(), "yyyy-MM-dd")}.csv`);
-        link.style.visibility = "hidden";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    const handlePublish = async () => {
+        if (!selectedQuizId) return toast.error("Please select a quiz to publish");
+        const res = await publishMockTestResults(selectedQuizId, publishSettings);
+        if (res.success) {
+            toast.success(res.message);
+            setIsPublishDialogOpen(false);
+            loadResults();
+        } else {
+            toast.error(res.error);
+        }
     };
+
+    const filteredResults = results.filter(res => 
+        res.studentId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        res.mockTestId?.title?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
-        <div className="space-y-8 max-w-7xl mx-auto pb-20">
-            {/* Header Area */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 bg-slate-50/95 backdrop-blur z-20 py-4 border-b border-white/50">
+        <div className="space-y-8 p-8 max-w-[1600px] mx-auto animate-in fade-in duration-500">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3">
-                        <CheckCircle2 className="w-8 h-8 text-blue-600" />
-                        Student Results
-                    </h1>
-                    <p className="text-slate-500 font-medium text-sm">Monitor performance across online & offline courses.</p>
+                    <h1 className="text-4xl font-black text-slate-900 tracking-tight">Mock Test Results</h1>
+                    <p className="text-slate-500 mt-2 font-medium">Manage and publish student performance rankings</p>
                 </div>
+                
                 <div className="flex items-center gap-3">
-                    <div className="bg-white border p-1 rounded-xl flex gap-1">
-                        <Button 
-                            variant={viewMode === "table" ? "secondary" : "ghost"} 
-                            size="sm" 
-                            onClick={() => setViewMode("table")}
-                            className="rounded-lg h-9"
-                        >
-                            <TableIcon className="w-4 h-4 mr-2" /> Table
-                        </Button>
-                        <Button 
-                            variant={viewMode === "grid" ? "secondary" : "ghost"} 
-                            size="sm" 
-                            onClick={() => setViewMode("grid")}
-                            className="rounded-lg h-9"
-                        >
-                            <LayoutGrid className="w-4 h-4 mr-2" /> Grid
-                        </Button>
-                    </div>
-                    <Button onClick={exportToCsv} variant="outline" className="rounded-xl h-11 px-6 font-bold border-2 hover:bg-slate-50">
-                        <Download className="w-4 h-4 mr-2" /> Export
+                    <Dialog open={isPublishDialogOpen} onOpenChange={setIsPublishDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button className="rounded-2xl h-12 font-bold gap-2 px-6 shadow-xl shadow-primary/20">
+                                <Send className="w-5 h-5" />
+                                Publish New Results
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="rounded-[2.5rem] p-10 max-w-lg border-none shadow-2xl">
+                            <DialogHeader>
+                                <DialogTitle className="text-2xl font-black mb-4">Publish Results Settings</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <Label className="font-bold text-slate-700">Select Mock Test</Label>
+                                    <select 
+                                        className="w-full h-12 rounded-xl bg-slate-50 border-none px-4 font-bold"
+                                        value={selectedQuizId}
+                                        onChange={(e) => setSelectedQuizId(e.target.value)}
+                                    >
+                                        <option value="">Select a Test</option>
+                                        {/* Simple unique mockTest extraction from already mapped results */}
+                                        {Array.from(new Set(results.map(r => r.mockTestId?._id))).map((id: any) => {
+                                            const quiz = results.find(r => r.mockTestId?._id === id)?.mockTestId;
+                                            return <option key={id} value={id}>{quiz?.title}</option>
+                                        })}
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="font-bold text-slate-700">Custom Heading (Optional)</Label>
+                                    <Input 
+                                        placeholder="e.g. JEE Mock Test - March 2026"
+                                        className="h-12 rounded-xl"
+                                        value={publishSettings.customHeading}
+                                        onChange={(e) => setPublishSettings({...publishSettings, customHeading: e.target.value})}
+                                    />
+                                </div>
+
+                                <div className="space-y-4 pt-2">
+                                    <div className="flex items-center space-x-3 bg-slate-50 p-4 rounded-2xl">
+                                        <Switch 
+                                            id="student-panel" 
+                                            checked={publishSettings.publishToStudentPanel}
+                                            onCheckedChange={(val: boolean) => setPublishSettings({...publishSettings, publishToStudentPanel: !!val})}
+                                        />
+                                        <Label htmlFor="student-panel" className="font-bold cursor-pointer">Publish to Student Panel</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-3 bg-slate-50 p-4 rounded-2xl">
+                                        <Switch 
+                                            id="public-web" 
+                                            checked={publishSettings.publishToPublicWebsite}
+                                            onCheckedChange={(val: boolean) => setPublishSettings({...publishSettings, publishToPublicWebsite: !!val})}
+                                        />
+                                        <Label htmlFor="public-web" className="font-bold cursor-pointer">Publish to Public Website</Label>
+                                    </div>
+                                </div>
+
+                                <Button className="w-full h-14 rounded-2xl font-black text-lg gap-2 mt-4" onClick={handlePublish}>
+                                    <CheckCircle2 className="w-6 h-6" />
+                                    Confirm & Publish
+                                </Button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                    <Button variant="outline" className="rounded-2xl h-12 font-bold px-4 border-2">
+                        <Download className="w-5 h-5" />
                     </Button>
                 </div>
             </div>
 
-            {/* Filters Section */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-                <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Course Type</label>
-                    <Select value={filters.courseType} onValueChange={(v) => handleFilterChange("courseType", v)}>
-                        <SelectTrigger className="h-12 rounded-xl border-slate-200 focus:ring-blue-500/20">
-                            <SelectValue placeholder="All Types" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                            <SelectItem value="ALL">All Courses</SelectItem>
-                            <SelectItem value="ONLINE">Online Courses</SelectItem>
-                            <SelectItem value="OFFLINE">Offline Courses</SelectItem>
-                        </SelectContent>
-                    </Select>
+            {/* Filters bar */}
+            <div className="bg-white rounded-[2rem] p-4 border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input 
+                        placeholder="Search student or test name..." 
+                        className="pl-12 h-12 rounded-xl border-none bg-slate-50 font-medium"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
-
-                <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Quiz Selection</label>
-                    <Select value={filters.quizId} onValueChange={(v) => handleFilterChange("quizId", v)}>
-                        <SelectTrigger className="h-12 rounded-xl border-slate-200 focus:ring-blue-500/20">
-                            <SelectValue placeholder="All Quizzes" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                            <SelectItem value="ALL">All Quizzes</SelectItem>
-                            {quizzes.map(q => (
-                                <SelectItem key={q._id} value={q._id}>{q.title}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Result Date</label>
-                    <div className="relative">
-                        <Input 
-                            type="date" 
-                            className="h-12 rounded-xl border-slate-200 pl-10 focus:ring-blue-500/20" 
-                            value={filters.date}
-                            onChange={(e) => handleFilterChange("date", e.target.value)}
-                        />
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Search Student</label>
-                    <div className="relative">
-                        <Input 
-                            placeholder="Name or Email..."
-                            className="h-12 rounded-xl border-slate-200 pl-10 focus:ring-blue-500/20" 
-                        />
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    </div>
+                <div className="flex gap-2">
+                    <Button variant="outline" className="rounded-xl h-12 font-bold gap-2 bg-slate-50 border-none">
+                        <Filter className="w-4 h-4" />
+                        Course
+                    </Button>
+                    <Button variant="outline" className="rounded-xl h-12 font-bold gap-2 bg-slate-50 border-none">
+                        <Filter className="w-4 h-4" />
+                        Status
+                    </Button>
                 </div>
             </div>
 
-            {/* Content Area */}
-            {loading ? (
-                <div className="py-20 text-center space-y-4">
-                    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                    <p className="font-bold text-slate-500 uppercase tracking-widest text-xs">Fetching Results...</p>
-                </div>
-            ) : results.length === 0 ? (
-                <div className="bg-white rounded-[2.5rem] border border-dashed border-slate-300 py-24 text-center">
-                    <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                        <Info className="w-10 h-10 text-slate-300" />
-                    </div>
-                    <h3 className="text-2xl font-black text-slate-900">No results found</h3>
-                    <p className="text-slate-500 font-medium max-w-sm mx-auto mt-2">Try adjusting your filters or search criteria to find what you're looking for.</p>
-                    <Button 
-                        variant="link" 
-                        className="text-blue-600 font-bold mt-4"
-                        onClick={() => setFilters({ courseType: "ALL", quizId: "ALL", date: "" })}
-                    >
-                        Clear All Filters
-                    </Button>
-                </div>
-            ) : viewMode === "table" ? (
-                <Card className="rounded-[2.5rem] border-slate-100 shadow-xl overflow-hidden border-none bg-white">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-slate-900 text-white border-none">
-                                    <th className="px-6 py-5 text-xs font-black uppercase tracking-widest">Student</th>
-                                    <th className="px-6 py-5 text-xs font-black uppercase tracking-widest">Quiz & Course</th>
-                                    <th className="px-6 py-5 text-xs font-black uppercase tracking-widest">Score</th>
-                                    <th className="px-6 py-5 text-xs font-black uppercase tracking-widest">Status</th>
-                                    <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-right">Date</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50">
-                                {results.map((r) => (
-                                    <tr key={r._id} className="hover:bg-slate-50/80 transition-colors group">
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold overflow-hidden border border-slate-200">
-                                                    {r.studentId?.photoUrl ? (
-                                                        <img src={r.studentId.photoUrl} alt="" className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <User className="w-5 h-5 opacity-50" />
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <p className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{r.studentId?.name || "Unknown Patient"}</p>
-                                                    <p className="text-xs text-slate-500 font-medium">{r.studentId?.email}</p>
-                                                </div>
+            {/* Table */}
+            <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+                <Table>
+                    <TableHeader className="bg-slate-50/50">
+                        <TableRow className="hover:bg-transparent border-slate-100">
+                            <TableHead className="font-black text-slate-900 py-6 pl-8">Student</TableHead>
+                            <TableHead className="font-black text-slate-900 py-6">Mock Test</TableHead>
+                            <TableHead className="font-black text-slate-900 py-6 text-center">Score</TableHead>
+                            <TableHead className="font-black text-slate-900 py-6 text-center">Rank</TableHead>
+                            <TableHead className="font-black text-slate-900 py-6">Attempt Date</TableHead>
+                            <TableHead className="font-black text-slate-900 py-6">Status</TableHead>
+                            <TableHead className="font-black text-slate-900 py-6 text-right pr-8">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {loading ? (
+                            Array.from({ length: 5 }).map((_, i) => (
+                                <TableRow key={i} className="animate-pulse">
+                                    <TableCell colSpan={7} className="h-20 bg-slate-50/20" />
+                                </TableRow>
+                            ))
+                        ) : filteredResults.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={7} className="h-60 text-center">
+                                    <div className="flex flex-col items-center justify-center space-y-3">
+                                        <Clock className="w-12 h-12 text-slate-200" />
+                                        <p className="text-slate-400 font-bold">No results found</p>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            filteredResults.map((res) => (
+                                <TableRow key={res._id} className="group hover:bg-slate-50/50 transition-colors border-slate-100">
+                                    <TableCell className="py-6 pl-8">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-sm">
+                                                {res.studentId?.name?.[0]}
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="space-y-1">
-                                                <p className="font-bold text-slate-800 text-sm">{r.quizId?.title}</p>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold uppercase">{r.quizId?.courseId?.type}</span>
-                                                    <span className="text-xs text-slate-500 font-medium truncate max-w-[150px] inline-block">{r.quizId?.courseId?.title}</span>
-                                                </div>
+                                            <div>
+                                                <p className="font-black text-slate-900">{res.studentId?.name}</p>
+                                                <p className="text-xs font-bold text-slate-400">{res.studentId?.email}</p>
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center gap-2">
-                                                <div className="h-2 w-24 bg-slate-100 rounded-full overflow-hidden">
-                                                    <div 
-                                                        className={`h-full ${r.isPassed ? "bg-emerald-500" : "bg-rose-500"}`} 
-                                                        style={{ width: `${(r.totalScore / r.totalMarks) * 100}%` }}
-                                                    />
-                                                </div>
-                                                <span className="font-black text-slate-900 text-sm">{r.totalScore}/{r.totalMarks}</span>
-                                            </div>
-                                            <p className="text-[10px] font-black text-slate-400 mt-1 uppercase tracking-tighter">
-                                                {Math.round((r.totalScore / r.totalMarks) * 100)}% Performance
-                                            </p>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            {r.isPassed ? (
-                                                <Badge className="bg-emerald-50 text-emerald-600 border-none shadow-none font-bold uppercase tracking-widest text-[10px] hover:bg-emerald-100 px-3 py-1 rounded-full">
-                                                    <CheckCircle2 className="w-3 h-3 mr-1" /> Passed
-                                                </Badge>
-                                            ) : (
-                                                <Badge className="bg-rose-50 text-rose-600 border-none shadow-none font-bold uppercase tracking-widest text-[10px] hover:bg-rose-100 px-3 py-1 rounded-full">
-                                                    <XCircle className="w-3 h-3 mr-1" /> Failed
-                                                </Badge>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-5 text-right">
-                                            <p className="text-sm font-bold text-slate-900">{format(new Date(r.endTime), "dd MMM, yyyy")}</p>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase">{format(new Date(r.endTime), "p")}</p>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </Card>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {results.map((r) => (
-                        <div key={r._id} className="bg-white rounded-[2.5rem] p-6 border border-slate-100 hover:shadow-xl transition-all group overflow-hidden relative">
-                            <div className={`absolute top-0 right-0 w-32 h-32 opacity-5 -mr-16 -mt-16 rounded-full ${r.isPassed ? "bg-emerald-500" : "bg-rose-500"}`} />
-                            
-                            <div className="flex items-center gap-4 mb-6">
-                                <div className="w-14 h-14 rounded-[1.25rem] bg-slate-100 flex items-center justify-center text-slate-600 font-bold overflow-hidden border-2 border-white shadow-md">
-                                    {r.studentId?.photoUrl ? (
-                                        <img src={r.studentId.photoUrl} alt="" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <User className="w-6 h-6 opacity-50" />
-                                    )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="font-black text-slate-900 truncate">{r.studentId?.name}</h4>
-                                    <p className="text-xs text-slate-500 font-medium truncate">{r.studentId?.email}</p>
-                                </div>
-                                {r.isPassed ? (
-                                    <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
-                                        <CheckCircle2 className="w-5 h-5" />
-                                    </div>
-                                ) : (
-                                    <div className="w-8 h-8 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center">
-                                        <XCircle className="w-5 h-5" />
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="bg-slate-50 rounded-2xl p-4">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <BookOpen className="w-3.5 h-3.5 text-blue-600" />
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{r.quizId?.courseId?.type} Course</span>
-                                    </div>
-                                    <p className="font-bold text-slate-900 text-sm line-clamp-1">{r.quizId?.title}</p>
-                                    <p className="text-xs text-slate-500 font-medium truncate">{r.quizId?.courseId?.title}</p>
-                                </div>
-
-                                <div className="flex items-center justify-between px-1">
-                                    <div>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Score</p>
-                                        <p className="text-xl font-black text-slate-900">{r.totalScore}<span className="text-slate-300 text-sm">/{r.totalMarks}</span></p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Percentage</p>
-                                        <p className={`text-xl font-black ${r.isPassed ? "text-emerald-600" : "text-rose-600"}`}>
-                                            {Math.round((r.totalScore / r.totalMarks) * 100)}%
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                                    <div className="flex items-center gap-2 text-slate-400">
-                                        <Calendar className="w-3.5 h-3.5" />
-                                        <span className="text-[10px] font-bold uppercase">{format(new Date(r.endTime), "PP")}</span>
-                                    </div>
-                                    <Button variant="ghost" size="sm" className="h-8 rounded-lg text-[10px] font-black uppercase text-blue-600 hover:text-blue-700 hover:bg-blue-50">
-                                        View Details <ChevronRight className="w-3 h-3 ml-1" />
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="py-6 font-bold text-slate-700">{res.mockTestId?.title}</TableCell>
+                                    <TableCell className="py-6 text-center">
+                                        <span className="font-black text-slate-900">{res.score}</span>
+                                        <span className="text-slate-400 font-bold"> / {res.totalMarks}</span>
+                                    </TableCell>
+                                    <TableCell className="py-6 text-center">
+                                        {res.rank ? (
+                                            <Badge className="bg-blue-50 text-blue-600 border-none px-3 py-1 font-black text-sm">
+                                                #{res.rank}
+                                            </Badge>
+                                        ) : (
+                                            <span className="text-slate-400 font-medium">-</span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="py-6 text-slate-500 font-bold">
+                                        {new Date(res.attemptDate).toLocaleDateString()}
+                                    </TableCell>
+                                    <TableCell className="py-6">
+                                        {res.publishStatus === "PUBLISHED" ? (
+                                            <Badge className="bg-emerald-50 text-emerald-600 border-none font-black px-3 py-1">
+                                                <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Published
+                                            </Badge>
+                                        ) : (
+                                            <Badge className="bg-amber-50 text-amber-600 border-none font-black px-3 py-1">
+                                                <Clock className="w-3.5 h-3.5 mr-1" /> Pending
+                                            </Badge>
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="py-6 text-right pr-8">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-10 w-10 p-0 rounded-xl hover:bg-slate-100">
+                                                    <MoreVertical className="h-5 w-5" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="rounded-2xl p-2 border-slate-100 shadow-xl w-48">
+                                                <DropdownMenuItem className="rounded-xl font-bold py-3 cursor-pointer">
+                                                    <Eye className="w-4 h-4 mr-3 text-slate-400" /> View Details
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem className="rounded-xl font-bold py-3 cursor-pointer">
+                                                    <SettingsIcon className="w-4 h-4 mr-3 text-slate-400" /> Edit Visibility
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem 
+                                                    className="rounded-xl font-bold py-3 cursor-pointer text-rose-600 focus:text-rose-600 focus:bg-rose-50"
+                                                    onClick={() => handleDelete(res._id)}
+                                                >
+                                                    <Trash2 className="w-4 h-4 mr-3" /> Delete Result
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
         </div>
     );
 }
