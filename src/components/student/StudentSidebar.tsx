@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
     Home,
     PlayCircle,
+    BookOpen,
     HelpCircle,
     FileText,
     Trophy,
@@ -16,20 +17,23 @@ import {
     CreditCard
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSession } from "next-auth/react";
 
 const menuItems = [
     { label: "Dashboard", href: "/student", icon: Home },
     { label: "My Courses", href: "/student/courses", icon: PlayCircle },
-    { label: "Fees & Payments", href: "/student/fees", icon: CreditCard },
-    { label: "Mock Tests", href: "/student/quizzes", icon: Trophy },
-    { label: "My Results", href: "/student/results", icon: TrendingUp },
+    { label: "My Exams", href: "/student/quizzes", icon: Trophy },
+    { label: "Study Material", href: "/student/materials", icon: BookOpen },
+    { label: "Results", href: "/student/results", icon: TrendingUp },
+    { label: "Payments", href: "/student/fees", icon: CreditCard },
     { label: "Attendance", href: "/student/attendance", icon: ClipboardList },
     { label: "Certificates", href: "/student/certificates", icon: Award },
-    { label: "Settings", href: "/student/settings", icon: Settings },
+    { label: "Profile", href: "/student/settings", icon: UserCircle },
 ];
 
 export default function StudentSidebar() {
     const pathname = usePathname();
+    const { data: session } = useSession();
 
     return (
         <aside className="w-64 bg-slate-900 text-white flex flex-col">

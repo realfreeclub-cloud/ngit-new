@@ -2,10 +2,19 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Phone, FileDown, LogIn } from "lucide-react";
+import { Menu, X, Phone, LogIn, User, LayoutDashboard, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { getHeaderFooterData } from "@/app/actions/layoutContent";
+import { useSession, signOut } from "next-auth/react";
+import { 
+    DropdownMenu, 
+    DropdownMenuContent, 
+    DropdownMenuItem, 
+    DropdownMenuLabel, 
+    DropdownMenuSeparator, 
+    DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 type NavLink = {
     label: string;
@@ -20,6 +29,7 @@ interface HeaderData {
 }
 
 export default function PublicNavbar() {
+    const { data: session } = useSession();
     const [isOpen, setIsOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [headerData, setHeaderData] = useState<HeaderData | null>(null);
@@ -30,8 +40,6 @@ export default function PublicNavbar() {
         };
         window.addEventListener("scroll", handleScroll);
 
-        // Fetch header data client-side for now to keep interactivity simpler without full SSR refactor
-        // Ideally this component should be server-side or receive props, but we'll fetch on mount.
         getHeaderFooterData().then(res => {
             if (res.success) setHeaderData(res.header);
         });
@@ -48,8 +56,6 @@ export default function PublicNavbar() {
         { label: "Faculty", href: "/faculty" },
         { label: "Contact", href: "/contact" },
     ];
-
-    const cta = headerData?.ctaButton || { label: "Apply Now", href: "/register" };
 
     return (
         <nav className={cn(
@@ -92,17 +98,74 @@ export default function PublicNavbar() {
 
                         <div className="flex items-center gap-3 ml-4 pl-4 border-l border-gray-200">
                             <Link href="tel:+919876543210">
-                                <Button variant="ghost" className="gap-2 text-gray-700 hover:text-primary hover:bg-primary/5 font-semibold">
+                                <Button variant="ghost" className="gap-2 text-gray-700 hover:text-primary hover:bg-primary/5 font-semibold px-2">
                                     <Phone className="w-4 h-4" />
-                                    <span className="hidden xl:inline">Call Now</span>
+                                    <span className="hidden xl:inline">Support</span>
                                 </Button>
                             </Link>
-                            <Link href="/student/login">
-                                <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary hover:text-white font-bold px-5 py-2.5 transition-all duration-300">
-                                    <LogIn className="w-4 h-4" />
-                                    Student Portal
-                                </Button>
-                            </Link>
+                            
+                            {session ? (
+                                <div className="flex items-center gap-3">
+                                    {session.user.role === "STUDENT" ? (
+                                        <Link href="/student">
+                                            <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary hover:text-white font-bold px-5 py-2.5 transition-all duration-300">
+                                                <LayoutDashboard className="w-4 h-4" />
+                                                My Dashboard
+                                            </Button>
+                                        </Link>
+                                    ) : (
+                                        <Link href="/admin">
+                                            <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary hover:text-white font-bold px-5 py-2.5 transition-all duration-300">
+                                                <LayoutDashboard className="w-4 h-4" />
+                                                Admin Panel
+                                            </Button>
+                                        </Link>
+                                    )}
+
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <button className="flex items-center gap-3 hover:bg-slate-50 p-1.5 rounded-2xl transition-all group border border-transparent hover:border-slate-100">
+                                                <div className="text-right hidden xl:block">
+                                                    <p className="text-xs font-black text-slate-900 leading-none group-hover:text-primary transition-colors">
+                                                        {session.user.name}
+                                                    </p>
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                                        {session.user.role}
+                                                    </p>
+                                                </div>
+                                                <div className="relative h-10 w-10 rounded-xl p-0 flex items-center justify-center bg-slate-900 text-white font-bold group-hover:bg-primary transition-colors shadow-sm">
+                                                    {session.user.name?.[0]}
+                                                </div>
+                                            </button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent className="w-64 rounded-2xl p-2 mt-2" align="end" forceMount>
+                                            <DropdownMenuLabel className="font-normal p-4">
+                                                <div className="flex flex-col space-y-1">
+                                                    <p className="text-sm font-black leading-none text-slate-900">{session.user.name}</p>
+                                                    <p className="text-xs font-medium leading-none text-slate-500 mt-1">{session.user.email}</p>
+                                                    <Badge className="w-fit mt-2 bg-blue-50 text-blue-600 border-none shadow-none text-[10px] font-black">{session.user.role}</Badge>
+                                                </div>
+                                            </DropdownMenuLabel>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem className="rounded-xl p-3 font-bold text-slate-600 focus:text-primary focus:bg-primary/5 cursor-pointer" asChild>
+                                                <Link href={session.user.role === 'STUDENT' ? '/student/settings' : '/admin/settings'}>
+                                                    <User className="mr-3 h-4 w-4" /> Profile Details
+                                                </Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem className="rounded-xl p-3 font-bold text-rose-600 focus:text-rose-700 focus:bg-rose-50 cursor-pointer" onClick={() => signOut()}>
+                                                <LogOut className="mr-3 h-4 w-4" /> Sign out
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                            ) : (
+                                <Link href="/student/login">
+                                    <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary hover:text-white font-bold px-6 py-2.5 transition-all duration-300 rounded-xl">
+                                        <LogIn className="w-4 h-4" />
+                                        Student Login
+                                    </Button>
+                                </Link>
+                            )}
                         </div>
                     </div>
 
@@ -124,25 +187,41 @@ export default function PublicNavbar() {
                                 <Link
                                     key={idx}
                                     href={link.href}
-                                    className="text-base font-medium py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors"
+                                    className="text-base font-bold py-3 px-4 rounded-xl hover:bg-slate-50 transition-colors text-slate-700"
                                     onClick={() => setIsOpen(false)}
                                 >
                                     {link.label}
                                 </Link>
                             ))}
                             <div className="flex flex-col gap-3 pt-4 border-t">
-                                <Link href="tel:+919876543210" onClick={() => setIsOpen(false)}>
-                                    <Button variant="outline" className="w-full gap-2 justify-center">
-                                        <Phone className="w-4 h-4" />
-                                        Call Now
-                                    </Button>
-                                </Link>
-                                <Link href="/student/login" onClick={() => setIsOpen(false)}>
-                                    <Button variant="outline" className="w-full gap-2 justify-center border-primary text-primary hover:bg-primary hover:text-white font-bold transition-all duration-300">
-                                        <LogIn className="w-4 h-4" />
-                                        Student Portal Login
-                                    </Button>
-                                </Link>
+                                {session ? (
+                                    <>
+                                        <div className="px-4 py-2 border rounded-2xl bg-slate-50 flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold">
+                                                {session.user.name?.[0]}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold">{session.user.name}</p>
+                                                <p className="text-xs text-slate-500">{session.user.role}</p>
+                                            </div>
+                                        </div>
+                                        <Link href={session.user.role === 'STUDENT' ? '/student' : '/admin'} onClick={() => setIsOpen(false)}>
+                                            <Button className="w-full gap-2 rounded-xl h-12 font-bold">
+                                                Go to Dashboard
+                                            </Button>
+                                        </Link>
+                                        <Button variant="ghost" className="w-full text-rose-600 font-bold" onClick={() => signOut()}>
+                                            Sign Out
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <Link href="/student/login" onClick={() => setIsOpen(false)}>
+                                        <Button className="w-full gap-2 justify-center border-primary text-primary hover:bg-primary hover:text-white font-bold h-12 rounded-xl transition-all duration-300" variant="outline">
+                                            <LogIn className="w-4 h-4" />
+                                            Student Portal Login
+                                        </Button>
+                                    </Link>
+                                )}
                             </div>
                         </div>
                     </div>
