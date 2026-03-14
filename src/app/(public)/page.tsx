@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic";
-import HeroSlider from "@/components/public/HeroSlider";
+import HeroSection from "@/components/public/HeroSection";
 
 import TrustIndicators from "@/components/public/TrustIndicators";
 import AboutSection from "@/components/public/AboutSection";
+import WhyChooseSection from "@/components/public/WhyChooseSection";
 import InfrastructureSection from "@/components/public/InfrastructureSection";
 import FacultySection from "@/components/public/FacultySection";
 import AchievementsSection from "@/components/public/AchievementsSection";
@@ -38,8 +39,8 @@ export default async function PublicHomePage() {
 
     return (
         <div className="min-h-screen">
-            {/* Hero Slider */}
-            <HeroSlider slides={slides} />
+            {/* Hero Section */}
+            <HeroSection />
 
             {/* Notification Scroller */}
             <NotificationScroller notifications={notifications} />
@@ -49,6 +50,9 @@ export default async function PublicHomePage() {
 
             {/* About Section */}
             <AboutSection data={about} />
+
+            {/* Why Choose NGIT Section */}
+            <WhyChooseSection />
 
             {/* Infrastructure Section */}
             <InfrastructureSection />

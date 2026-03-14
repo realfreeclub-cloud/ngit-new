@@ -1,163 +1,139 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getCourses } from "@/services/CourseService";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import {
-    ArrowRight,
-    Search,
-    Filter,
-    BookOpen,
-    Clock,
-    Users,
-    Trophy
-} from "lucide-react";
+import { ArrowRight, Monitor, GraduationCap, Keyboard, Ribbon, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
+const courseCategories = [
+    {
+        title: "Computer Courses",
+        icon: <Monitor className="w-10 h-10 text-blue-500" />,
+        description: "Professional IT and computer application programs.",
+        courses: ["CCC", "O Level", "DCA", "ADCA", "DOAP", "PGDCA", "Tally with GST"],
+        color: "bg-blue-50",
+        borderColor: "border-blue-100"
+    },
+    {
+        title: "University Courses",
+        icon: <GraduationCap className="w-10 h-10 text-purple-500" />,
+        description: "Degree programs to build your academic foundation.",
+        courses: ["BCA", "BBA", "BA", "B.Com", "MA", "MBA"],
+        color: "bg-purple-50",
+        borderColor: "border-purple-100"
+    },
+    {
+        title: "Skill Courses",
+        icon: <Keyboard className="w-10 h-10 text-orange-500" />,
+        description: "Practical skills for immediate employment opportunities.",
+        courses: ["Hindi Typing", "English Typing", "Shorthand (Hindi & English)", "Spoken English"],
+        color: "bg-orange-50",
+        borderColor: "border-orange-100"
+    },
+    {
+        title: "Special Programs",
+        icon: <Ribbon className="w-10 h-10 text-emerald-500" />,
+        description: "Specialized training and government exam preparation.",
+        courses: ["Yoga Teacher Diploma", "Government Exam Preparation", "Online Test Series"],
+        color: "bg-emerald-50",
+        borderColor: "border-emerald-100"
+    }
+];
+
 export default function PublicCoursesPage() {
-    const [courses, setCourses] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        async function load() {
-            // For demo, if empty, show some static ones
-            const data = await getCourses();
-            setCourses(data.length > 0 ? data : [
-                {
-                    _id: "1",
-                    title: "IIT-JEE Foundation 2026",
-                    description: "A comprehensive program designed to build strong foundations in physics, chemistry and mathematics for future IIT aspirants.",
-                    price: 19999,
-                    category: "Academic",
-                    thumbnail: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=2070",
-                    stats: { students: "1.2k", hours: "350+", tests: "45" }
-                },
-                {
-                    _id: "2",
-                    title: "NEET Medical Batch",
-                    description: "Intensive biology and chemistry training with regular doubt-clearing sessions and mock medical entrance exams.",
-                    price: 18500,
-                    category: "Medical",
-                    thumbnail: "https://images.unsplash.com/photo-1576091160550-217359f4ecf8?q=80&w=2070",
-                    stats: { students: "850", hours: "400+", tests: "50" }
-                },
-                {
-                    _id: "3",
-                    title: "Advanced Coding & DSA",
-                    description: "Master data structures and algorithms with real-world problems and professional mentor support.",
-                    price: 9999,
-                    category: "Technical",
-                    thumbnail: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=2070",
-                    stats: { students: "2.1k", hours: "200+", tests: "30" }
-                }
-            ]);
-            setLoading(false);
-        }
-        load();
-    }, []);
-
     return (
-        <div className="pb-32 bg-slate-50/50">
-            {/* Hero / Header */}
-            <section className="bg-slate-900 text-white py-24 mb-16 relative overflow-hidden">
-                <div className="absolute inset-0 bg-primary/20 blur-[120px] rounded-full -top-1/2 -left-1/4" />
-                <div className="container mx-auto px-4 relative z-10">
-                    <div className="max-w-3xl space-y-6">
-                        <span className="text-primary font-black uppercase tracking-widest text-sm bg-primary/10 px-4 py-2 rounded-full border border-primary/20">
-                            Academic excellence
-                        </span>
-                        <h1 className="text-6xl font-black leading-tight">Elite Programs for <span className="text-primary">Genius</span> Minds</h1>
-                        <p className="text-xl text-slate-400 leading-relaxed">
-                            Choose from our meticulously crafted curriculum designed to challenge, inspire, and prepare you for the world's most competitive exams.
-                        </p>
-                    </div>
+        <div className="min-h-screen bg-slate-50 pt-24 pb-20">
+            {/* Header / Hero */}
+            <section className="relative overflow-hidden mb-16 px-4">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-slate-900 to-purple-900 rounded-3xl mx-4 lg:mx-10" />
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=2070')] bg-cover opacity-10 mix-blend-overlay rounded-3xl mx-4 lg:mx-10" />
+                
+                <div className="relative z-10 container mx-auto px-4 py-24 text-center">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-blue-200 font-semibold text-sm uppercase tracking-wider mb-6 backdrop-blur-md"
+                    >
+                        Our Programs
+                    </motion.div>
+                    <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-tight max-w-4xl mx-auto"
+                    >
+                        Explore <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">50+ Courses</span> in Hindi & English
+                    </motion.h1>
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed"
+                    >
+                        Whether you are looking for computer training, university degrees, or government exam preparation, NGIT has a course designed for your success.
+                    </motion.p>
                 </div>
             </section>
 
-            <div className="container mx-auto px-4 -mt-24 relative z-20">
-                {/* Search & Filter Bar */}
-                <div className="bg-white p-6 rounded-[2.5rem] shadow-xl border border-slate-100 flex flex-col md:flex-row gap-6 mb-16">
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input placeholder="Search for your dream program..." className="w-full h-16 rounded-[1.5rem] bg-slate-50 border-none pl-16 pr-8 font-medium outline-none focus:ring-2 focus:ring-primary/20" />
-                    </div>
-                    <div className="flex gap-4">
-                        <Button variant="outline" size="lg" className="h-16 rounded-[1.5rem] px-8 border-slate-100 bg-white gap-2 font-bold font-primary">
-                            <Filter className="w-5 h-5" /> Category
-                        </Button>
-                        <Button size="lg" className="h-16 rounded-[1.5rem] px-12 font-bold shadow-lg shadow-primary/20">Search Courses</Button>
-                    </div>
-                </div>
-
-                {/* Course Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-                    {courses.map((course) => (
-                        <div key={course._id} className="bg-white rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden group">
-                            <div className="aspect-[4/3] relative overflow-hidden">
-                                <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                <div className="absolute top-6 left-6">
-                                    <span className="bg-primary text-white font-black text-[10px] px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
-                                        {course.category}
-                                    </span>
-                                </div>
+            {/* Courses Categories Grid */}
+            <div className="container mx-auto px-4 lg:px-10">
+                <div className="grid md:grid-cols-2 gap-8 mb-20">
+                    {courseCategories.map((category, idx) => (
+                        <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: idx * 0.1 }}
+                            className={`p-8 rounded-[2rem] bg-white border ${category.borderColor} shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300`}
+                        >
+                            <div className={`w-20 h-20 rounded-2xl ${category.color} flex items-center justify-center mb-6`}>
+                                {category.icon}
                             </div>
-
-                            <div className="p-10 space-y-6">
-                                <h3 className="text-2xl font-black text-slate-900 group-hover:text-primary transition-colors">{course.title}</h3>
-                                <p className="text-slate-500 leading-relaxed line-clamp-2">
-                                    {course.description}
-                                </p>
-
-                                <div className="flex items-center justify-between border-y border-slate-50 py-6">
-                                    <div className="flex flex-col items-center">
-                                        <Users className="w-5 h-5 text-primary mb-1" />
-                                        <p className="text-xs font-black text-slate-900">{course.stats?.students || '450'}+</p>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Students</p>
+                            <h3 className="text-3xl font-bold text-slate-900 mb-4">{category.title}</h3>
+                            <p className="text-slate-600 mb-8 text-lg">{category.description}</p>
+                            
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                {category.courses.map((course, cIdx) => (
+                                    <div key={cIdx} className="flex items-start gap-3">
+                                        <CheckCircle2 className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                                        <span className="font-medium text-slate-700">{course}</span>
                                     </div>
-                                    <div className="w-px h-8 bg-slate-100" />
-                                    <div className="flex flex-col items-center">
-                                        <Clock className="w-5 h-5 text-indigo-500 mb-1" />
-                                        <p className="text-xs font-black text-slate-900">{course.stats?.hours || '300'} hrs</p>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Content</p>
-                                    </div>
-                                    <div className="w-px h-8 bg-slate-100" />
-                                    <div className="flex flex-col items-center">
-                                        <Trophy className="w-5 h-5 text-emerald-500 mb-1" />
-                                        <p className="text-xs font-black text-slate-900">{course.stats?.tests || '25'}</p>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Mock Tests</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between pt-4">
-                                    <div className="space-y-0.5">
-                                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Enrollment Fee</p>
-                                        <p className="text-3xl font-black text-slate-900 tracking-tighter">₹{course.price.toLocaleString()}</p>
-                                    </div>
-                                    <Link href={`/courses/${course._id}`}>
-                                        <Button size="lg" className="rounded-2xl px-8 h-12 shadow-lg shadow-primary/10">
-                                            View Syllabus <ArrowRight className="ml-2 w-4 h-4" />
-                                        </Button>
-                                    </Link>
-                                </div>
+                                ))}
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
-            </div>
 
-            {/* FAQ Snippet for Courses */}
-            <div className="container mx-auto px-4 mt-32">
-                <div className="bg-slate-950 rounded-[4rem] p-16 text-center text-white space-y-8 relative overflow-hidden">
-                    <div className="absolute bottom-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
-                    <h2 className="text-4xl font-black">Confused about which program to pick?</h2>
-                    <p className="text-slate-400 max-w-2xl mx-auto text-lg">
-                        Our educational consultants are ready to help you map out your academic journey. Get a free counseling session today.
-                    </p>
-                    <div className="flex gap-4 justify-center">
-                        <Button size="lg" className="rounded-full px-12 h-14 font-bold">Request Counseling</Button>
-                        <Button variant="outline" size="lg" className="rounded-full px-12 h-14 font-bold border-white/20 text-white">Call Us Now</Button>
+                {/* Admission CTA */}
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="bg-blue-600 rounded-[3rem] p-12 lg:p-16 text-center text-white relative overflow-hidden shadow-2xl shadow-blue-900/20"
+                >
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl" />
+                    
+                    <div className="relative z-10 max-w-3xl mx-auto space-y-8">
+                        <h2 className="text-4xl md:text-5xl font-extrabold">Ready to start your journey?</h2>
+                        <p className="text-xl text-blue-100 font-medium">
+                            Join NGIT today and take the first step towards a successful career. Admissions are currently open!
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                            <Link href="/register">
+                                <Button size="lg" className="w-full sm:w-auto h-14 px-10 text-lg font-bold bg-white text-blue-600 hover:bg-slate-100 rounded-full shadow-lg hover:scale-105 transition-transform">
+                                    Apply for Admission
+                                </Button>
+                            </Link>
+                            <Link href="/contact">
+                                <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-10 text-lg font-bold border-white/30 text-white hover:bg-white/10 rounded-full hover:scale-105 transition-transform">
+                                    Contact Counselor <ArrowRight className="w-5 h-5 ml-2" />
+                                </Button>
+                            </Link>
+                        </div>
                     </div>
-                </div>
+                </motion.div>
             </div>
         </div>
     );

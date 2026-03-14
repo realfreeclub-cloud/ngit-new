@@ -1,120 +1,95 @@
-import { Button } from "@/components/ui/button";
-import {
-    Linkedin,
-    Mail,
-    GraduationCap,
-    ExternalLink,
-    Search,
-    UserCircle2
-} from "lucide-react";
-import { getFaculty } from "@/app/actions/faculty";
+"use client";
 
-export default async function FacultyPage() {
-    const res = await getFaculty();
-    const faculty = res.success ? res.faculty : [];
+import { motion } from "framer-motion";
+import { Quote, Users, Laptop, TrendingUp, Keyboard } from "lucide-react";
+import Image from "next/image";
 
-    if (faculty.length === 0) {
-        return (
-            <div className="pb-32">
-                <section className="bg-slate-50 py-24 mb-20 border-b">
-                    <div className="container mx-auto px-4">
-                        <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
-                            <div className="max-w-2xl space-y-4 text-center lg:text-left">
-                                <h1 className="text-5xl font-black text-slate-900 leading-tight">Meet Our <span className="text-primary">Exceptional</span> Faculty</h1>
-                                <p className="text-slate-600 text-lg leading-relaxed">
-                                    Learn from the best minds in the industry. Our faculty consists of IITians, researchers, and professional experts dedicated to your growth.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                <div className="container mx-auto px-4 text-center mt-20">
-                    <div className="p-16 border-2 border-dashed border-slate-200 rounded-[3rem] text-slate-400">
-                        <UserCircle2 className="w-16 h-16 mx-auto mb-6 text-slate-300" />
-                        <h2 className="text-2xl font-bold text-slate-600 mb-2">No profiles available</h2>
-                        <p>Faculty profiles are currently being updated.</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
+export default function PublicFacultyPage() {
     return (
-        <div className="pb-32">
-            {/* Header */}
-            <section className="bg-slate-50 py-24 mb-20 border-b">
-                <div className="container mx-auto px-4">
-                    <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
-                        <div className="max-w-2xl space-y-4 text-center lg:text-left">
-                            <h1 className="text-5xl font-black text-slate-900 leading-tight">Meet Our <span className="text-primary">Exceptional</span> Faculty</h1>
-                            <p className="text-slate-600 text-lg leading-relaxed">
-                                Learn from the best minds in the industry. Our faculty consists of IITians, researchers, and professional experts dedicated to your growth.
+        <div className="min-h-screen bg-slate-50 pt-32 pb-24">
+            <div className="container mx-auto px-4 lg:px-10">
+                {/* Director Message Section */}
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 mb-16 text-center">
+                    Leadership & Faculty
+                </h1>
+
+                <div className="bg-white rounded-[3rem] p-8 md:p-16 shadow-2xl border border-slate-100 mb-20 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-bl-full opacity-50 blur-3xl" />
+                    <div className="grid lg:grid-cols-2 gap-12 items-center relative z-10">
+                        <motion.div
+                            initial={{ opacity: 0, x: -50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.6 }}
+                            className="flex justify-center"
+                        >
+                            <div className="relative w-72 h-72 md:w-96 md:h-96">
+                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-blue-900 via-transparent to-transparent z-10 rounded-[3rem]" />
+                                <div className="absolute inset-0 bg-blue-100 rounded-[3rem] transform -rotate-6 scale-105" />
+                                <Image
+                                    src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1974" // Using an elegant placeholder instead of a missing image
+                                    alt="Md. Javed Siddiqui - Director"
+                                    fill
+                                    className="object-cover rounded-[3rem] shadow-xl z-0"
+                                />
+                            </div>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.6, delay: 0.2 }}
+                            className="space-y-6"
+                        >
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-700 font-semibold text-sm uppercase tracking-wider mb-2">
+                                Message from Director
+                            </div>
+                            <div>
+                                <h2 className="text-4xl font-extrabold text-slate-900 mb-2">Md. Javed Siddiqui</h2>
+                                <h3 className="text-xl text-slate-500 font-medium tracking-wide">Director, National Genius Institute of Technology</h3>
+                            </div>
+
+                            <div className="relative mt-10">
+                                <Quote className="w-20 h-20 text-blue-100 absolute -top-8 -left-6 -z-10" />
+                                <blockquote className="text-2xl text-slate-800 font-medium leading-relaxed italic z-10 relative">
+                                    "हर बड़ा सपना छोटे कदमों से शुरू होता है। NGIT में हम सिर्फ कंप्यूटर नहीं सिखाते बल्कि छात्रों को आत्मविश्वास और सफलता की दिशा भी देते हैं।"
+                                </blockquote>
+                            </div>
+                        </motion.div>
+                    </div>
+                </div>
+
+                {/* Faculty Overview */}
+                <div className="text-center max-w-3xl mx-auto mb-16">
+                    <h2 className="text-4xl font-extrabold text-slate-900 mb-6">Our Exceptional Team</h2>
+                    <p className="text-xl text-slate-600 leading-relaxed">
+                        Learn from industry experts, professional trainers, and seasoned government exam mentors dedicated to your success.
+                    </p>
+                </div>
+
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {[
+                        { icon: <Users className="w-10 h-10 text-blue-600" />, count: "16+", title: "Teaching Faculty", color: "bg-blue-50" },
+                        { icon: <Laptop className="w-10 h-10 text-purple-600" />, title: "Professional Trainers", color: "bg-purple-50" },
+                        { icon: <TrendingUp className="w-10 h-10 text-emerald-600" />, title: "Govt Exam Mentors", color: "bg-emerald-50" },
+                        { icon: <Keyboard className="w-10 h-10 text-orange-600" />, title: "Computer & Typing Instructors", color: "bg-orange-50" }
+                    ].map((item, idx) => (
+                        <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: idx * 0.1 }}
+                            className={`p-10 rounded-[2rem] ${item.color} flex flex-col items-center justify-center text-center shadow-lg hover:-translate-y-2 transition-transform duration-300`}
+                        >
+                            <div className="bg-white p-4 rounded-full shadow-sm mb-6">
+                                {item.icon}
+                            </div>
+                            {item.count && <h4 className="text-5xl font-extrabold text-slate-900 mb-3">{item.count}</h4>}
+                            <p className="text-xl font-bold text-slate-700 leading-tight">
+                                {item.title}
                             </p>
-                        </div>
-                        <div className="relative w-full max-w-sm">
-                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                            <input
-                                placeholder="Search faculty by name or subject..."
-                                className="w-full h-16 rounded-full border-2 border-slate-200 bg-white pl-16 pr-8 font-medium focus:border-primary outline-none transition-all shadow-sm"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <div className="container mx-auto px-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-                    {faculty.map((member: any) => (
-                        <div key={member._id} className="group bg-white rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all p-8 flex flex-col items-center text-center">
-                            <div className="w-48 h-48 rounded-[2.5rem] overflow-hidden mb-8 ring-8 ring-slate-50 group-hover:ring-primary/10 transition-all flex items-center justify-center bg-slate-100">
-                                {member.image ? (
-                                    <img src={member.image} alt={member.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                ) : (
-                                    <UserCircle2 className="w-20 h-20 text-slate-300" />
-                                )}
-                            </div>
-
-                            <div className="space-y-4 flex-1">
-                                <div>
-                                    <h3 className="text-2xl font-black text-slate-900">{member.name}</h3>
-                                    <p className="text-primary font-bold text-sm uppercase tracking-widest mt-1">{member.position}</p>
-                                </div>
-
-                                {member.bio && (
-                                    <p className="text-slate-500 text-sm leading-relaxed px-4">
-                                        {member.bio}
-                                    </p>
-                                )}
-
-                                <div className="pt-4 border-t border-slate-50 space-y-3">
-                                    {member.qualification && (
-                                        <div className="flex items-center justify-center gap-2 text-slate-700 font-bold text-xs uppercase italic tracking-tighter">
-                                            <GraduationCap className="w-4 h-4 text-primary" /> {member.qualification}
-                                        </div>
-                                    )}
-                                    <div className="flex items-center justify-center gap-4 pt-2">
-                                        {member.email && (
-                                            <Button variant="ghost" size="icon" className="rounded-full text-slate-400 hover:text-primary" asChild>
-                                                <a href={`mailto:${member.email}`}>
-                                                    <Mail className="w-5 h-5" />
-                                                </a>
-                                            </Button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        </motion.div>
                     ))}
-                </div>
-
-                <div className="mt-24 text-center">
-                    <div className="bg-primary/5 p-12 rounded-[3.5rem] border border-primary/10 max-w-4xl mx-auto space-y-6">
-                        <h2 className="text-3xl font-black text-slate-900">Want to join our elite faculty?</h2>
-                        <p className="text-slate-600 max-w-2xl mx-auto font-medium">
-                            We are always looking for passionate educators who want to shape the genius minds of tomorrow. Send us your resume and we will get back to you.
-                        </p>
-                        <Button className="h-14 px-12 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20">Apply as Faculty</Button>
-                    </div>
                 </div>
             </div>
         </div>

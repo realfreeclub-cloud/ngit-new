@@ -1,18 +1,19 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle } from "lucide-react";
+import { ArrowRight, CheckCircle, Target, Award, Rocket, BookOpen } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const defaultAbout = {
-    title: "Building Future Leaders Since 2009",
+    title: "National Genius Institute of Technology",
     subtitle: "About NGIT",
-    description: "National Genius Institute of Technology (NGIT) has been at the forefront of competitive exam preparation for over 15 years. We have consistently produced top rankers in IIT-JEE, NEET, and other prestigious entrance examinations.\n\nOur success is built on a foundation of expert faculty, comprehensive study materials, regular assessments, and personalized attention to each student's growth.",
+    description: "National Genius Institute of Technology (NGIT) is a professional training institute located in Prayagraj. The institute provides a wide range of computer courses, diploma programs, government exam preparation, and typing training in both Hindi and English languages.\n\nNGIT aims to empower students with digital skills, practical knowledge, and career guidance so they can succeed in competitive exams and professional careers.",
     highlights: [
-        "Established in 2009 with a vision for excellence",
-        "Expert faculty from IITs and premier institutions",
-        "Proven track record of top ranks every year",
-        "Modern infrastructure with AC classrooms",
-        "Comprehensive study material and test series",
-        "Personal mentorship and doubt-clearing sessions",
+        "Professional IT training and computer courses",
+        "Government exam preparation support",
+        "Expert typing training in Hindi & English",
+        "Career-focused diploma programs",
+        "Practical and hands-on learning approach",
+        "Dedicated faculty and modern infrastructure",
     ]
 };
 
@@ -22,65 +23,83 @@ interface AboutSectionProps {
 
 export default function AboutSection({ data }: AboutSectionProps) {
     const about = data || defaultAbout;
-    const descriptionParas = about.description.split('\n\n');
+    const descriptionParas = typeof about.description === 'string' ? about.description.split('\n\n') : defaultAbout.description.split('\n\n');
 
     return (
-        <section id="about" className="section-spacing bg-white">
-            <div className="container-custom">
-                <div className="grid lg:grid-cols-2 gap-12 items-center">
-                    {/* Image Grid */}
-                    <div className="grid grid-cols-2 gap-4 animate-fade-in">
-                        <div className="space-y-4">
-                            <div className="aspect-[4/5] bg-gradient-to-br from-primary to-primary-dark rounded-2xl overflow-hidden flex items-center justify-center">
-                                <span className="text-white font-bold text-2xl">NGIT Campus</span>
-                            </div>
-                            <div className="aspect-video bg-gradient-to-br from-secondary to-secondary-dark rounded-2xl overflow-hidden flex items-center justify-center">
-                                <span className="text-white font-bold text-xl">Students</span>
-                            </div>
-                        </div>
-                        <div className="space-y-4 pt-8">
-                            <div className="aspect-video bg-gradient-to-br from-accent to-accent-dark rounded-2xl overflow-hidden flex items-center justify-center">
-                                <span className="text-white font-bold text-xl">Classroom</span>
-                            </div>
-                            <div className="aspect-[4/5] bg-gradient-to-br from-info to-primary rounded-2xl overflow-hidden flex items-center justify-center">
-                                <span className="text-white font-bold text-2xl">Faculty</span>
+        <section id="about" className="py-24 bg-slate-50 relative overflow-hidden">
+            {/* Background elements */}
+            <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-blue-100 rounded-bl-full opacity-50 blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-purple-100 rounded-tr-full opacity-50 blur-3xl" />
+
+            <div className="container relative z-10 px-4 mx-auto">
+                <div className="grid lg:grid-cols-2 gap-16 items-center">
+                    
+                    {/* Visual Content */}
+                    <div className="relative group">
+                        <div className="absolute inset-0 bg-blue-600 rounded-3xl translate-x-4 translate-y-4 opacity-20 transition-transform group-hover:translate-x-6 group-hover:translate-y-6" />
+                        <div className="relative bg-white rounded-3xl p-8 shadow-2xl border border-slate-100 overflow-hidden">
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-6">
+                                    <div className="p-6 bg-blue-50 rounded-2xl flex flex-col items-center justify-center text-center">
+                                        <BookOpen className="w-10 h-10 text-blue-600 mb-3" />
+                                        <span className="font-bold text-slate-800">50+ Courses</span>
+                                    </div>
+                                    <div className="p-6 bg-purple-50 rounded-2xl flex flex-col items-center justify-center text-center">
+                                        <Award className="w-10 h-10 text-purple-600 mb-3" />
+                                        <span className="font-bold text-slate-800">Certified Training</span>
+                                    </div>
+                                </div>
+                                <div className="space-y-6 pt-10">
+                                    <div className="p-6 bg-emerald-50 rounded-2xl flex flex-col items-center justify-center text-center">
+                                        <Target className="w-10 h-10 text-emerald-600 mb-3" />
+                                        <span className="font-bold text-slate-800">Govt. Exams Prep</span>
+                                    </div>
+                                    <div className="p-6 bg-orange-50 rounded-2xl flex flex-col items-center justify-center text-center">
+                                        <Rocket className="w-10 h-10 text-orange-600 mb-3" />
+                                        <span className="font-bold text-slate-800">Career Guidance</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Content */}
-                    <div className="animate-slide-up">
-                        <p className="text-primary font-bold text-sm uppercase tracking-widest mb-4 inline-block px-4 py-2 bg-primary/5 rounded-lg">
-                            {about.subtitle}
-                        </p>
-                        <h2 className="heading-2 text-gray-900 mb-6">
-                            {about.title}
+                    {/* Text Content */}
+                    <div>
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm uppercase tracking-wider mb-6">
+                            {about.subtitle || defaultAbout.subtitle}
+                        </div>
+                        
+                        <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
+                            {about.title || defaultAbout.title}
                         </h2>
 
-                        {descriptionParas.map((para: string, idx: number) => (
-                            <p key={idx} className="text-lg text-gray-600 mb-6 leading-relaxed">
-                                {para}
-                            </p>
-                        ))}
+                        <div className="space-y-6 mb-8">
+                            {descriptionParas.map((para: string, idx: number) => (
+                                <p key={idx} className="text-lg text-slate-600 leading-relaxed">
+                                    {para}
+                                </p>
+                            ))}
+                        </div>
 
-                        <div className="space-y-4 mb-10">
-                            {about.highlights.map((highlight: string, index: number) => (
-                                <div key={index} className="flex items-start gap-4 group">
-                                    <div className="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-secondary/20 transition-colors">
-                                        <CheckCircle className="w-4 h-4 text-secondary" />
+                        <div className="grid sm:grid-cols-2 gap-4 mb-10">
+                            {(about.highlights || defaultAbout.highlights).map((highlight: string, index: number) => (
+                                <div key={index} className="flex items-start gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">
+                                        <CheckCircle className="w-4 h-4 text-blue-600" />
                                     </div>
-                                    <span className="text-gray-700 font-medium text-base leading-relaxed">{highlight}</span>
+                                    <span className="text-slate-700 font-medium">{highlight}</span>
                                 </div>
                             ))}
                         </div>
 
                         <Link href="/about">
-                            <Button className="btn-primary group text-base">
+                            <Button className="h-14 px-8 text-lg font-bold bg-slate-900 hover:bg-blue-600 text-white shadow-xl transition-all hover:scale-105 group">
                                 Read More About Us
                                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                             </Button>
                         </Link>
                     </div>
+
                 </div>
             </div>
         </section>

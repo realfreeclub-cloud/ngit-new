@@ -1,139 +1,173 @@
-import { getCMSContent } from "@/services/CMSService";
-import { Mail, Phone, MapPin, Send, Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
+"use client";
+
+import { motion } from "framer-motion";
+import { MapPin, Phone, Mail, Send, Clock, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 
-export default async function ContactPage() {
-    const contactInfo = await getCMSContent("CONTACT_INFO") || {
-        email: "contact@ngit.edu",
-        phone: "+91 98765 43210",
-        address: "Neil Gogte Institute of Technology, Kachavanisingaram, Hyderabad"
-    };
-
-    const socialLinks = await getCMSContent("SOCIAL_LINKS") || {
-        facebook: "#",
-        instagram: "#",
-        youtube: "#",
-        linkedin: "#"
-    };
-
+export default function PublicContactPage() {
     return (
-        <div className="bg-slate-50 min-h-screen pb-20">
-            {/* Header */}
-            <div className="bg-slate-900 text-white py-20 px-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-3xl -mr-20 -mt-20" />
-                <div className="max-w-7xl mx-auto relative z-10 text-center">
-                    <h1 className="text-5xl font-black tracking-tight mb-4">Get in Touch</h1>
-                    <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-                        Have questions about admissions, campus life, or collaborations? reach out to our team.
-                    </p>
+        <div className="min-h-screen bg-slate-50 pt-32 pb-24">
+            <div className="container mx-auto px-4 lg:px-10">
+                {/* Header Section */}
+                <div className="text-center max-w-4xl mx-auto mb-16 space-y-6">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-blue-100 text-blue-700 font-bold uppercase tracking-widest text-sm shadow-sm"
+                    >
+                        <Globe className="w-5 h-5" /> Get in touch
+                    </motion.div>
+                    
+                    <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-5xl md:text-6xl font-black text-slate-900 leading-tight"
+                    >
+                        Contact Admissions
+                    </motion.h1>
+
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-xl md:text-2xl text-slate-600 leading-relaxed max-w-3xl mx-auto"
+                    >
+                        Have a question about our courses? Want to enroll? Feel free to reach out to us and our support team will get back to you immediately.
+                    </motion.p>
                 </div>
-            </div>
 
-            <div className="max-w-7xl mx-auto px-6 -mt-10 relative z-20">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="grid lg:grid-cols-2 gap-12 items-start max-w-6xl mx-auto">
+                    {/* Contact Information Cards */}
+                    <div className="space-y-6">
+                        <motion.div
+                            initial={{ opacity: 0, x: -50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4 }}
+                            className="bg-white p-8 rounded-3xl shadow-lg border border-slate-100 flex items-start gap-6 hover:shadow-xl transition-shadow"
+                        >
+                            <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0">
+                                <MapPin className="w-8 h-8 text-blue-600" />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold text-slate-900 mb-2">Visit Campus</h3>
+                                <p className="text-slate-600 text-lg leading-relaxed">
+                                    First Floor, Sainik Market<br />
+                                    Rasulabad Ghat Road<br />
+                                    Near Mahila Polytechnic<br />
+                                    Teliarganj, Prayagraj<br />
+                                    Uttar Pradesh – 211004
+                                </p>
+                            </div>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, x: -50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.1 }}
+                            className="bg-white p-8 rounded-3xl shadow-lg border border-slate-100 flex items-start gap-6 hover:shadow-xl transition-shadow"
+                        >
+                            <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center shrink-0">
+                                <Phone className="w-8 h-8 text-emerald-600" />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold text-slate-900 mb-2">Call Us</h3>
+                                <p className="text-slate-600 text-lg leading-relaxed mb-1">Support & Admissions:</p>
+                                <a href="tel:+918840341525" className="text-xl font-bold text-emerald-600 hover:text-emerald-700 transition-colors">
+                                    +91 8840341525
+                                </a>
+                            </div>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, x: -50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.2 }}
+                            className="bg-white p-8 rounded-3xl shadow-lg border border-slate-100 flex items-start gap-6 hover:shadow-xl transition-shadow"
+                        >
+                            <div className="w-16 h-16 rounded-2xl bg-purple-50 flex items-center justify-center shrink-0">
+                                <Mail className="w-8 h-8 text-purple-600" />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold text-slate-900 mb-2">Email Us</h3>
+                                <p className="text-slate-600 text-lg leading-relaxed mb-1">General Inquiries:</p>
+                                <a href="mailto:contact@ngit.org.in" className="text-xl font-bold text-purple-600 hover:text-purple-700 transition-colors">
+                                    contact@ngit.org.in
+                                </a>
+                            </div>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, x: -50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.3 }}
+                            className="bg-white p-8 rounded-3xl shadow-lg border border-slate-100 flex items-start gap-6 hover:shadow-xl transition-shadow"
+                        >
+                            <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center shrink-0">
+                                <Clock className="w-8 h-8 text-orange-600" />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold text-slate-900 mb-2">Office Hours</h3>
+                                <p className="text-slate-600 text-lg leading-relaxed">
+                                    Monday - Saturday<br />
+                                    08:00 AM - 08:00 PM<br />
+                                    (Closed on Sundays & Public Holidays)
+                                </p>
+                            </div>
+                        </motion.div>
+                    </div>
+
                     {/* Contact Form */}
-                    <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-slate-200">
-                        <h2 className="text-2xl font-bold text-slate-900 mb-6">Send us a Message</h2>
-                        <form className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Your Name</label>
-                                    <Input placeholder="John Doe" className="h-12 border-slate-200 focus:border-primary font-medium" />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Email Address</label>
-                                    <Input placeholder="john@example.com" className="h-12 border-slate-200 focus:border-primary font-medium" />
-                                </div>
-                            </div>
+                    <motion.div
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className="bg-white p-10 lg:p-12 rounded-[3.5rem] shadow-2xl border border-slate-100 relative overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/50 rounded-bl-full pointer-events-none -z-10" />
+                        
+                        <h2 className="text-3xl font-extrabold text-slate-900 mb-8 border-b border-slate-100 pb-4">
+                            Send us a Message
+                        </h2>
 
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Subject</label>
-                                <Input placeholder="Admissions Inquiry" className="h-12 border-slate-200 focus:border-primary font-medium" />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Message</label>
-                                <Textarea
-                                    placeholder="How can we help you today?"
-                                    className="min-h-[150px] resize-none border-slate-200 focus:border-primary text-base"
+                        <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-2">Full Name</label>
+                                <input
+                                    type="text"
+                                    placeholder="Enter your name"
+                                    className="w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl px-6 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
                                 />
                             </div>
-
-                            <Button size="lg" className="w-full md:w-auto px-10 rounded-xl font-bold gap-2 shadow-lg shadow-primary/20">
-                                Send Message <Send className="w-4 h-4" />
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-2">Email Address</label>
+                                <input
+                                    type="email"
+                                    placeholder="Enter your email"
+                                    className="w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl px-6 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-2">Phone Number</label>
+                                <input
+                                    type="tel"
+                                    placeholder="Enter your mobile number"
+                                    className="w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl px-6 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-2">Your Message</label>
+                                <textarea
+                                    placeholder="How can we help you?"
+                                    rows={5}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none resize-none"
+                                ></textarea>
+                            </div>
+                            <Button className="w-full h-16 text-lg font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-xl shadow-blue-500/20 hover:scale-[1.02] transition-transform">
+                                Send Message <Send className="w-5 h-5 ml-2" />
                             </Button>
                         </form>
-                    </div>
-
-                    {/* Contact Details Sidebar */}
-                    <div className="space-y-8">
-                        {/* Info Card */}
-                        <div className="bg-slate-900 text-white rounded-[2.5rem] p-10 relative overflow-hidden">
-                            <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -ml-10 -mb-10" />
-
-                            <div className="space-y-8 relative z-10">
-                                <div>
-                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                        <Mail className="w-5 h-5 text-primary" /> Email Us
-                                    </h3>
-                                    <p className="text-slate-300 font-medium">{contactInfo.email}</p>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                        <Phone className="w-5 h-5 text-primary" /> Call Us
-                                    </h3>
-                                    <p className="text-slate-300 font-medium">{contactInfo.phone}</p>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                        <MapPin className="w-5 h-5 text-primary" /> Visit Campus
-                                    </h3>
-                                    <p className="text-slate-300 font-medium leading-relaxed">
-                                        {contactInfo.address}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="mt-12 pt-8 border-t border-white/10">
-                                <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Connect With Us</h4>
-                                <div className="flex gap-4">
-                                    {socialLinks.facebook && (
-                                        <a href={socialLinks.facebook} target="_blank" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary hover:text-white transition-all text-slate-300">
-                                            <Facebook className="w-5 h-5" />
-                                        </a>
-                                    )}
-                                    {socialLinks.instagram && (
-                                        <a href={socialLinks.instagram} target="_blank" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-pink-600 hover:text-white transition-all text-slate-300">
-                                            <Instagram className="w-5 h-5" />
-                                        </a>
-                                    )}
-                                    {socialLinks.youtube && (
-                                        <a href={socialLinks.youtube} target="_blank" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all text-slate-300">
-                                            <Youtube className="w-5 h-5" />
-                                        </a>
-                                    )}
-                                    {socialLinks.linkedin && (
-                                        <a href={socialLinks.linkedin} target="_blank" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all text-slate-300">
-                                            <Linkedin className="w-5 h-5" />
-                                        </a>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Map or External Link */}
-                        <div className="bg-primary/5 rounded-[2.5rem] p-8 border border-primary/10">
-                            <h3 className="font-bold text-slate-900 mb-2">Need Directions?</h3>
-                            <p className="text-sm text-slate-500 mb-6">Find us on Google Maps for the easiest route to our campus.</p>
-                            <Button variant="outline" className="w-full rounded-xl font-bold bg-white hover:bg-slate-50">
-                                Open Google Maps
-                            </Button>
-                        </div>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
         </div>
