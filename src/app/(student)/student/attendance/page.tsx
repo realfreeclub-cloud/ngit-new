@@ -37,6 +37,7 @@ export default function StudentAttendancePage() {
     const [locError, setLocError] = useState("");
     const [scannerReady, setScannerReady] = useState(false);
     const [cameraPermission, setCameraPermission] = useState<"unknown" | "granted" | "denied">("unknown");
+    const [submitting, setSubmitting] = useState(false);
 
     const scannerRef = useRef<any>(null);
     const html5QrRef = useRef<any>(null);
@@ -155,7 +156,9 @@ export default function StudentAttendancePage() {
 
     const handleManualSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setSubmitting(true);
         await processCode(manualCode);
+        setSubmitting(false);
     };
 
     const reset = async () => {
@@ -372,10 +375,10 @@ export default function StudentAttendancePage() {
 
                             <Button
                                 type="submit"
-                                disabled={!manualCode.trim() || scanState === "processing"}
+                                disabled={!manualCode.trim() || submitting}
                                 className="w-full h-14 rounded-2xl font-bold text-base shadow-xl shadow-indigo-500/25 gap-3"
                             >
-                                {scanState === "processing" ? (
+                                {submitting ? (
                                     <><Loader2 className="w-5 h-5 animate-spin" /> Verifying...</>
                                 ) : (
                                     <><ShieldCheck className="w-5 h-5" /> Submit Attendance</>

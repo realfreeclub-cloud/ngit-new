@@ -129,13 +129,17 @@ export default function AdvancedCmsPage() {
         }
     };
 
+    const CORE_PAGES = ["home", "about", "contact", "gallery", "results"];
+
     const handleCreatePage = async () => {
         const name = prompt("Enter page name/slug (e.g., services):");
         if (!name) return;
+        const slug = name.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+        if (CORE_PAGES.includes(slug)) return toast.error(`'${slug}' is a reserved page name.`);
         const title = prompt("Enter page display title:", name.charAt(0).toUpperCase() + name.slice(1));
         if (!title) return;
 
-        const res = await createCmsPage({ page_name: name.toLowerCase(), title });
+        const res = await createCmsPage({ page_name: slug, title });
         if (res.success) {
             toast.success("Page created");
             const resPages = await getCmsPages();
@@ -219,12 +223,6 @@ export default function AdvancedCmsPage() {
 
     return (
         <div className="space-y-8 max-w-7xl mx-auto pb-20">
-            <div className="flex items-center justify-between sticky top-0 bg-slate-50/95 backdrop-blur z-20 py-4 border-b border-white/50">
-                <div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Dynamic CMS Builder</h1>
-                    <p className="text-slate-500 font-medium text-sm">Design pages. Add sections. Insert content dynamically.</p>
-                </div>
-            </div>
 
             <div className="grid lg:grid-cols-4 gap-8 items-start">
                 
@@ -236,26 +234,37 @@ export default function AdvancedCmsPage() {
                             <Button size="icon" variant="ghost" onClick={handleCreatePage} className="h-8 w-8 hover:bg-blue-50"><Plus className="w-4 h-4 text-blue-600" /></Button>
                         </div>
                         <div className="space-y-1">
-                            {visiblePages.map(page => (
-                                <div key={page._id} className="group relative">
-                                    <button 
-                                        onClick={() => {
-                                            setActivePageId(page._id);
-                                            loadSections(page._id);
-                                        }}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activePageId === page._id ? "bg-slate-900 text-white shadow-lg" : "text-slate-600 hover:bg-slate-50"}`}
-                                    >
-                                        <Menu className="w-4 h-4 opacity-40" />
-                                        <span className="capitalize flex-1 text-left">{page.page_name}</span>
-                                        {activePageId === page._id && <ChevronRight className="w-4 h-4 text-blue-400" />}
-                                    </button>
-                                    {activePageId === page._id && !["home", "about", "contact"].includes(page.page_name) && (
-                                        <button onClick={() => handleDeletePage(page._id)} className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-opacity">
-                                            <Trash2 className="w-3.5 h-3.5" />
+                            {visiblePages.map(page => {
+                                const isCore = ["home", "about", "contact", "gallery", "results"].includes(page.page_name);
+                                return (
+                                    <div key={page._id} className="group relative flex items-center gap-1">
+                                        <button 
+                                            onClick={() => {
+                                                setActivePageId(page._id);
+                                                loadSections(page._id);
+                                            }}
+                                            className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                                                activePageId === page._id
+                                                    ? "bg-slate-900 text-white shadow-lg"
+                                                    : "text-slate-600 hover:bg-slate-50"
+                                            }`}
+                                        >
+                                            <Menu className="w-4 h-4 opacity-40 shrink-0" />
+                                            <span className="capitalize flex-1 text-left truncate">{page.page_name}</span>
+                                            {activePageId === page._id && <ChevronRight className="w-4 h-4 text-blue-400 shrink-0" />}
                                         </button>
-                                    )}
-                                </div>
-                            ))}
+                                        {!isCore && (
+                                            <button
+                                                onClick={() => handleDeletePage(page._id)}
+                                                title={`Delete '${page.page_name}' page`}
+                                                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-50 hover:text-red-500 text-slate-400 transition-all shrink-0"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 
