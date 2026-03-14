@@ -82,3 +82,28 @@ export async function getStudentResults() {
         return { success: false, error: "Failed to load results" };
     }
 }
+
+export async function getPublicResults() {
+    try {
+        await connectDB();
+        
+        // Fetch top 10 unique quiz attempts with high scores
+        const topResults = await Attempt.find({ status: "EVALUATED" })
+            .sort({ totalScore: -1 })
+            .limit(20)
+            .populate({ path: "studentId", select: "name photoUrl email" })
+            .populate({ path: "quizId", select: "title totalMarks" })
+            .lean();
+
+        // Manual results could be coming from CMS sections (handled in DynamicRenderer)
+        // This function focuses on real database attempts/quizzes
+
+        return { 
+            success: true, 
+            results: JSON.parse(JSON.stringify(topResults)) 
+        };
+    } catch (error: any) {
+        console.error("Get Public Results Error:", error);
+        return { success: false, error: error.message };
+    }
+}

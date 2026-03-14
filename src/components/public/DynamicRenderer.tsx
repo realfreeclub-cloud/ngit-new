@@ -17,9 +17,10 @@ import FacultyGrid from "./FacultyGrid";
 import GalleryGrid from "./GalleryGrid";
 import TestimonialSlider from "./TestimonialSlider";
 import CTASection from "./CTASection";
+import PublicResultsGrid from "./PublicResultsGrid";
 
 // Add some placeholder or custom mapping
-export default function DynamicRenderer({ sections, staticFallback }: { sections: any[], staticFallback?: React.ReactNode }) {
+export default function DynamicRenderer({ sections, staticFallback, extraData }: { sections: any[], staticFallback?: React.ReactNode, extraData?: any }) {
     if (!sections || sections.length === 0) {
         return <>{staticFallback}</>;
     }
@@ -39,11 +40,11 @@ export default function DynamicRenderer({ sections, staticFallback }: { sections
                     case "CourseGrid":
                         return <CourseGrid {...props} />;
                     case "CoursesSection":
-                        return <CoursesSection {...props} />;
+                        return <CoursesSection {...props} courses={extraData?.courses || []} />;
                     case "FacultyGrid":
                         return <FacultyGrid {...props} />;
                     case "FacultySection":
-                        return <FacultySection {...props} />;
+                        return <FacultySection {...props} members={extraData?.faculty || []} />;
                     case "GalleryGrid":
                         return <GalleryGrid {...props} />;
                     case "GallerySection":
@@ -62,6 +63,8 @@ export default function DynamicRenderer({ sections, staticFallback }: { sections
                         return <EventsSection {...props} />;
                     case "InfrastructureSection":
                         return <InfrastructureSection {...props} />;
+                    case "PublicResultsGrid":
+                        return <PublicResultsGrid key={props.key} results={extraData?.publicResults || []} />;
                     case "NotificationScroller": {
                         const notifications = props.blocks?.map((b: any) => ({
                             id: b._id || b.id,

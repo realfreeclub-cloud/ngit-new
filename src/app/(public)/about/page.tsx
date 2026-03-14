@@ -1,4 +1,5 @@
 import { getDynamicPageData } from "@/app/actions/cms";
+import { getFaculty } from "@/app/actions/faculty";
 import DynamicRenderer from "@/components/public/DynamicRenderer";
 import { CheckCircle, Target, Eye, BookOpen, Award, Rocket, MonitorPlay } from "lucide-react";
 import Image from "next/image";
@@ -116,12 +117,21 @@ const staticFallbackContent = (
 );
 
 export default async function AboutPage() {
-    const dynamicData = await getDynamicPageData("about");
+    const [dynamicData, facultyRes] = await Promise.all([
+        getDynamicPageData("about"),
+        getFaculty()
+    ]);
+    
     const cmsSections = dynamicData.success && dynamicData.sections ? dynamicData.sections : [];
+    const facultyMembers = facultyRes.success ? facultyRes.faculty : [];
 
     return (
         <div className="min-h-screen">
-            <DynamicRenderer sections={cmsSections} staticFallback={staticFallbackContent} />
+            <DynamicRenderer 
+                sections={cmsSections} 
+                staticFallback={staticFallbackContent} 
+                extraData={{ faculty: facultyMembers }}
+            />
         </div>
     );
 }

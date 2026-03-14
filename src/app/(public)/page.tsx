@@ -46,6 +46,12 @@ export default async function PublicHomePage() {
         <div className="min-h-screen">
             <DynamicRenderer 
                 sections={cmsSections} 
+                extraData={{
+                    courses: publicCourses,
+                    faculty: facultyMembers,
+                    events: publicEvents,
+                    gallery: galleryImages
+                }}
                 staticFallback={
                     <>
                         {/* Hero Section */}

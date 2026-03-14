@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { getCmsPages, createCmsPage, deleteCmsPage, getCmsSections, createCmsSection, updateCmsSection, deleteCmsSection, getCmsContentBlocks, createCmsContentBlock, updateCmsContentBlock, deleteCmsContentBlock } from "@/app/actions/cms";
 import { ArrowUp, ArrowDown, ExternalLink, Plus, Trash2, Save, Menu, ChevronRight, LayoutTemplate, List } from "lucide-react";
+import Link from "next/link";
 
 export default function AdvancedCmsPage() {
     const [pages, setPages] = useState<any[]>([]);
@@ -16,7 +17,16 @@ export default function AdvancedCmsPage() {
     const [blocks, setBlocks] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const sectionTypes = ["HeroSection", "CourseGrid", "FacultyGrid", "GalleryGrid", "TestimonialSlider", "CTASection", "AboutSection", "WhyChooseSection", "ContactSection"];
+    const sectionTypes = ["HeroSection", "CourseGrid", "FacultyGrid", "GalleryGrid", "TestimonialSlider", "CTASection", "AboutSection", "WhyChooseSection", "ContactSection", "AchievementsSection", "CoursesSection", "FacultySection", "EventsSection", "InfrastructureSection", "PublicResultsGrid", "NotificationScroller", "TrustIndicators"];
+
+    const DATA_DRIVEN_SECTIONS: Record<string, { label: string, link: string }> = {
+        "CoursesSection": { label: "Courses", link: "/admin/courses" },
+        "CourseGrid": { label: "Courses", link: "/admin/courses" },
+        "FacultySection": { label: "Faculty", link: "/admin/faculty" },
+        "FacultyGrid": { label: "Faculty", link: "/admin/faculty" },
+        "EventsSection": { label: "Events", link: "/admin/events" },
+        "PublicResultsGrid": { label: "Exam Results", link: "/admin/quizzes" }
+    };
 
     useEffect(() => {
         loadPages();
@@ -299,80 +309,102 @@ export default function AdvancedCmsPage() {
                             </div>
 
                             <div className="p-6 md:p-8 flex-1 bg-slate-50/50">
-                                <div className="flex items-center justify-between mb-8">
-                                    <h3 className="text-xl font-bold text-slate-900">Content Blocks</h3>
-                                    <Button onClick={handleCreateBlock} className="font-bold shadow-lg shadow-blue-500/20 bg-blue-600 hover:bg-blue-700">
-                                        <Plus className="w-4 h-4 mr-2" /> Add Content Block
-                                    </Button>
-                                </div>
-
-                                <div className="space-y-6">
-                                    {blocks.length === 0 && (
-                                        <div className="text-center py-20 bg-white border border-dashed border-slate-300 rounded-3xl">
-                                            <List className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                                            <p className="text-slate-500 font-medium text-lg">Empty Section.</p>
-                                            <p className="text-slate-400">Add a content block to populate this component with data.</p>
+                                {DATA_DRIVEN_SECTIONS[sections.find(s => s._id === activeSectionId)?.section_type] ? (
+                                    <div className="max-w-md mx-auto py-20 text-center space-y-6">
+                                        <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
+                                            <ExternalLink className="w-10 h-10" />
                                         </div>
-                                    )}
-
-                                    {blocks.map((block, index) => (
-                                        <div key={block._id} className="bg-white border text-sm border-slate-200 rounded-3xl p-6 relative group hover:shadow-lg transition-all">
-                                            <div className="absolute -top-3 -left-3 w-8 h-8 bg-slate-900 text-white flex items-center justify-center font-bold font-mono text-xs rounded-full shadow-lg border-4 border-white">
-                                                {index + 1}
-                                            </div>
-                                            <div className="absolute top-4 right-4 flex gap-2">
-                                                <div className="flex flex-col gap-1 mr-2 bg-slate-100 rounded-lg p-1">
-                                                    <button disabled={index === 0} onClick={() => handleMoveBlock(block._id, "up")} className="p-1 hover:text-blue-600 disabled:opacity-20"><ArrowUp className="w-3.5 h-3.5" /></button>
-                                                    <button disabled={index === blocks.length - 1} onClick={() => handleMoveBlock(block._id, "down")} className="p-1 hover:text-blue-600 disabled:opacity-20"><ArrowDown className="w-3.5 h-3.5" /></button>
-                                                </div>
-                                                <Button size="icon" variant="outline" className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200" onClick={() => handleSaveBlock(block._id, block)}>
-                                                    <Save className="w-4 h-4" />
-                                                </Button>
-                                                <Button size="icon" variant="destructive" className="h-8 w-8" onClick={() => handleDeleteBlock(block._id)}>
-                                                    <Trash2 className="w-4 h-4" />
-                                                </Button>
-                                            </div>
-                                            <div className="grid md:grid-cols-2 gap-5 mt-4">
-                                                <div>
-                                                    <label className="text-xs font-bold text-slate-500 uppercase">Title / Name</label>
-                                                    <Input className="mt-1 bg-slate-50" value={block.title || ""} onChange={(e) => handleUpdateBlockFields(block._id, "title", e.target.value)} />
-                                                </div>
-                                                <div>
-                                                    <label className="text-xs font-bold text-slate-500 uppercase">Subtitle / Category</label>
-                                                    <Input className="mt-1 bg-slate-50" value={block.subtitle || ""} onChange={(e) => handleUpdateBlockFields(block._id, "subtitle", e.target.value)} />
-                                                </div>
-                                                <div className="md:col-span-2">
-                                                    <label className="text-xs font-bold text-slate-500 uppercase">Description / Details</label>
-                                                    <Textarea className="mt-1 bg-slate-50 h-24" value={block.description || ""} onChange={(e) => handleUpdateBlockFields(block._id, "description", e.target.value)} />
-                                                </div>
-                                                <div>
-                                                    <label className="text-xs font-bold text-slate-500 uppercase">Image/Media URL</label>
-                                                    <Input className="mt-1 bg-slate-50 font-mono text-xs" value={block.image || ""} onChange={(e) => handleUpdateBlockFields(block._id, "image", e.target.value)} />
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-3">
-                                                    <div>
-                                                        <label className="text-xs font-bold text-slate-500 uppercase">Button Text</label>
-                                                        <Input className="mt-1 bg-slate-50" value={block.button_text || ""} onChange={(e) => handleUpdateBlockFields(block._id, "button_text", e.target.value)} />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-xs font-bold text-slate-500 uppercase">Button Link</label>
-                                                        <Input className="mt-1 bg-slate-50 font-mono text-xs" value={block.button_link || ""} onChange={(e) => handleUpdateBlockFields(block._id, "button_link", e.target.value)} />
-                                                    </div>
-                                                </div>
-                                                <div className="md:col-span-2">
-                                                    <label className="text-xs font-bold text-slate-500 uppercase">Extra Details (JSON)</label>
-                                                    <Input className="mt-1 bg-slate-50 font-mono text-xs" placeholder='e.g., {"color": "bg-blue-500", "icon": "GraduationCap"}' value={typeof block.extra_data === 'object' ? JSON.stringify(block.extra_data) : block.extra_data || ""} onChange={(e) => handleUpdateBlockFields(block._id, "extra_data", e.target.value)} onBlur={(e) => {
-                                                        try {
-                                                            if (e.target.value) JSON.parse(e.target.value);
-                                                        } catch (err) {
-                                                            toast.error("Invalid JSON format in extra details");
-                                                        }
-                                                    }} />
-                                                </div>
-                                            </div>
+                                        <div className="space-y-2">
+                                            <h3 className="text-2xl font-black text-slate-900">Managed Automatically</h3>
+                                            <p className="text-slate-500 font-medium">
+                                                The content for this {DATA_DRIVEN_SECTIONS[sections.find(s => s._id === activeSectionId)?.section_type].label} section is pulled directly from your main database records.
+                                            </p>
                                         </div>
-                                    ))}
-                                </div>
+                                        <Link href={DATA_DRIVEN_SECTIONS[sections.find(s => s._id === activeSectionId)?.section_type].link}>
+                                            <Button className="w-full h-14 rounded-2xl font-black text-lg shadow-xl shadow-blue-500/20 bg-blue-600 hover:bg-blue-700 mt-4 group">
+                                                Manage {DATA_DRIVEN_SECTIONS[sections.find(s => s._id === activeSectionId)?.section_type].label}
+                                                <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="flex items-center justify-between mb-8">
+                                            <h3 className="text-xl font-bold text-slate-900">Content Blocks</h3>
+                                            <Button onClick={handleCreateBlock} className="font-bold shadow-lg shadow-blue-500/20 bg-blue-600 hover:bg-blue-700">
+                                                <Plus className="w-4 h-4 mr-2" /> Add Content Block
+                                            </Button>
+                                        </div>
+
+                                        <div className="space-y-6">
+                                            {blocks.length === 0 && (
+                                                <div className="text-center py-20 bg-white border border-dashed border-slate-300 rounded-3xl">
+                                                    <List className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                                                    <p className="text-slate-500 font-medium text-lg">Empty Section.</p>
+                                                    <p className="text-slate-400">Add a content block to populate this component with data.</p>
+                                                </div>
+                                            )}
+
+                                            {blocks.map((block, index) => (
+                                                <div key={block._id} className="bg-white border text-sm border-slate-200 rounded-3xl p-6 relative group hover:shadow-lg transition-all">
+                                                    <div className="absolute -top-3 -left-3 w-8 h-8 bg-slate-900 text-white flex items-center justify-center font-bold font-mono text-xs rounded-full shadow-lg border-4 border-white">
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="absolute top-4 right-4 flex gap-2">
+                                                        <div className="flex flex-col gap-1 mr-2 bg-slate-100 rounded-lg p-1">
+                                                            <button disabled={index === 0} onClick={() => handleMoveBlock(block._id, "up")} className="p-1 hover:text-blue-600 disabled:opacity-20"><ArrowUp className="w-3.5 h-3.5" /></button>
+                                                            <button disabled={index === blocks.length - 1} onClick={() => handleMoveBlock(block._id, "down")} className="p-1 hover:text-blue-600 disabled:opacity-20"><ArrowDown className="w-3.5 h-3.5" /></button>
+                                                        </div>
+                                                        <Button size="icon" variant="outline" className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200" onClick={() => handleSaveBlock(block._id, block)}>
+                                                            <Save className="w-4 h-4" />
+                                                        </Button>
+                                                        <Button size="icon" variant="destructive" className="h-8 w-8" onClick={() => handleDeleteBlock(block._id)}>
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </Button>
+                                                    </div>
+                                                    <div className="grid md:grid-cols-2 gap-5 mt-4">
+                                                        <div>
+                                                            <label className="text-xs font-bold text-slate-500 uppercase">Title / Name</label>
+                                                            <Input className="mt-1 bg-slate-50" value={block.title || ""} onChange={(e) => handleUpdateBlockFields(block._id, "title", e.target.value)} />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-xs font-bold text-slate-500 uppercase">Subtitle / Category</label>
+                                                            <Input className="mt-1 bg-slate-50" value={block.subtitle || ""} onChange={(e) => handleUpdateBlockFields(block._id, "subtitle", e.target.value)} />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="text-xs font-bold text-slate-500 uppercase">Description / Details</label>
+                                                            <Textarea className="mt-1 bg-slate-50 h-24" value={block.description || ""} onChange={(e) => handleUpdateBlockFields(block._id, "description", e.target.value)} />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-xs font-bold text-slate-500 uppercase">Image/Media URL</label>
+                                                            <Input className="mt-1 bg-slate-50 font-mono text-xs" value={block.image || ""} onChange={(e) => handleUpdateBlockFields(block._id, "image", e.target.value)} />
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <div>
+                                                                <label className="text-xs font-bold text-slate-500 uppercase">Button Text</label>
+                                                                <Input className="mt-1 bg-slate-50" value={block.button_text || ""} onChange={(e) => handleUpdateBlockFields(block._id, "button_text", e.target.value)} />
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-xs font-bold text-slate-500 uppercase">Button Link</label>
+                                                                <Input className="mt-1 bg-slate-50 font-mono text-xs" value={block.button_link || ""} onChange={(e) => handleUpdateBlockFields(block._id, "button_link", e.target.value)} />
+                                                            </div>
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="text-xs font-bold text-slate-500 uppercase">Extra Details (JSON)</label>
+                                                            <Input className="mt-1 bg-slate-50 font-mono text-xs" placeholder='e.g., {"color": "bg-blue-500", "icon": "GraduationCap"}' value={typeof block.extra_data === 'object' ? JSON.stringify(block.extra_data) : block.extra_data || ""} onChange={(e) => handleUpdateBlockFields(block._id, "extra_data", e.target.value)} onBlur={(e) => {
+                                                                try {
+                                                                    if (e.target.value) JSON.parse(e.target.value);
+                                                                } catch (err) {
+                                                                    toast.error("Invalid JSON format in extra details");
+                                                                }
+                                                            }} />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </>
                     ) : (
