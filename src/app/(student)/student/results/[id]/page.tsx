@@ -187,21 +187,47 @@ export default function DetailedResultPage() {
                                         </span>
                                     </div>
                                     
-                                    <div className="prose prose-slate max-w-none text-slate-900 font-medium mb-6" dangerouslySetInnerHTML={{ __html: answer.questionId?.content || "Question content hidden" }} />
+                                    <div className="prose prose-slate max-w-none text-slate-900 font-bold text-lg mb-6 leading-relaxed" dangerouslySetInnerHTML={{ __html: answer.questionId?.content || "Question content hidden" }} />
                                     
-                                    {/* Selected Options Display (Simple text mapping assumed if populated, else just basic UI block) */}
-                                    {!isSkipped && (
-                                        <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Your Answer ID(s)</p>
-                                            <p className="text-slate-700 font-medium">{answer.selectedOptionIds?.join(", ")}</p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                                        {!isSkipped && (
+                                            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Student Submission</p>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-slate-900 font-bold">Options:</span>
+                                                    <div className="flex gap-1">
+                                                        {answer.selectedOptionIds?.map((id: string, i: number) => (
+                                                            <Badge key={id} variant="outline" className="bg-white border-slate-200 text-slate-600 font-bold">
+                                                                {String.fromCharCode(65 + i)}
+                                                            </Badge>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div className="bg-blue-50/30 rounded-2xl p-5 border border-blue-100/50">
+                                            <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">Engagement Metrics</p>
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Clock className="w-4 h-4 text-blue-400" />
+                                                    <span className="font-bold text-slate-700">{answer.timeTakenSeconds || 0}s <span className="text-slate-400 text-[10px] font-medium uppercase">spent</span></span>
+                                                </div>
+                                                <div className="w-px h-4 bg-blue-100" />
+                                                <div className="flex items-center gap-1.5">
+                                                    <Target className="w-4 h-4 text-blue-400" />
+                                                    <span className="font-bold text-slate-700">{answer.evaluation?.marksAwarded || 0} <span className="text-slate-400 text-[10px] font-medium uppercase">earned</span></span>
+                                                </div>
+                                            </div>
                                         </div>
-                                    )}
+                                    </div>
 
                                     {/* Show explanation if available */}
                                     {answer.questionId?.explanation && (
-                                        <div className="mt-4 bg-primary/5 rounded-2xl p-4 border border-primary/10">
-                                            <p className="text-xs font-black text-primary uppercase tracking-widest mb-2">Explanation</p>
-                                            <div className="prose prose-sm prose-slate max-w-none text-slate-700" dangerouslySetInnerHTML={{ __html: answer.questionId.explanation }} />
+                                        <div className="mt-4 bg-primary/5 rounded-2xl p-6 border border-b-4 border-primary/20">
+                                            <p className="text-xs font-black text-primary uppercase tracking-widest mb-3 flex items-center gap-2">
+                                                <AlertCircle className="w-4 h-4" /> Comprehensive Explanation
+                                            </p>
+                                            <div className="prose prose-sm prose-slate max-w-none text-slate-700 font-medium" dangerouslySetInnerHTML={{ __html: answer.questionId.explanation }} />
                                         </div>
                                     )}
                                 </div>

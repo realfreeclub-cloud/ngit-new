@@ -59,72 +59,87 @@ export default function StudentResultsPage() {
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-10">
-            <div>
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight">My Results</h1>
-                <p className="text-slate-500 mt-1 font-medium">Track your performance and ranking across mock tests</p>
+        <div className="space-y-10 animate-in fade-in duration-500 max-w-7xl mx-auto pb-20">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <h1 className="text-4xl font-black text-slate-900 tracking-tight">Academic Performance</h1>
+                    <p className="text-slate-500 mt-2 font-medium text-lg">Detailed breakdown of your mock test attempts and rankings.</p>
+                </div>
+                <div className="flex bg-slate-100 p-1.5 rounded-2xl">
+                    <Button variant="ghost" className="rounded-xl px-6 font-bold bg-white shadow-sm">Mock Tests</Button>
+                    <Button variant="ghost" className="rounded-xl px-6 font-bold text-slate-400">Sectional Tests</Button>
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6">
                 {results.map((res) => {
-                    // Logic to determine pass/fail based on basic 40% criteria if not strictly stored
                     const isPass = res.score >= (res.totalMarks * 0.4); 
+                    const timeTakenMinutes = Math.floor((res.analysis?.timeTaken || 0) / 60);
+                    const timeTakenSeconds = (res.analysis?.timeTaken || 0) % 60;
                     
                     return (
-                        <div key={res._id} className="bg-white rounded-[2.5rem] p-6 border border-slate-100 hover:shadow-xl hover:border-primary/20 transition-all group relative overflow-hidden flex flex-col h-full">
-                            <div className={`absolute top-0 right-0 w-32 h-32 opacity-5 -mr-16 -mt-16 rounded-full ${isPass ? "bg-emerald-500" : "bg-rose-500"}`} />
-                            
-                            <div className="flex-1 space-y-4 mb-6 relative">
-                                <div className="flex justify-between items-start">
-                                    <span className="inline-block px-3 py-1 rounded-full bg-slate-50 text-slate-600 text-xs font-black uppercase tracking-widest border border-slate-100">
-                                        {new Date(res.attemptDate).toLocaleDateString()}
+                        <div key={res._id} className="bg-white rounded-[2.5rem] p-8 border border-slate-100 hover:shadow-2xl hover:border-primary/20 transition-all group flex flex-col lg:flex-row gap-10 items-center">
+                            {/* Left: Status & Main Title */}
+                            <div className="flex-1 w-full lg:w-auto">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <Badge className={`${isPass ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"} border-none px-3 py-1 text-[10px] font-black uppercase tracking-widest`}>
+                                        {isPass ? "Passed" : "Under Target"}
+                                    </Badge>
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                        <Calendar className="w-3.5 h-3.5" /> {new Date(res.attemptDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                                     </span>
-                                    {isPass ? (
-                                        <Badge className="bg-emerald-50 text-emerald-600 border-none px-2 py-0.5 text-xs font-black uppercase tracking-widest">Pass</Badge>
-                                    ) : (
-                                        <Badge className="bg-rose-50 text-rose-600 border-none px-2 py-0.5 text-xs font-black uppercase tracking-widest">Fail</Badge>
-                                    )}
                                 </div>
-                                
-                                <div>
-                                    <h3 className="text-xl font-black text-slate-900 leading-tight mb-1">
-                                        {res.mockTestId?.title || "Mock Test Assessment"}
-                                    </h3>
-                                    <p className="text-sm font-medium text-slate-500">{res.course || "General Category"}</p>
-                                </div>
+                                <h3 className="text-2xl font-black text-slate-900 mb-2 group-hover:text-primary transition-colors">
+                                    {res.mockTestId?.title || "Mock Assessment"}
+                                </h3>
+                                <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">{res.course || "IIT-JEE Foundation"}</p>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4 mb-6">
-                                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                                        <Target className="w-3 h-3" /> Score
+                            {/* Middle: Key Stats */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full lg:w-auto shrink-0">
+                                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 min-w-[140px]">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                        <Target className="w-3 h-3" /> Raw Score
                                     </p>
                                     <div className="flex items-baseline gap-1">
                                         <span className="text-2xl font-black text-slate-900">{res.score}</span>
-                                        <span className="text-sm font-bold text-slate-400">/{res.totalMarks}</span>
+                                        <span className="text-xs font-bold text-slate-400">/{res.totalMarks}</span>
                                     </div>
                                 </div>
-                                <div className="bg-blue-50 rounded-2xl p-4 border border-blue-100/50">
-                                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                                        <Trophy className="w-3 h-3" /> Rank 
+                                <div className="bg-blue-50/50 rounded-2xl p-5 border border-blue-100/50 min-w-[140px]">
+                                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                        <Trophy className="w-3 h-3" /> All India Rank
                                     </p>
-                                    <div className="flex flex-col">
+                                    <div className="flex items-baseline gap-2">
                                         <span className="text-2xl font-black text-blue-600">#{res.rank || "-"}</span>
-                                        <span className="text-xs font-bold text-blue-400 mt-0.5">{res.percentile ? `${res.percentile}%ile` : "-"}</span>
+                                        <span className="text-[10px] font-black text-blue-400 bg-blue-100 px-1.5 rounded-md self-center">{res.percentile}%ile</span>
+                                    </div>
+                                </div>
+                                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 min-w-[140px]">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                        <Clock className="w-3 h-3" /> Time Used
+                                    </p>
+                                    <div className="flex items-baseline">
+                                        <span className="text-2xl font-black text-slate-900">{timeTakenMinutes}m</span>
+                                        <span className="text-2xl font-black text-slate-900 ml-1">{timeTakenSeconds}s</span>
+                                    </div>
+                                </div>
+                                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 min-w-[140px]">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                        <TrendingUp className="w-3 h-3" /> Accuracy
+                                    </p>
+                                    <div className="flex items-baseline text-slate-900">
+                                        <span className="text-2xl font-black">{Math.round(res.analysis?.accuracy || 0)}%</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-6 bg-slate-50 rounded-xl p-3 px-4 border border-slate-100">
-                                <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-slate-300" /> {Math.floor(res.analysis?.timeTaken / 60) || 0}m {res.analysis?.timeTaken % 60 || 0}s</span>
-                                <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-slate-300" /> Attempted</span>
-                            </div>
-
-                            <div className="mt-auto">
+                            {/* Right: Action */}
+                            <div className="w-full lg:w-auto">
                                 <Link href={`/student/results/${res._id}`}>
-                                    <Button className="w-full h-12 rounded-xl font-bold gap-2 text-base shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">
-                                        View Detailed Analysis
-                                        <ChevronRight className="w-4 h-4 ml-1" />
+                                    <Button className="w-full lg:w-16 lg:h-16 rounded-2xl lg:rounded-3xl bg-slate-900 hover:bg-primary text-white p-0 group-hover:scale-110 transition-all flex items-center justify-center font-bold">
+                                        <span className="lg:hidden mr-2">View Analysis</span>
+                                        <ChevronRight className="w-6 h-6" />
                                     </Button>
                                 </Link>
                             </div>

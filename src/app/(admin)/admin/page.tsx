@@ -6,7 +6,8 @@ import {
     AlertCircle,
     TrendingUp,
     ShieldAlert,
-    Award
+    Award,
+    ChevronRight
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -68,6 +69,57 @@ export default async function AdminDashboard() {
                     trend="Needs attention"
                     alert={true}
                 />
+            </div>
+
+            {/* Mock Test Specific Analytics Widget */}
+            <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl shadow-slate-200/20 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl transition-all group-hover:bg-primary/10" />
+                
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
+                    <div>
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                            <Award className="w-8 h-8 text-primary" />
+                            Mock Test Performance Hub
+                        </h2>
+                        <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-2">Comprehensive Assessment Metrics</p>
+                    </div>
+                    <Link href="/admin/results">
+                        <Button className="rounded-2xl h-14 px-8 font-black gap-2 shadow-lg shadow-primary/20 hover:scale-105 transition-all">
+                            Release Rankings <ChevronRight className="w-5 h-5" />
+                        </Button>
+                    </Link>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mt-12 relative z-10">
+                    <div className="space-y-2">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Conducted</p>
+                        <p className="text-3xl font-black text-slate-900">{s.mockMetrics?.totalTests || 0}</p>
+                        <p className="text-[10px] font-bold text-slate-500">Live Assessments</p>
+                    </div>
+                    <div className="space-y-2">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Attempts</p>
+                        <p className="text-3xl font-black text-slate-900">{s.mockMetrics?.totalAttempts || 0}</p>
+                        <p className="text-[10px] font-bold text-emerald-500">↑ High Engagement</p>
+                    </div>
+                    <div className="space-y-2">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Top Score</p>
+                        <p className="text-3xl font-black text-indigo-600 font-mono">{s.mockMetrics?.highestScore || 0}</p>
+                        <p className="text-[10px] font-bold text-slate-500">Peak Performance</p>
+                    </div>
+                    <div className="space-y-2">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Avg. Score</p>
+                        <p className="text-3xl font-black text-slate-900">{s.mockMetrics?.avgScore || 0}</p>
+                        <p className="text-[10px] font-bold text-slate-500">Cohort Median</p>
+                    </div>
+                    <div className="space-y-2 lg:pl-8 lg:border-l border-slate-100">
+                        <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Pending</p>
+                        <div className="flex items-center gap-2">
+                            <p className="text-3xl font-black text-rose-600">{s.mockMetrics?.pending || 0}</p>
+                            {s.mockMetrics?.pending > 0 && <span className="animate-ping w-2 h-2 rounded-full bg-rose-500" />}
+                        </div>
+                        <p className="text-[10px] font-bold text-rose-400 uppercase">To Publish</p>
+                    </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">

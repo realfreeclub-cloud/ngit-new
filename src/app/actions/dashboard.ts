@@ -10,14 +10,14 @@ import { authOptions } from "@/lib/auth";
 
 import Enrollment from "@/models/Enrollment";
 import Attendance from "@/models/Attendance";
-
+import MockTestResult from "@/models/MockTestResult";
 export async function getDashboardStats() {
     try {
         await connectDB();
         const session = await getServerSession(authOptions);
         if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
-        const [totalStudents, activeCourses, payments, attempts, recentStudents] = await Promise.all([
+        const [totalStudents, activeCourses, payments, allAttempts, recentStudents, totalPublishedResults] = await Promise.all([
             User.countDocuments({ role: "STUDENT" }),
             Course.countDocuments({ isPublished: true }),
             Payment.find({ status: PaymentStatus.SUCCESS }).lean(),
@@ -25,23 +25,36 @@ export async function getDashboardStats() {
                 .populate({ path: "studentId", select: "name email" })
                 .populate({ path: "quizId", select: "title" })
                 .sort({ createdAt: -1 })
-                .limit(10)
                 .lean(),
             User.find({ role: "STUDENT" })
                 .sort({ createdAt: -1 })
                 .limit(5)
                 .select("name email createdAt")
-                .lean()
+                .lean(),
+            MockTestResult.countDocuments()
         ]);
 
         const totalRevenue = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
-
+        
+        // Mock Test Analytics
+        const mockTestAttempts = allAttempts.length;
+        const highestScore = allAttempts.length > 0 ? Math.max(...allAttempts.map(a => a.totalScore || 0)) : 0;
+        const avgScore = allAttempts.length > 0 ? Math.round(allAttempts.reduce((sum, a) => sum + (a.totalScore || 0), 0) / allAttempts.length) : 0;
+        const uniqueTests = new Set(allAttempts.map(a => a.quizId?._id?.toString())).size;
+        
         const stats = {
             totalStudents,
             activeCourses,
             totalRevenue,
-            pendingApprovals: 0,
-            recentAttempts: JSON.parse(JSON.stringify(attempts)),
+            pendingApprovals: mockTestAttempts - totalPublishedResults,
+            mockMetrics: {
+                totalTests: uniqueTests,
+                totalAttempts: mockTestAttempts,
+                highestScore,
+                avgScore,
+                pending: Math.max(0, mockTestAttempts - totalPublishedResults)
+            },
+            recentAttempts: JSON.parse(JSON.stringify(allAttempts.slice(0, 10))),
             recentStudents: JSON.parse(JSON.stringify(recentStudents))
         };
 

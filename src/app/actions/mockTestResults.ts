@@ -43,18 +43,28 @@ export async function publishMockTestResults(quizId: string, settings: any) {
         const session = await getServerSession(authOptions);
         if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
 
-        // 1. Get all SUBMITTED or EVALUATED attempts for this quiz
-        const attempts = await Attempt.find({
+        const quiz = await Quiz.findById(quizId).populate("courseId");
+        if (!quiz) throw new Error("Quiz not found");
+
+        // 1. Define query based on settings (Filter by batch/course if provided)
+        const attemptQuery: any = {
             quizId: new mongoose.Types.ObjectId(quizId),
             status: { $in: ["SUBMITTED", "EVALUATED"] }
-        }).sort({ totalScore: -1 }).lean();
+        };
+
+        // If specific student filters are applied in settings, we might need a more complex join
+        // But for now, we process all attempts for the quiz and filter them during result generation if needed
+
+        const attempts = await Attempt.find(attemptQuery)
+            .populate("studentId", "name email profile")
+            .sort({ totalScore: -1 })
+            .lean();
 
         if (attempts.length === 0) {
             return { success: false, error: "No attempts found for this quiz" };
         }
 
         // 2. Calculate Rank & Percentile
-        // (This is a simplified rank calculation where ties share the same rank)
         const totalAttempts = attempts.length;
         const resultsToSave = [];
 
@@ -63,7 +73,6 @@ export async function publishMockTestResults(quizId: string, settings: any) {
             const rank = i + 1;
             const percentile = ((totalAttempts - rank) / totalAttempts) * 100;
 
-            // Get answers for analysis
             const answers = await Answer.find({ attemptId: attempt._id }).lean();
             const correct = answers.filter(a => a.evaluation?.isCorrect === true).length;
             const incorrect = answers.filter(a => a.evaluation?.isCorrect === false).length;
@@ -71,7 +80,7 @@ export async function publishMockTestResults(quizId: string, settings: any) {
             const timeTaken = (attempt.endTime?.getTime() || 0) - (attempt.startTime?.getTime() || 0);
 
             resultsToSave.push({
-                studentId: attempt.studentId,
+                studentId: attempt.studentId._id,
                 mockTestId: attempt.quizId,
                 attemptId: attempt._id,
                 score: attempt.totalScore,
@@ -79,6 +88,8 @@ export async function publishMockTestResults(quizId: string, settings: any) {
                 rank,
                 percentile: parseFloat(percentile.toFixed(2)),
                 attemptDate: attempt.createdAt,
+                batch: (attempt.studentId as any).batch || "N/A",
+                course: (quiz.courseId as any)?.title || "General",
                 publishStatus: "PUBLISHED",
                 publicVisibility: settings.publishToPublicWebsite || false,
                 analysis: {
@@ -91,20 +102,21 @@ export async function publishMockTestResults(quizId: string, settings: any) {
             });
         }
 
-        // 3. Update or Insert results
+        // 3. Save to MockTestResult
         for (const res of resultsToSave) {
             await MockTestResult.findOneAndUpdate(
                 { attemptId: res.attemptId },
                 res,
-                { upsrert: true, new: true, upsert: true }
+                { upsert: true, new: true }
             );
         }
 
-        // 4. Save Publish Settings
+        // 4. Update Publish Setting record
         await ResultPublishSetting.findOneAndUpdate(
             { mockTestId: new mongoose.Types.ObjectId(quizId) },
             {
                 ...settings,
+                title: quiz.title,
                 mockTestId: new mongoose.Types.ObjectId(quizId),
                 isPublished: true
             },
@@ -112,9 +124,31 @@ export async function publishMockTestResults(quizId: string, settings: any) {
         );
 
         return { success: true, message: "Results published successfully" };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Publish Results Error:", error);
-        return { success: false, error: "Failed to publish results" };
+        return { success: false, error: error.message || "Failed to publish results" };
+    }
+}
+
+export async function unpublishMockTestResults(quizId: string) {
+    try {
+        await connectDB();
+        const session = await getServerSession(authOptions);
+        if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
+
+        await MockTestResult.updateMany(
+            { mockTestId: new mongoose.Types.ObjectId(quizId) },
+            { publishStatus: "UNPUBLISHED", publicVisibility: false }
+        );
+
+        await ResultPublishSetting.findOneAndUpdate(
+            { mockTestId: new mongoose.Types.ObjectId(quizId) },
+            { isPublished: false, publishToPublicWebsite: false }
+        );
+
+        return { success: true, message: "Results unpublished" };
+    } catch (error) {
+        return { success: false, error: "Failed to unpublish" };
     }
 }
 
