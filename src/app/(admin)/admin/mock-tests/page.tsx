@@ -1,0 +1,158 @@
+"use client";
+
+import { BrainCircuit, FileText, Users, Target, TrendingUp, Sparkles, ChevronRight, PlusCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { motion } from "framer-motion";
+
+export default function MockTestDashboard() {
+    const stats = [
+        { label: "Total Questions", value: "1,248", icon: BrainCircuit, color: "text-blue-600", bg: "bg-blue-50" },
+        { label: "Active Mock Tests", value: "24", icon: FileText, color: "text-purple-600", bg: "bg-purple-50" },
+        { label: "Total Attempts", value: "8,432", icon: Users, color: "text-emerald-600", bg: "bg-emerald-50" },
+        { label: "Avg. Accuracy", value: "68%", icon: Target, color: "text-amber-600", bg: "bg-amber-50" },
+    ];
+
+    const upcomingTests = [
+        { title: "JEE Advanced Full Mock", course: "JEE Mains + Adv", date: "24 Mar 2026", duration: "180m" },
+        { title: "NEET Biology Sectional", course: "NEET Crash Course", date: "26 Mar 2026", duration: "60m" },
+    ];
+
+    return (
+        <div className="p-8 max-w-7xl mx-auto space-y-10 animate-in fade-in duration-500">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <h1 className="text-4xl font-black text-slate-900 tracking-tight">Mock Test Manager</h1>
+                    <p className="text-slate-500 mt-2 font-medium">Create, manage and analyze all assessment activities from one place.</p>
+                </div>
+                <div className="flex gap-3">
+                    <Link href="/admin/quizzes/new">
+                        <Button className="h-14 px-8 rounded-2xl font-black gap-2 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">
+                            <PlusCircle className="w-6 h-6" /> Create New Test
+                        </Button>
+                    </Link>
+                </div>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {stats.map((stat, idx) => (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.1 }}
+                        key={stat.label} 
+                        className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm group hover:shadow-xl transition-all"
+                    >
+                        <div className={`w-14 h-14 ${stat.bg} ${stat.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                            <stat.icon className="w-7 h-7" />
+                        </div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{stat.label}</p>
+                        <p className="text-3xl font-black text-slate-900 mt-1">{stat.value}</p>
+                    </motion.div>
+                ))}
+            </div>
+
+            <div className="grid lg:grid-cols-3 gap-8">
+                {/* Left Column: Recent Activity / Modules */}
+                <div className="lg:col-span-2 space-y-8">
+                    <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-primary/10 transition-colors" />
+                        
+                        <div className="relative z-10">
+                            <h2 className="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
+                                <Sparkles className="w-7 h-7 text-amber-500" />
+                                Assessment Ecosystem
+                            </h2>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                {[
+                                    { label: "Question Bank", desc: "Manage 5,000+ MCQs & Theory", href: "/admin/questions", icon: BrainCircuit },
+                                    { label: "Mock Quizzes", desc: "Live exam papers & sets", href: "/admin/quizzes", icon: FileText },
+                                    { label: "Performance Results", desc: "View student scorecards", href: "/admin/results", icon: TrendingUp },
+                                    { label: "Advanced Analytics", desc: "Growth patterns & data", href: "/admin/mock-tests/analytics", icon: Target },
+                                ].map((module) => (
+                                    <Link key={module.label} href={module.href}>
+                                        <div className="p-6 rounded-[2rem] bg-slate-50 border border-transparent hover:border-primary/20 hover:bg-white hover:shadow-lg transition-all group/card">
+                                            <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center mb-4 group-hover/card:bg-primary group-hover/card:text-white transition-colors">
+                                                <module.icon className="w-5 h-5" />
+                                            </div>
+                                            <h3 className="font-bold text-slate-900">{module.label}</h3>
+                                            <p className="text-xs text-slate-500 font-medium mt-1">{module.desc}</p>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Table Placeholder */}
+                    <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm">
+                        <div className="flex items-center justify-between mb-8">
+                            <h2 className="text-2xl font-black text-slate-900">Upcoming Live Tests</h2>
+                            <Button variant="ghost" className="font-bold gap-2 text-primary hover:bg-primary/5 rounded-xl">
+                                View Full Schedule <ChevronRight className="w-4 h-4" />
+                            </Button>
+                        </div>
+                        <div className="space-y-4">
+                            {upcomingTests.map((test) => (
+                                <div key={test.title} className="flex items-center justify-between p-6 rounded-3xl bg-slate-50 border border-transparent hover:border-slate-200 hover:bg-white transition-all">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center font-black text-primary shadow-sm">
+                                            {test.duration}
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-slate-900">{test.title}</h4>
+                                            <p className="text-xs text-slate-500 font-medium">{test.course}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-black text-slate-900">{test.date}</p>
+                                        <p className="text-[10px] uppercase font-black tracking-widest text-emerald-500">Starts 9:00 AM</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column: Actions / Updates */}
+                <div className="space-y-8">
+                    <div className="bg-slate-900 rounded-[3rem] p-10 text-white shadow-2xl shadow-slate-900/40 relative overflow-hidden group">
+                        <div className="absolute bottom-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -mb-16 -mr-16" />
+                        <h3 className="text-xl font-black mb-6">Quick Publish</h3>
+                        <div className="space-y-4">
+                            <p className="text-slate-400 text-sm font-medium leading-relaxed">
+                                Ready to announce results for the last Batch test? Use our quick publisher to alert all students.
+                            </p>
+                            <Link href="/admin/results">
+                                <Button className="w-full h-14 rounded-[1.5rem] font-bold text-base mt-2">
+                                    Open Results Manager
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm">
+                        <h3 className="text-lg font-black text-slate-900 mb-6 uppercase tracking-wider text-[10px] text-slate-400">Recent Logs</h3>
+                        <div className="space-y-6">
+                            {[
+                                { msg: "New question added to Physics Bank", time: "2h ago" },
+                                { msg: "Mock Test 04 results published", time: "5h ago" },
+                                { msg: "Chemistry paper set updated", time: "1d ago" },
+                            ].map((log, i) => (
+                                <div key={i} className="flex gap-4">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-700 leading-tight">{log.msg}</p>
+                                        <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">{log.time}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
