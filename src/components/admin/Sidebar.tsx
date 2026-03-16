@@ -31,7 +31,7 @@ const menuItems = [
             { label: "Dashboard", href: "/admin/mock-tests" },
             { label: "Question Bank", href: "/admin/questions" },
             { label: "Paper Sets", href: "/admin/mock-tests/papers" },
-            { label: "Mock Tests", href: "/admin/quizzes" },
+            { label: "Mock Tests", href: "/admin/mock-tests/list" },
             { label: "Paid Test Requests", href: "/admin/mock-tests/requests" },
             { label: "Mock Test Results", href: "/admin/results" },
             { label: "Analytics", href: "/admin/mock-tests/analytics" }
