@@ -9,8 +9,12 @@ import {
     Flag,
     AlertCircle,
     Maximize,
-    Loader2
+    Loader2,
+    Info,
+    ArrowRight
 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { getQuiz, submitQuiz } from "@/app/actions/student/quizzes";
 import { useRouter } from "next/navigation";
@@ -24,7 +28,7 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
     const [loading, setLoading] = useState(true);
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [timeLeft, setTimeLeft] = useState(0);
-    const [answers, setAnswers] = useState<Record<string, string>>({});
+    const [answers, setAnswers] = useState<Record<string, any>>({});
     const [markedForReview, setMarkedForReview] = useState<Record<number, boolean>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -110,6 +114,18 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    };
+
+    const handleAnswerChange = (qId: string, val: any, type: string) => {
+        if (type === "MCQ_MULTIPLE") {
+            const current = (answers[qId] || []) as string[];
+            const updated = current.includes(val) 
+                ? current.filter(id => id !== val) 
+                : [...current, val];
+            setAnswers({ ...answers, [qId]: updated });
+        } else {
+            setAnswers({ ...answers, [qId]: val });
+        }
     };
 
     const handleSubmit = async () => {
@@ -227,37 +243,110 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
                         </Button>
                     </div>
 
-                    {/* Question Content */}
                     <div className="flex-1 max-w-4xl mx-auto w-full">
-                        <div className="text-xl lg:text-2xl font-medium text-slate-800 leading-relaxed mb-10">
-                            {currentQ?.content?.[language] || currentQ?.content?.en || "Question text unavailable."}
-                        </div>
+                        <div className="text-xl lg:text-2xl font-medium text-slate-800 leading-relaxed mb-10 prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: currentQ?.content?.[language] || currentQ?.content?.en || "" }} />
 
-                        {/* Options */}
-                        <div className="space-y-4">
-                            {currentQ?.options?.map((option: any, idx: number) => {
-                                const optText = option.text?.[language] || option.text?.en || option.text;
-                                const isSelected = answers[currentQ._id] === option._id;
+                        {/* MCQ Rendering (Single & Multiple) */}
+                        {["MCQ_SINGLE", "MCQ_MULTIPLE"].includes(currentQ?.type) && (
+                            <div className="space-y-4">
+                                {currentQ?.options?.map((option: any, idx: number) => {
+                                    const optText = option.text?.[language] || option.text?.en || option.text;
+                                    const isSelected = currentQ?.type === "MCQ_MULTIPLE" 
+                                        ? (answers[currentQ._id] || []).includes(option._id)
+                                        : answers[currentQ._id] === option._id;
 
-                                return (
-                                    <button
-                                        key={option._id}
-                                        onClick={() => setAnswers({ ...answers, [currentQ._id]: option._id })}
-                                        className={`w-full flex items-center gap-4 p-4 lg:p-6 rounded-xl border-2 text-left transition-all ${isSelected
-                                                ? "border-primary bg-primary/5 shadow-sm"
-                                                : "border-slate-200 bg-white hover:border-slate-300"
+                                    return (
+                                        <button
+                                            key={option._id}
+                                            onClick={() => handleAnswerChange(currentQ._id, option._id, currentQ.type)}
+                                            className={`w-full flex items-center gap-4 p-4 lg:p-6 rounded-2xl border-2 text-left transition-all ${isSelected
+                                                    ? "border-primary bg-primary/5 shadow-md"
+                                                    : "border-slate-100 bg-white hover:border-slate-200"
+                                                }`}
+                                        >
+                                            <div className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm ${isSelected ? 'bg-primary text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}>
+                                                {String.fromCharCode(65 + idx)}
+                                            </div>
+                                            <span className={`text-lg transition-colors ${isSelected ? 'font-bold text-slate-900' : 'text-slate-600'}`}>
+                                                {optText}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* Numeric Rendering */}
+                        {currentQ?.type === "NUMERIC" && (
+                            <div className="bg-white p-12 rounded-[2.5rem] border-2 border-dashed border-slate-200 flex flex-col items-center">
+                                <Label className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Enter Your Numeric Answer</Label>
+                                <Input 
+                                    className="max-w-[300px] h-20 rounded-3xl bg-slate-50 border-none text-center text-4xl font-black text-primary focus-visible:ring-primary/20"
+                                    type="number"
+                                    placeholder="0.00"
+                                    value={answers[currentQ._id] || ""}
+                                    onChange={(e) => handleAnswerChange(currentQ._id, e.target.value, "NUMERIC")}
+                                />
+                                <p className="text-slate-400 font-medium text-sm mt-6 flex items-center gap-2">
+                                    <Info className="w-4 h-4" /> Use numbers only. Decimals are accepted.
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Assertion Reason Rendering */}
+                        {currentQ?.type === "ASSERTION_REASON" && (
+                            <div className="space-y-8">
+                                <div className="space-y-6">
+                                    <div className="bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100">
+                                        <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2">Statement I: Assertion</p>
+                                        <p className="text-lg font-bold text-slate-800 italic leading-relaxed">{currentQ.assertion?.en}</p>
+                                    </div>
+                                    <div className="bg-purple-50/50 p-6 rounded-3xl border border-purple-100">
+                                        <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-2">Statement II: Reason</p>
+                                        <p className="text-lg font-bold text-slate-800 italic leading-relaxed">{currentQ.reason?.en}</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-3">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Select the Correct interpretation</p>
+                                    {[
+                                        "Both Assertion & Reason are true, Reason is correct explanation",
+                                        "Both are true, but Reason is NOT correct explanation",
+                                        "Assertion is true, but Reason is false",
+                                        "Assertion is false, but Reason is true"
+                                    ].map((opt, i) => (
+                                        <button 
+                                            key={i}
+                                            onClick={() => handleAnswerChange(currentQ._id, i.toString(), "ASSERTION_REASON")}
+                                            className={`w-full p-5 rounded-2xl text-left font-black text-sm transition-all border-2 ${
+                                                answers[currentQ._id] === i.toString() 
+                                                ? "bg-slate-900 border-slate-900 text-white shadow-xl" 
+                                                : "bg-white border-slate-100 hover:bg-slate-50"
                                             }`}
-                                    >
-                                        <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${isSelected ? 'bg-primary text-white' : 'bg-slate-100 text-slate-500'}`}>
-                                            {String.fromCharCode(65 + idx)}
-                                        </div>
-                                        <span className={`text-lg ${isSelected ? 'font-semibold text-primary' : 'text-slate-700'}`}>
-                                            {optText}
-                                        </span>
-                                    </button>
-                                );
-                            })}
-                        </div>
+                                        >
+                                            <span className="mr-3 text-slate-400">{String.fromCharCode(65 + i)}.</span> {opt}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Match Matrix Rendering */}
+                        {currentQ?.type === "MATCH_THE_FOLLOWING" && (
+                            <div className="space-y-6 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                                <div className="grid grid-cols-2 gap-10 font-black text-[10px] text-slate-400 uppercase tracking-widest mb-2 px-4">
+                                    <span>Column A</span>
+                                    <span>Column B</span>
+                                </div>
+                                {currentQ.options?.map((opt: any, idx: number) => (
+                                    <div key={idx} className="flex gap-4 items-center">
+                                        <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-black text-xs shrink-0">{String.fromCharCode(65 + idx)}</div>
+                                        <div className="flex-1 bg-slate-50 p-4 rounded-xl font-bold text-slate-700">{opt.text?.en}</div>
+                                        <ArrowRight className="w-5 h-5 text-slate-300" />
+                                        <div className="flex-1 bg-primary/5 p-4 rounded-xl font-bold text-primary">{opt.pair?.en}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Bottom Navigation */}

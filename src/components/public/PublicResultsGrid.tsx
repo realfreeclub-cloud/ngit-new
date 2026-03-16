@@ -57,8 +57,13 @@ export default function PublicResultsGrid({ results, data }: PublicResultsGridPr
                             viewport={{ once: true }}
                             transition={{ delay: idx * 0.1 }}
                             key={item._id}
-                            className="bg-slate-50 rounded-3xl p-6 border border-slate-200 hover:shadow-xl transition-all group"
+                            className="bg-slate-50 rounded-3xl p-6 border border-slate-200 hover:shadow-xl transition-all group relative overflow-hidden"
                         >
+                            {/* Rank Badge */}
+                            <div className="absolute top-0 right-0 px-4 py-2 bg-slate-900 text-white font-black text-xs rounded-bl-2xl">
+                                RANK #{item.rank < 10 ? `0${item.rank}` : item.rank}
+                            </div>
+
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="relative w-12 h-12">
                                     {item.studentId?.photoUrl ? (
@@ -72,35 +77,34 @@ export default function PublicResultsGrid({ results, data }: PublicResultsGridPr
                                 </div>
                                 <div className="overflow-hidden">
                                     <h4 className="font-bold text-slate-900 truncate">{item.studentId?.name || "Anonymous Student"}</h4>
-                                    <p className="text-xs text-slate-500 font-medium">{item.quizId?.title}</p>
+                                    <p className="text-xs text-slate-500 font-medium truncate">{item.mockTestId?.title}</p>
                                 </div>
                             </div>
 
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between text-sm">
-                                    <span className="text-slate-500 font-medium">Score</span>
+                                    <span className="text-slate-500 font-medium">Score Card</span>
                                     <span className="font-black text-blue-600 text-lg">
-                                        {item.totalScore} / {item.totalMarks}
+                                        {item.score} / {item.totalMarks}
                                     </span>
                                 </div>
                                 
                                 <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                                     <div 
                                         className="bg-blue-600 h-full rounded-full transition-all duration-1000"
-                                        style={{ width: `${(item.totalScore / item.totalMarks) * 100}%` }}
+                                        style={{ width: `${(item.score / item.totalMarks) * 100}%` }}
                                     />
                                 </div>
 
-                                <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-                                    <div className="flex items-center gap-1.5 text-xs text-slate-400 font-bold uppercase tracking-wider">
-                                        <Calendar className="w-3.5 h-3.5" />
-                                        {new Date(item.endTime).toLocaleDateString()}
+                                <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-200">
+                                    <div className="text-center p-2 rounded-xl bg-white border border-slate-100">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase">Percentile</p>
+                                        <p className="font-black text-slate-900">{item.percentile}%</p>
                                     </div>
-                                    {item.isPassed && (
-                                        <div className="flex items-center gap-1 text-green-600 font-bold text-[10px] uppercase tracking-tighter">
-                                            <CheckCircle2 className="w-3.5 h-3.5" /> PASSED
-                                        </div>
-                                    )}
+                                    <div className="text-center p-2 rounded-xl bg-white border border-slate-100">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase">Status</p>
+                                        <p className="font-black text-emerald-600 text-xs">QUALIFIED</p>
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>

@@ -21,7 +21,8 @@ import { getFaculty } from "@/app/actions/faculty";
 import { getPublicCourses } from "@/app/actions/courses";
 import { getEvents } from "@/app/actions/events";
 import { getGalleryImages } from "@/app/actions/upload";
-import { getPublicResults, getPublicExams } from "@/app/actions/results";
+import { getPublicResults as getOldResults, getPublicExams } from "@/app/actions/results";
+import { getPublicMockTestResults } from "@/app/actions/mockTestResults";
 
 export default async function PublicHomePage() {
     const [slides, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, notifications, dynamicData, resultsRes, examsRes] = await Promise.all([
@@ -34,7 +35,7 @@ export default async function PublicHomePage() {
         getGalleryImages(),
         getCMSContent("HOME_NOTIFICATIONS"),
         getDynamicPageData("home"),
-        getPublicResults(),
+        getPublicMockTestResults(),
         getPublicExams()
     ]);
 
@@ -42,7 +43,8 @@ export default async function PublicHomePage() {
     const publicCourses = coursesRes.success ? coursesRes.courses : [];
     const publicEvents = eventsRes.success ? eventsRes.events : [];
     const galleryImages = galleryRes.success ? galleryRes.images : [];
-    const publicResults = resultsRes.success ? resultsRes.results : [];
+    const publicResultsGrouped = resultsRes.success ? (resultsRes as any).sections : {};
+    const firstSectionResults = Object.values(publicResultsGrouped)[0] || [];
     const publicExams = (examsRes as any)?.success ? (examsRes as any).exams : [];
 
     const cmsSections = dynamicData.success && dynamicData.sections ? dynamicData.sections : [];
@@ -56,7 +58,7 @@ export default async function PublicHomePage() {
                     faculty: facultyMembers,
                     events: publicEvents,
                     gallery: galleryImages,
-                    publicResults: publicResults,
+                    publicResults: firstSectionResults as any[],
                     publicExams: publicExams
                 }}
                 staticFallback={

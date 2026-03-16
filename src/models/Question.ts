@@ -4,11 +4,10 @@ export enum QuestionType {
     MCQ_SINGLE = "MCQ_SINGLE",
     MCQ_MULTIPLE = "MCQ_MULTIPLE",
     TRUE_FALSE = "TRUE_FALSE",
-    FILL_BLANK = "FILL_BLANK",
-    SHORT_ANSWER = "SHORT_ANSWER",
+    NUMERIC = "NUMERIC",
     DESCRIPTIVE = "DESCRIPTIVE",
-    PRACTICAL = "PRACTICAL",
-    TYPING = "TYPING",
+    MATCH_THE_FOLLOWING = "MATCH_THE_FOLLOWING",
+    ASSERTION_REASON = "ASSERTION_REASON",
 }
 
 export enum Difficulty {
@@ -19,6 +18,7 @@ export enum Difficulty {
 
 export interface IQuestion extends Document {
     courseId: mongoose.Types.ObjectId;
+    subject: string;
     topic: string;
     type: QuestionType;
     difficulty: Difficulty;
@@ -30,7 +30,11 @@ export interface IQuestion extends Document {
         _id?: mongoose.Types.ObjectId;
         text: { en: string; hi?: string };
         isCorrect: boolean;
+        pair?: { en: string; hi?: string }; // For Match Following
     }[];
+    numericAnswer?: number;
+    assertion?: { en: string; hi?: string }; // For Assertion Reason
+    reason?: { en: string; hi?: string };    // For Assertion Reason
     marks: number;
     negativeMarks: number;
     explanation?: {
@@ -44,6 +48,7 @@ export interface IQuestion extends Document {
 const QuestionSchema = new Schema<IQuestion>(
     {
         courseId: { type: Schema.Types.ObjectId, ref: "Course", required: true },
+        subject: { type: String, required: true },
         topic: { type: String, required: true },
         type: {
             type: String,
@@ -62,14 +67,27 @@ const QuestionSchema = new Schema<IQuestion>(
         options: [
             {
                 text: {
-                    en: { type: String, required: true },
+                    en: { type: String },
                     hi: { type: String },
                 },
                 isCorrect: { type: Boolean, default: false },
+                pair: {
+                    en: { type: String },
+                    hi: { type: String },
+                }
             },
         ],
-        marks: { type: Number, default: 1 },
-        negativeMarks: { type: Number, default: 0 },
+        numericAnswer: { type: Number },
+        assertion: {
+            en: { type: String },
+            hi: { type: String },
+        },
+        reason: {
+            en: { type: String },
+            hi: { type: String },
+        },
+        marks: { type: Number, default: 4 },
+        negativeMarks: { type: Number, default: 1 },
         explanation: {
             en: { type: String },
             hi: { type: String },

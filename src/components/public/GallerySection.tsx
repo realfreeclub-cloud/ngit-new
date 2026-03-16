@@ -11,8 +11,12 @@ interface GalleryImage {
     url: string;
 }
 
-export default function GallerySection({ images = [] }: { images?: GalleryImage[] }) {
+export default function GallerySection({ images = [], data }: { images?: GalleryImage[], data?: any }) {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+    const title = data?.section_name || "Campus Life at NGIT";
+    const subtitle = data?.subtitle || "Gallery";
+    const description = data?.description || "Experience the vibrant campus life, modern infrastructure, and memorable moments";
 
     const openLightbox = (id: string) => {
         setSelectedImage(id);
@@ -42,17 +46,17 @@ export default function GallerySection({ images = [] }: { images?: GalleryImage[
 
     return (
         <section className="section-spacing bg-gray-50">
-            <div className="container-custom">
+            <div className="container-custom px-4">
                 {/* Section Header */}
-                <div className="text-center max-w-3xl mx-auto mb-16">
-                    <p className="text-primary font-semibold text-sm uppercase tracking-wider mb-3">
-                        Gallery
+                <div className="text-center max-w-3xl mx-auto mb-16 px-4">
+                    <p className="text-primary font-bold text-sm uppercase tracking-[0.2em] mb-3">
+                        {subtitle}
                     </p>
-                    <h2 className="heading-2 text-gray-900 mb-4">
-                        Campus Life at NGIT
+                    <h2 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight mb-4">
+                        {title}
                     </h2>
-                    <p className="body text-gray-600">
-                        Experience the vibrant campus life, modern infrastructure, and memorable moments
+                    <p className="text-lg text-slate-600">
+                        {description}
                     </p>
                 </div>
 

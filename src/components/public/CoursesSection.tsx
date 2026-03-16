@@ -12,20 +12,24 @@ interface Course {
     category: string;
 }
 
-export default function CoursesSection({ courses = [] }: { courses?: Course[] }) {
+export default function CoursesSection({ courses = [], data }: { courses?: Course[], data?: any }) {
+    const title = data?.section_name || "Choose Your Path to Success";
+    const subtitle = data?.subtitle || "Our Programs";
+    const description = data?.description || "Structured programs designed to help you achieve your academic goals with expert guidance";
+
     return (
         <section className="section-spacing bg-white">
             <div className="container-custom">
                 {/* Section Header */}
-                <div className="text-center max-w-3xl mx-auto mb-16">
-                    <p className="text-primary font-semibold text-sm uppercase tracking-wider mb-3">
-                        Our Programs
+                <div className="text-center max-w-3xl mx-auto mb-16 px-4">
+                    <p className="text-primary font-bold text-sm uppercase tracking-[0.2em] mb-3">
+                        {subtitle}
                     </p>
-                    <h2 className="heading-2 text-gray-900 mb-4">
-                        Choose Your Path to Success
+                    <h2 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight mb-4">
+                        {title}
                     </h2>
-                    <p className="body text-gray-600">
-                        Structured programs designed to help you achieve your academic goals with expert guidance
+                    <p className="text-lg text-slate-600">
+                        {description}
                     </p>
                 </div>
 

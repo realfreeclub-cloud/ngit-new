@@ -50,11 +50,16 @@ const defaultFaculty: Faculty[] = [
 
 interface FacultySectionProps {
     members?: any[];
+    data?: any;
 }
 
-export default function FacultySection({ members }: FacultySectionProps) {
+export default function FacultySection({ members, data }: FacultySectionProps) {
     const [startIndex, setStartIndex] = useState(0);
     const itemsPerPage = 4;
+
+    const title = data?.section_name || "Learn from the Best Minds";
+    const subtitle = data?.subtitle || "Our Faculty";
+    const description = data?.description || "Our expert faculty members from IITs and premier institutions bring years of experience and proven teaching methodologies";
 
     // Map DB members to UI format if provided
     const displayFaculty = members && members.length > 0 ? members.map((m, i) => ({
@@ -85,17 +90,17 @@ export default function FacultySection({ members }: FacultySectionProps) {
 
     return (
         <section id="faculty" className="section-spacing bg-white">
-            <div className="container-custom">
+            <div className="container-custom px-4">
                 {/* Section Header */}
                 <div className="text-center max-w-3xl mx-auto mb-16">
-                    <p className="text-primary font-semibold text-sm uppercase tracking-wider mb-3">
-                        Our Faculty
+                    <p className="text-primary font-bold text-sm uppercase tracking-[0.2em] mb-3">
+                        {subtitle}
                     </p>
-                    <h2 className="heading-2 text-gray-900 mb-4">
-                        Learn from the Best Minds
+                    <h2 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight mb-4">
+                        {title}
                     </h2>
-                    <p className="body text-gray-600">
-                        Our expert faculty members from IITs and premier institutions bring years of experience and proven teaching methodologies
+                    <p className="text-lg text-slate-600">
+                        {description}
                     </p>
                 </div>
 

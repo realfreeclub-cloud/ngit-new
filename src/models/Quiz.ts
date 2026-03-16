@@ -24,6 +24,13 @@ export interface IQuiz extends Document {
         trackIpDevice: boolean;
     };
     questions: mongoose.Types.ObjectId[]; // References to Question model
+    paperSetId?: mongoose.Types.ObjectId;   // Optional reference to PaperSet
+    description?: string;
+    pricing: {
+        type: "FREE" | "PAID";
+        amount: number;
+        currency: string;
+    };
     instructions: {
         en: string;
         hi?: string;
@@ -36,6 +43,7 @@ export interface IQuiz extends Document {
 const QuizSchema = new Schema<IQuiz>(
     {
         title: { type: String, required: true },
+        description: { type: String },
         courseId: { type: Schema.Types.ObjectId, ref: "Course", required: true },
         batchIds: [{ type: Schema.Types.ObjectId, ref: "Batch" }],
         settings: {
@@ -58,6 +66,12 @@ const QuizSchema = new Schema<IQuiz>(
             trackIpDevice: { type: Boolean, default: true },
         },
         questions: [{ type: Schema.Types.ObjectId, ref: "Question" }],
+        paperSetId: { type: Schema.Types.ObjectId, ref: "PaperSet" },
+        pricing: {
+            type: { type: String, enum: ["FREE", "PAID"], default: "FREE" },
+            amount: { type: Number, default: 0 },
+            currency: { type: String, default: "INR" },
+        },
         instructions: {
             en: { type: String },
             hi: { type: String },
