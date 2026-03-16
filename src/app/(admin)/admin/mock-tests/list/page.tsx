@@ -10,6 +10,8 @@ import { getAdminQuizzes } from "@/app/actions/admin-quizzes";
 export default function AdminQuizzesPage() {
     const [quizzes, setQuizzes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchTitle, setSearchTitle] = useState("");
+    const [filterExamCode, setFilterExamCode] = useState("ALL");
 
     useEffect(() => {
         const fetchQuizzes = async () => {
@@ -31,7 +33,7 @@ export default function AdminQuizzesPage() {
                     <h1 className="text-3xl font-black tracking-tight text-slate-900">Quiz & Mock Test Engine</h1>
                     <p className="text-muted-foreground mt-1 font-medium">Create online tests, assign them to students, and analyze performance.</p>
                 </div>
-                <Link href="/admin/quizzes/new">
+                <Link href="/admin/mock-tests/new">
                     <Button className="h-12 px-6 rounded-2xl gap-2 font-bold shadow-xl shadow-primary/20">
                         <PlusCircle className="w-5 h-5" /> Create New Quiz
                     </Button>
@@ -51,8 +53,23 @@ export default function AdminQuizzesPage() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input
                             placeholder="Find mock tests by name..."
+                            value={searchTitle}
+                            onChange={(e) => setSearchTitle(e.target.value)}
                             className="w-full h-12 bg-white border rounded-xl pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                         />
+                    </div>
+                    <div className="flex gap-3">
+                        <select 
+                            className="h-12 bg-white border rounded-xl px-4 text-sm focus:ring-2 focus:ring-primary outline-none font-medium text-slate-700"
+                            value={filterExamCode}
+                            onChange={(e) => setFilterExamCode(e.target.value)}
+                        >
+                            <option value="ALL">All Exam Codes</option>
+                            <option value="M1-R5">M1-R5</option>
+                            <option value="M2-R5">M2-R5</option>
+                            <option value="M3-R5">M3-R5</option>
+                            <option value="M4-R5">M4-R5</option>
+                        </select>
                     </div>
                 </div>
 
@@ -76,7 +93,10 @@ export default function AdminQuizzesPage() {
                                     <td colSpan={4} className="px-8 py-10 text-center text-slate-400 italic font-medium">No quizzes published yet. Start creating!</td>
                                 </tr>
                             )}
-                            {quizzes.map((quiz) => (
+                            {quizzes.filter(quiz => 
+                                (filterExamCode === "ALL" || quiz.examCode === filterExamCode) &&
+                                (quiz.title.toLowerCase().includes(searchTitle.toLowerCase()))
+                            ).map((quiz) => (
                                 <tr key={quiz._id} className="hover:bg-slate-50 transition-colors">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
@@ -85,8 +105,9 @@ export default function AdminQuizzesPage() {
                                             </div>
                                             <div>
                                                 <p className="font-bold text-slate-900">{quiz.title}</p>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
                                                     Course: {quiz.courseId?.title || "Standalone"}
+                                                    {quiz.examCode && <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary rounded-full">{quiz.examCode}</span>}
                                                 </p>
                                             </div>
                                         </div>

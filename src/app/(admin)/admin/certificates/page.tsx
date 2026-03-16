@@ -102,6 +102,12 @@ export default function AdminCertificatesPage() {
                         />
                     </div>
 
+                    <Link href="/admin/certificates/templates">
+                        <Button variant="outline" className="h-12 px-6 rounded-2xl font-bold gap-2 shadow-sm border-2">
+                            <FileDiff className="w-5 h-5" /> Manage Templates
+                        </Button>
+                    </Link>
+
                     <Dialog open={openAdd} onOpenChange={setOpenAdd}>
                         <DialogTrigger asChild>
                             <Button className="h-12 px-6 rounded-2xl font-bold gap-2 text-white shadow-lg shadow-primary/20">

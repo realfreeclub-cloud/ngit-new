@@ -41,6 +41,7 @@ export default function NewMockTestPage() {
         title: "",
         description: "",
         courseId: "",
+        examCode: "M1-R5",
         paperSetId: "",
         pricing: {
             type: "FREE",
@@ -185,6 +186,19 @@ export default function NewMockTestPage() {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
+                                    <Label className="font-bold text-slate-700 ml-2">Exam Code</Label>
+                                    <select 
+                                        className="w-full h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-slate-900 outline-none"
+                                        value={formData.examCode}
+                                        onChange={(e) => setFormData({...formData, examCode: e.target.value})}
+                                    >
+                                        <option value="M1-R5">M1-R5</option>
+                                        <option value="M2-R5">M2-R5</option>
+                                        <option value="M3-R5">M3-R5</option>
+                                        <option value="M4-R5">M4-R5</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2 lg:col-span-2">
                                     <Label className="font-bold text-slate-700 ml-2">Select Paper Set Blueprint</Label>
                                     <select 
                                         className="w-full h-14 rounded-2xl bg-indigo-50 border-none px-6 font-bold text-indigo-900 outline-none"

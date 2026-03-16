@@ -45,6 +45,7 @@ export default function QuestionBankPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [filterType, setFilterType] = useState("ALL");
     const [filterDifficulty, setFilterDifficulty] = useState("ALL");
+    const [filterExamCode, setFilterExamCode] = useState("ALL");
 
     useEffect(() => {
         loadQuestions();
@@ -78,7 +79,8 @@ export default function QuestionBankPage() {
                              q.topic?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesType = filterType === "ALL" || q.type === filterType;
         const matchesDifficulty = filterDifficulty === "ALL" || q.difficulty === filterDifficulty;
-        return matchesSearch && matchesType && matchesDifficulty;
+        const matchesExamCode = filterExamCode === "ALL" || q.examCode === filterExamCode;
+        return matchesSearch && matchesType && matchesDifficulty && matchesExamCode;
     });
 
     return (
@@ -140,7 +142,18 @@ export default function QuestionBankPage() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 overflow-x-auto pb-2 md:pb-0">
+                    <select 
+                        className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-primary/20 appearance-none min-w-[160px]"
+                        value={filterExamCode}
+                        onChange={(e) => setFilterExamCode(e.target.value)}
+                    >
+                        <option value="ALL">All Exam Codes</option>
+                        <option value="M1-R5">M1-R5</option>
+                        <option value="M2-R5">M2-R5</option>
+                        <option value="M3-R5">M3-R5</option>
+                        <option value="M4-R5">M4-R5</option>
+                    </select>
                     <select 
                         className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-primary/20 appearance-none min-w-[160px]"
                         value={filterType}
@@ -200,6 +213,7 @@ export default function QuestionBankPage() {
                                         <div className="prose prose-sm font-bold text-slate-900 line-clamp-2" dangerouslySetInnerHTML={{ __html: q.content?.en }} />
                                         <div className="flex items-center gap-2 mt-2">
                                             <Badge variant="outline" className="text-[9px] font-black uppercase text-slate-400 bg-white">ID: {q._id.slice(-6)}</Badge>
+                                            <Badge variant="outline" className="text-[9px] font-black uppercase text-slate-400 bg-white">Code: {q.examCode || "N/A"}</Badge>
                                             <Badge variant="outline" className="text-[9px] font-black uppercase text-slate-400 bg-white">Course: {q.courseId?.title}</Badge>
                                         </div>
                                     </TableCell>

@@ -35,7 +35,7 @@ export default async function AdminDashboard() {
                     <p className="text-slate-500 font-medium mt-1">Real-time overview of your institute's performance.</p>
                 </div>
                 <div className="flex gap-4">
-                    <Link href="/admin/quizzes/new">
+                    <Link href="/admin/mock-tests/new">
                         <Button className="h-12 font-bold bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20">
                             Create Exam
                         </Button>

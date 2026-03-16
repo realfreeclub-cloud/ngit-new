@@ -37,7 +37,7 @@ export default async function QuizAnalyticsPage({ params }: { params: Promise<{ 
                         Course: {quiz.courseId?.title || 'Standalone'}
                     </div>
                 </div>
-                <Link href="/admin/quizzes">
+                <Link href="/admin/mock-tests/list">
                     <Button variant="outline" className="font-bold">Back to Quizzes</Button>
                 </Link>
             </div>

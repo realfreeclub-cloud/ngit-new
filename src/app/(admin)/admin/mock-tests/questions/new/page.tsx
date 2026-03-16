@@ -34,6 +34,7 @@ export default function NewQuestionPage() {
     // Form State
     const [formData, setFormData] = useState<any>({
         courseId: "",
+        examCode: "M1-R5",
         subject: "",
         topic: "",
         type: "MCQ_SINGLE",
@@ -93,8 +94,8 @@ export default function NewQuestionPage() {
     };
 
     const handleSubmit = async () => {
-        if (!formData.courseId || !formData.topic || !formData.content.en) {
-            toast.error("Please fill Course, Topic Tag, and Question Content");
+        if (!formData.courseId || !formData.examCode || !formData.topic || !formData.content.en) {
+            toast.error("Please fill Course, Exam Code, Topic Tag, and Question Content");
             return;
         }
 
@@ -159,10 +160,23 @@ export default function NewQuestionPage() {
                             {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
                         </select>
                     </div>
-                    <div className="space-y-2 lg:col-span-2">
+                    <div className="space-y-2">
+                        <Label className="font-bold text-slate-700 ml-1">Exam Code</Label>
+                        <select 
+                            className="w-full h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
+                            value={formData.examCode}
+                            onChange={(e) => setFormData({...formData, examCode: e.target.value})}
+                        >
+                            <option value="M1-R5">M1-R5</option>
+                            <option value="M2-R5">M2-R5</option>
+                            <option value="M3-R5">M3-R5</option>
+                            <option value="M4-R5">M4-R5</option>
+                        </select>
+                    </div>
+                    <div className="space-y-2">
                         <Label className="font-bold text-slate-700 ml-1">Topic Tag</Label>
                         <Input 
-                            placeholder="e.g. Thermodynamics, Algebra, Quantum Physics"
+                            placeholder="e.g. Thermodynamics"
                             className="h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold shadow-none"
                             value={formData.topic}
                             onChange={(e) => setFormData({...formData, topic: e.target.value, subject: e.target.value})} // syncing subject & topic for simpler UX

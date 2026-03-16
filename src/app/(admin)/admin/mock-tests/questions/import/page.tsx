@@ -116,8 +116,15 @@ export default function ImportQuestionsPage() {
             const formattedQuestions = data.map(row => {
                 // Basic validation & mapping
                 const type = mapType(row.Type || row["Question Type"]);
+                const examCode = row.ExamCode || row["Exam Code"];
+                
+                if (!examCode) {
+                    throw new Error(`Row missing Exam Code. Problematic row Question: ${row.Question?.substring(0, 20)}...`);
+                }
+
                 return {
                     courseId: selectedCourseId,
+                    examCode: examCode,
                     subject: row.Subject || "General",
                     topic: row.Topic || "Uncategorized",
                     type: type,
@@ -182,6 +189,8 @@ export default function ImportQuestionsPage() {
             { header: "Explanation", key: "Explanation", width: 40 },
             { header: "Marks", key: "Marks", width: 10 },
             { header: "Negative Marks", key: "NegativeMarks", width: 15 },
+            { header: "Course", key: "Course", width: 15 },
+            { header: "Exam Code", key: "ExamCode", width: 15 },
             { header: "Subject", key: "Subject", width: 15 },
             { header: "Topic", key: "Topic", width: 15 },
             { header: "Difficulty", key: "Difficulty", width: 12 },

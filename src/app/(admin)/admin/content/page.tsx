@@ -26,7 +26,7 @@ export default function AdvancedCmsPage() {
         "FacultyGrid": { label: "Faculty", link: "/admin/faculty" },
         "EventsSection": { label: "Events", link: "/admin/events" },
         "PublicResultsGrid": { label: "Exam Results", link: "/admin/results" },
-        "PublicExamsGrid": { label: "Available Exams", link: "/admin/quizzes" },
+        "PublicExamsGrid": { label: "Available Exams", link: "/admin/mock-tests/list" },
         "GallerySection": { label: "Gallery", link: "/admin/gallery" },
         "GalleryGrid": { label: "Gallery", link: "/admin/gallery" }
     };

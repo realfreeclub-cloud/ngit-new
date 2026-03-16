@@ -30,6 +30,7 @@ export default function MockTestResultsAdminPage() {
     const [results, setResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [filterExamCode, setFilterExamCode] = useState("ALL");
     const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
     const [selectedQuizId, setSelectedQuizId] = useState("");
     const [publishSettings, setPublishSettings] = useState({
@@ -115,10 +116,11 @@ export default function MockTestResultsAdminPage() {
         }
     };
 
-    const filteredResults = results.filter(res => 
-        res.studentId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.mockTestId?.title?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredResults = results.filter(res => {
+        const matchesSearch = res.studentId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || res.mockTestId?.title?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesExamCode = filterExamCode === "ALL" || res.mockTestId?.examCode === filterExamCode;
+        return matchesSearch && matchesExamCode;
+    });
 
     return (
         <div className="space-y-8 p-8 max-w-[1600px] mx-auto animate-in fade-in duration-500">
@@ -224,7 +226,18 @@ export default function MockTestResultsAdminPage() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 overflow-x-auto pb-2 md:pb-0">
+                    <select 
+                        className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-primary/20 appearance-none min-w-[160px]"
+                        value={filterExamCode}
+                        onChange={(e) => setFilterExamCode(e.target.value)}
+                    >
+                        <option value="ALL">All Exam Codes</option>
+                        <option value="M1-R5">M1-R5</option>
+                        <option value="M2-R5">M2-R5</option>
+                        <option value="M3-R5">M3-R5</option>
+                        <option value="M4-R5">M4-R5</option>
+                    </select>
                     <Button variant="outline" className="rounded-2xl h-14 font-black gap-2 bg-slate-50 border-none px-6">
                         <Filter className="w-4 h-4" /> Course
                     </Button>
@@ -281,8 +294,15 @@ export default function MockTestResultsAdminPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell className="py-8">
-                                        <p className="font-black text-slate-800">{res.mockTestId?.title}</p>
-                                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-1">{res.course || "General Course"}</p>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <p className="font-black text-slate-800">{res.mockTestId?.title}</p>
+                                            {res.mockTestId?.examCode && (
+                                                <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase tracking-widest px-2 py-0">
+                                                    {res.mockTestId.examCode}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{res.course || "General Course"}</p>
                                     </TableCell>
                                     <TableCell className="py-8 text-center">
                                         <Badge variant="outline" className="rounded-lg bg-white border-slate-200 text-slate-600 font-black text-[10px] uppercase px-2 py-0.5">

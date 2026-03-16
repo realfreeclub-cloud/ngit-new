@@ -21,8 +21,9 @@ export default function PublicResultsPage() {
     const [filters, setFilters] = useState({
         course: "All Courses",
         batch: "All Batches",
-        year: "2026",
-        month: "All Months"
+        examCode: "All Exam Codes",
+        month: "All Months",
+        year: "All Years"
     });
 
     useEffect(() => {
@@ -40,6 +41,7 @@ export default function PublicResultsPage() {
 
     const courses = ["All Courses", ...new Set(Object.values(sections).flat().map(r => r.course || "General"))];
     const batches = ["All Batches", ...new Set(Object.values(sections).flat().map(r => r.batch || "N/A"))];
+    const examCodes = ["All Exam Codes", "M1-R5", "M2-R5", "M3-R5", "M4-R5"];
     const months = ["All Months", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
     return (
@@ -102,6 +104,17 @@ export default function PublicResultsPage() {
                         </select>
                     </div>
                     <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-2xl border border-slate-100 shadow-sm">
+                        <Filter className="w-4 h-4 text-slate-400" />
+                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest mr-2 border-r pr-4">Exam Code</span>
+                        <select 
+                            className="bg-transparent text-sm font-bold text-slate-700 outline-none cursor-pointer"
+                            value={filters.examCode}
+                            onChange={(e) => setFilters({...filters, examCode: e.target.value})}
+                        >
+                            {examCodes.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-2xl border border-slate-100 shadow-sm">
                         <Calendar className="w-4 h-4 text-slate-400" />
                         <span className="text-xs font-black text-slate-400 uppercase tracking-widest mr-2 border-r pr-4">Month</span>
                         <select 
@@ -110,6 +123,20 @@ export default function PublicResultsPage() {
                             onChange={(e) => setFilters({...filters, month: e.target.value})}
                         >
                             {months.map(m => <option key={m} value={m}>{m}</option>)}
+                        </select>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-2xl border border-slate-100 shadow-sm">
+                        <Calendar className="w-4 h-4 text-slate-400" />
+                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest mr-2 border-r pr-4">Year</span>
+                        <select 
+                            className="bg-transparent text-sm font-bold text-slate-700 outline-none cursor-pointer"
+                            value={filters.year}
+                            onChange={(e) => setFilters({...filters, year: e.target.value})}
+                        >
+                            <option value="All Years">All Years</option>
+                            <option value="2025">2025</option>
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
                         </select>
                     </div>
                 </div>
@@ -136,8 +163,10 @@ export default function PublicResultsPage() {
                             const matchesSearch = r.studentId?.name?.toLowerCase().includes(searchTerm.toLowerCase());
                             const matchesCourse = filters.course === "All Courses" || r.course === filters.course;
                             const matchesBatch = filters.batch === "All Batches" || r.batch === filters.batch;
+                            const matchesExamCode = filters.examCode === "All Exam Codes" || r.mockTestId?.examCode === filters.examCode;
                             const matchesMonth = filters.month === "All Months" || new Date(r.attemptDate).toLocaleString('default', { month: 'long' }) === filters.month;
-                            return matchesSearch && matchesCourse && matchesBatch && matchesMonth;
+                            const matchesYear = filters.year === "All Years" || new Date(r.attemptDate).getFullYear().toString() === filters.year;
+                            return matchesSearch && matchesCourse && matchesBatch && matchesExamCode && matchesMonth && matchesYear;
                         });
 
                         if (filtered.length === 0) return null;
@@ -190,7 +219,14 @@ export default function PublicResultsPage() {
                                                             </div>
                                                         </TableCell>
                                                         <TableCell className="py-8">
-                                                            <p className="font-bold text-slate-700">{r.course || "Standard Course"}</p>
+                                                            <div className="flex flex-col gap-1 items-start">
+                                                                <p className="font-bold text-slate-700">{r.course || "Standard Course"}</p>
+                                                                {r.mockTestId?.examCode && (
+                                                                    <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase tracking-widest px-2 py-0">
+                                                                        {r.mockTestId.examCode}
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
                                                             <p className="text-xs font-black text-slate-400 uppercase tracking-widest mt-1.5">{r.batch || "Regular Batch"}</p>
                                                         </TableCell>
                                                         <TableCell className="py-8 text-center">

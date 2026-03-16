@@ -19,6 +19,7 @@ export enum Difficulty {
 
 export interface IQuestion extends Document {
     courseId: mongoose.Types.ObjectId;
+    examCode?: string; // M1-R5, M2-R5, M3-R5, M4-R5
     subject: string;
     topic: string;
     type: QuestionType;
@@ -50,6 +51,10 @@ export interface IQuestion extends Document {
 const QuestionSchema = new Schema<IQuestion>(
     {
         courseId: { type: Schema.Types.ObjectId, ref: "Course", required: true },
+        examCode: { 
+            type: String, 
+            enum: ["M1-R5", "M2-R5", "M3-R5", "M4-R5"],
+        },
         subject: { type: String, required: true },
         topic: { type: String, required: true },
         type: {

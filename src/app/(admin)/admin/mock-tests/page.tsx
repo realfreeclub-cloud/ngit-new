@@ -27,7 +27,7 @@ export default function MockTestDashboard() {
                     <p className="text-slate-500 mt-2 font-medium">Create, manage and analyze all assessment activities from one place.</p>
                 </div>
                 <div className="flex gap-3">
-                    <Link href="/admin/quizzes/new">
+                    <Link href="/admin/mock-tests/new">
                         <Button className="h-14 px-8 rounded-2xl font-black gap-2 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">
                             <PlusCircle className="w-6 h-6" /> Create New Test
                         </Button>
@@ -67,8 +67,8 @@ export default function MockTestDashboard() {
                             </h2>
                             <div className="grid sm:grid-cols-2 gap-4">
                                 {[
-                                    { label: "Question Bank", desc: "Manage 5,000+ MCQs & Theory", href: "/admin/questions", icon: BrainCircuit },
-                                    { label: "Mock Quizzes", desc: "Live exam papers & sets", href: "/admin/quizzes", icon: FileText },
+                                    { label: "Question Bank", desc: "Manage 5,000+ MCQs & Theory", href: "/admin/mock-tests/questions", icon: BrainCircuit },
+                                    { label: "Mock Quizzes", desc: "Live exam papers & sets", href: "/admin/mock-tests/list", icon: FileText },
                                     { label: "Performance Results", desc: "View student scorecards", href: "/admin/results", icon: TrendingUp },
                                     { label: "Advanced Analytics", desc: "Growth patterns & data", href: "/admin/mock-tests/analytics", icon: Target },
                                 ].map((module) => (

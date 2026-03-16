@@ -33,6 +33,7 @@ export default function PaperSetsPage() {
     const [paperSets, setPaperSets] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [filterExamCode, setFilterExamCode] = useState("ALL");
 
     useEffect(() => {
         loadPaperSets();
@@ -61,8 +62,9 @@ export default function PaperSetsPage() {
     };
 
     const filtered = paperSets.filter(ps => 
-        ps.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ps.subject.toLowerCase().includes(searchTerm.toLowerCase())
+        (ps.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ps.subject.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        (filterExamCode === "ALL" || ps.examCode === filterExamCode)
     );
 
     return (
@@ -96,6 +98,19 @@ export default function PaperSetsPage() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
+                <div className="flex gap-3">
+                    <select 
+                        className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-primary/20 appearance-none min-w-[160px]"
+                        value={filterExamCode}
+                        onChange={(e) => setFilterExamCode(e.target.value)}
+                    >
+                        <option value="ALL">All Exam Codes</option>
+                        <option value="M1-R5">M1-R5</option>
+                        <option value="M2-R5">M2-R5</option>
+                        <option value="M3-R5">M3-R5</option>
+                        <option value="M4-R5">M4-R5</option>
+                    </select>
+                </div>
             </div>
 
             {/* Grid for Paper Sets */}
@@ -116,9 +131,16 @@ export default function PaperSetsPage() {
                             
                             <div className="flex-1 space-y-6 relative z-10">
                                 <div className="flex justify-between items-start">
-                                    <Badge className="bg-slate-900 border-none text-[9px] font-black uppercase tracking-widest px-3 py-1">
-                                        {ps.subject}
-                                    </Badge>
+                                    <div className="flex gap-2">
+                                        <Badge className="bg-slate-900 border-none text-[9px] font-black uppercase tracking-widest px-3 py-1">
+                                            {ps.subject}
+                                        </Badge>
+                                        {ps.examCode && (
+                                            <Badge className="bg-primary/10 text-primary border-none text-[9px] font-black uppercase tracking-widest px-3 py-1">
+                                                {ps.examCode}
+                                            </Badge>
+                                        )}
+                                    </div>
                                     <button onClick={() => handleDelete(ps._id)} className="text-slate-300 hover:text-rose-500 transition-colors">
                                         <Trash2 className="w-5 h-5" />
                                     </button>

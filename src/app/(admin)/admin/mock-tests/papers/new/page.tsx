@@ -41,6 +41,7 @@ export default function NewPaperSetPage() {
     const [formData, setFormData] = useState<any>({
         name: "",
         courseId: "",
+        examCode: "",
         subject: "",
         totalQuestions: 0,
         totalMarks: 0,
@@ -86,6 +87,7 @@ export default function NewPaperSetPage() {
         // Simple auto-generate logic: select N questions from the filtered list random/top
         const pool = allQuestions.filter(q => 
             (!formData.courseId || q.courseId?._id === formData.courseId) &&
+            (!formData.examCode || q.examCode === formData.examCode) &&
             (!formData.subject || q.subject?.toLowerCase() === formData.subject?.toLowerCase())
         );
 
@@ -126,9 +128,10 @@ export default function NewPaperSetPage() {
 
     const filteredPool = allQuestions.filter(q => {
         const matchesCourse = !formData.courseId || q.courseId?._id === formData.courseId;
+        const matchesExamCode = !formData.examCode || q.examCode === formData.examCode;
         const matchesSubject = !formData.subject || q.subject?.toLowerCase() === formData.subject?.toLowerCase();
         const matchesSearch = !searchQ || q.content?.en?.toLowerCase().includes(searchQ.toLowerCase());
-        return matchesCourse && matchesSubject && matchesSearch;
+        return matchesCourse && matchesExamCode && matchesSubject && matchesSearch;
     });
 
     return (
@@ -184,6 +187,21 @@ export default function NewPaperSetPage() {
                                 >
                                     <option value="">Select Course</option>
                                     {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
+                                </select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="font-bold text-slate-700">Exam Code Filter</Label>
+                                <select 
+                                    className="w-full h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-slate-900 outline-none"
+                                    value={formData.examCode}
+                                    onChange={(e) => setFormData({...formData, examCode: e.target.value})}
+                                >
+                                    <option value="">Any / Not Applicable</option>
+                                    <option value="M1-R5">M1-R5</option>
+                                    <option value="M2-R5">M2-R5</option>
+                                    <option value="M3-R5">M3-R5</option>
+                                    <option value="M4-R5">M4-R5</option>
                                 </select>
                             </div>
 

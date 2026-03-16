@@ -647,7 +647,7 @@ export default function CourseContentPage() {
                                             <p className="text-sm font-bold text-slate-600">No quizzes found for this course</p>
                                             <p className="text-xs text-slate-400 mt-1">Create a quiz first, then come back to link it.</p>
                                             <Link
-                                                href="/admin/quizzes/new"
+                                                href="/admin/mock-tests/new"
                                                 target="_blank"
                                                 className="inline-flex items-center gap-1 mt-3 text-xs font-black text-purple-600 hover:text-purple-800 underline"
                                             >
