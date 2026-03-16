@@ -5,13 +5,13 @@ import { toast } from "sonner";
 import { Plus, Trash2, UploadCloud, Search, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createQuestion, deleteQuestion, bulkInsertQuestions } from "@/app/actions/questions";
+import { deleteQuestion, bulkInsertQuestions } from "@/app/actions/questions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import Link from "next/link";
 
 export default function QuestionBankClient({ initialQuestions, courses }: { initialQuestions: any[], courses: any[] }) {
     const [questions, setQuestions] = useState(initialQuestions);
     const [search, setSearch] = useState("");
-    const [isCreating, setIsCreating] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadFile, setUploadFile] = useState<File | null>(null);
 
@@ -33,35 +33,7 @@ export default function QuestionBankClient({ initialQuestions, courses }: { init
         explanationEn: ""
     });
 
-    const handleCreate = async () => {
-        try {
-            const mappedData = {
-                courseId: formData.courseId,
-                topic: formData.topic,
-                type: formData.type,
-                difficulty: formData.difficulty,
-                content: { en: formData.contentEn, hi: formData.contentHi },
-                marks: Number(formData.marks),
-                negativeMarks: Number(formData.negativeMarks),
-                options: formData.options.map(o => ({
-                    text: { en: o.textEn },
-                    isCorrect: o.isCorrect
-                })),
-                explanation: { en: formData.explanationEn }
-            };
 
-            const res = await createQuestion(mappedData);
-            if (res.success) {
-                toast.success("Question created!");
-                setQuestions([res.question, ...questions]);
-                setIsCreating(false);
-            } else {
-                toast.error(res.error);
-            }
-        } catch (e: any) {
-            toast.error("Failed to create question");
-        }
-    };
 
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure?")) return;
@@ -94,7 +66,6 @@ export default function QuestionBankClient({ initialQuestions, courses }: { init
                     const res = await bulkInsertQuestions(parsed);
                     if (res.success) {
                         toast.success(`Inserted ${res.count} questions! Refresh page to see.`);
-                        setIsCreating(false);
                     } else {
                         toast.error(res.error);
                     }
@@ -125,92 +96,9 @@ export default function QuestionBankClient({ initialQuestions, courses }: { init
                     />
                 </div>
                 <div className="flex gap-2">
-                    <Dialog open={isCreating} onOpenChange={setIsCreating}>
-                        <DialogTrigger asChild>
-                            <Button className="bg-primary text-white gap-2"><Plus className="w-4 h-4" /> Add Question</Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-                            <DialogHeader>
-                                <DialogTitle className="text-xl">Create Question</DialogTitle>
-                            </DialogHeader>
-
-                            <div className="space-y-4 pt-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-sm font-bold text-slate-700">Course</label>
-                                        <select
-                                            className="w-full mt-1 p-2 border rounded-md outline-none"
-                                            value={formData.courseId}
-                                            onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                                        >
-                                            {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-bold text-slate-700">Topic Tag</label>
-                                        <Input
-                                            className="mt-1"
-                                            value={formData.topic}
-                                            onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
-                                            placeholder="e.g. Kinematics"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="text-sm font-bold text-slate-700">Question Content (English)</label>
-                                    <textarea
-                                        className="w-full mt-1 p-3 border rounded-md outline-none min-h-[100px]"
-                                        value={formData.contentEn}
-                                        onChange={(e) => setFormData({ ...formData, contentEn: e.target.value })}
-                                        placeholder="What is the speed of light?"
-                                    />
-                                </div>
-
-                                <div className="p-4 border border-dashed rounded-lg bg-slate-50">
-                                    <h4 className="font-bold mb-3">Options</h4>
-                                    <div className="space-y-3">
-                                        {formData.options.map((opt, i) => (
-                                            <div key={i} className="flex items-center gap-3">
-                                                <input
-                                                    type="radio"
-                                                    name="correctOption"
-                                                    checked={opt.isCorrect}
-                                                    onChange={() => {
-                                                        const newOpts = formData.options.map((o, idx) => ({
-                                                            ...o, isCorrect: idx === i
-                                                        }));
-                                                        setFormData({ ...formData, options: newOpts });
-                                                    }}
-                                                />
-                                                <Input
-                                                    value={opt.textEn}
-                                                    onChange={(e) => {
-                                                        const newOpts = [...formData.options];
-                                                        newOpts[i].textEn = e.target.value;
-                                                        setFormData({ ...formData, options: newOpts });
-                                                    }}
-                                                    placeholder={`Option ${i + 1}`}
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-sm font-bold text-slate-700">Marks</label>
-                                        <Input type="number" value={formData.marks} onChange={(e) => setFormData({ ...formData, marks: Number(e.target.value) })} />
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-bold text-slate-700">Negative Marks</label>
-                                        <Input type="number" value={formData.negativeMarks} onChange={(e) => setFormData({ ...formData, negativeMarks: Number(e.target.value) })} />
-                                    </div>
-                                </div>
-                                <Button onClick={handleCreate} className="w-full">Save Question</Button>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
+                    <Link href="/admin/mock-tests/questions/new">
+                        <Button className="bg-primary text-white gap-2"><Plus className="w-4 h-4" /> Add Question</Button>
+                    </Link>
 
                     <Dialog>
                         <DialogTrigger asChild>
