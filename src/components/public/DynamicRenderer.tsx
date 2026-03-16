@@ -16,8 +16,8 @@ import CourseGrid from "./CourseGrid";
 import FacultyGrid from "./FacultyGrid";
 import GalleryGrid from "./GalleryGrid";
 import TestimonialSlider from "./TestimonialSlider";
-import CTASection from "./CTASection";
 import PublicResultsGrid from "./PublicResultsGrid";
+import PublicExamsGrid from "./PublicExamsGrid";
 
 // Add some placeholder or custom mapping
 export default function DynamicRenderer({ sections, staticFallback, extraData }: { sections: any[], staticFallback?: React.ReactNode, extraData?: any }) {
@@ -48,7 +48,7 @@ export default function DynamicRenderer({ sections, staticFallback, extraData }:
                     case "GalleryGrid":
                         return <GalleryGrid {...props} />;
                     case "GallerySection":
-                        return <GallerySection {...props} />;
+                        return <GallerySection {...props} images={extraData?.gallery || []} />;
                     case "TestimonialSlider":
                         return <TestimonialSlider {...props} />;
                     case "AchievementsSection":
@@ -64,7 +64,9 @@ export default function DynamicRenderer({ sections, staticFallback, extraData }:
                     case "InfrastructureSection":
                         return <InfrastructureSection {...props} />;
                     case "PublicResultsGrid":
-                        return <PublicResultsGrid key={props.key} results={extraData?.publicResults || []} />;
+                        return <PublicResultsGrid key={props.key} data={section} results={extraData?.publicResults || []} />;
+                    case "PublicExamsGrid":
+                        return <PublicExamsGrid key={props.key} data={section} exams={extraData?.publicExams || []} />;
                     case "NotificationScroller": {
                         const notifications = props.blocks?.map((b: any) => ({
                             id: b._id || b.id,

@@ -24,7 +24,7 @@ export async function getHeaderFooterData() {
                 navigation: [
                     { label: "Home", href: "/" },
                     { label: "Courses", href: "/courses" },
-                    { label: "Results", href: "/#results" },
+                    { label: "Results", href: "/results" },
                     { label: "Gallery", href: "/gallery" },
                     { label: "Faculty", href: "/faculty" },
                     { label: "About", href: "/about" },

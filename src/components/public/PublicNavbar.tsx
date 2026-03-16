@@ -52,7 +52,7 @@ export default function PublicNavbar() {
         { label: "Home", href: "/" },
         { label: "About", href: "/#about" },
         { label: "Courses", href: "/courses" },
-        { label: "Results", href: "/#results" },
+        { label: "Results", href: "/results" },
         { label: "Gallery", href: "/gallery" },
         { label: "Faculty", href: "/faculty" },
         { label: "Contact", href: "/contact" },

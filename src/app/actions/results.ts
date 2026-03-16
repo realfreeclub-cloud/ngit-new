@@ -108,6 +108,21 @@ export async function getPublicResults() {
     }
 }
 
+export async function getPublicExams() {
+    try {
+        await connectDB();
+        const exams = await Quiz.find({ isPublished: true })
+            .populate("courseId", "title")
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .lean();
+        return { success: true, exams: JSON.parse(JSON.stringify(exams)) };
+    } catch (error: any) {
+        console.error("Get Public Exams Error:", error);
+        return { success: false, error: error.message };
+    }
+}
+
 export async function getAdminResults(filters: { 
     courseType?: "ONLINE" | "OFFLINE", 
     quizId?: string, 

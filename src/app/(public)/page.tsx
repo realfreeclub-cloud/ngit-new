@@ -21,9 +21,10 @@ import { getFaculty } from "@/app/actions/faculty";
 import { getPublicCourses } from "@/app/actions/courses";
 import { getEvents } from "@/app/actions/events";
 import { getGalleryImages } from "@/app/actions/upload";
+import { getPublicResults, getPublicExams } from "@/app/actions/results";
 
 export default async function PublicHomePage() {
-    const [slides, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, notifications, dynamicData] = await Promise.all([
+    const [slides, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, notifications, dynamicData, resultsRes, examsRes] = await Promise.all([
         getCMSContent("HOME_SLIDER"),
         getCMSContent("HOME_STATS"),
         getCMSContent("HOME_ABOUT"),
@@ -32,13 +33,17 @@ export default async function PublicHomePage() {
         getEvents(),
         getGalleryImages(),
         getCMSContent("HOME_NOTIFICATIONS"),
-        getDynamicPageData("home")
+        getDynamicPageData("home"),
+        getPublicResults(),
+        getPublicExams()
     ]);
 
     const facultyMembers = facultyRes.success ? facultyRes.faculty : [];
     const publicCourses = coursesRes.success ? coursesRes.courses : [];
     const publicEvents = eventsRes.success ? eventsRes.events : [];
     const galleryImages = galleryRes.success ? galleryRes.images : [];
+    const publicResults = resultsRes.success ? resultsRes.results : [];
+    const publicExams = (examsRes as any)?.success ? (examsRes as any).exams : [];
 
     const cmsSections = dynamicData.success && dynamicData.sections ? dynamicData.sections : [];
 
@@ -50,7 +55,9 @@ export default async function PublicHomePage() {
                     courses: publicCourses,
                     faculty: facultyMembers,
                     events: publicEvents,
-                    gallery: galleryImages
+                    gallery: galleryImages,
+                    publicResults: publicResults,
+                    publicExams: publicExams
                 }}
                 staticFallback={
                     <>

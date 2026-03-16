@@ -1,39 +1,52 @@
 "use client";
 
-import { Trophy, Star, Calendar, CheckCircle2, TrendingUp, User } from "lucide-react";
+import { Trophy, Star, Calendar, CheckCircle2, TrendingUp, User, ChevronRight } from "lucide-react";
+import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
 interface PublicResultsGridProps {
     results: any[];
+    data?: any;
 }
 
-export default function PublicResultsGrid({ results }: PublicResultsGridProps) {
+export default function PublicResultsGrid({ results, data }: PublicResultsGridProps) {
+    const title = data?.section_name || "Latest Performance & Rankings";
+    const subtitle = data?.subtitle || "LIVE BOARD";
+    const description = data?.description || (results?.length === 0 ? "No official exam results are available at this moment. Check back soon for updates on student performance." : "Real-time updates on student achievements and test outcomes directly from our official evaluation platform.");
     if (!results || results.length === 0) {
         return (
-            <section className="py-20 bg-slate-50">
-                <div className="container px-4 mx-auto text-center">
-                    <p className="text-slate-500 font-medium">No official exam results available yet.</p>
+            <section id="results" className="py-24 bg-white">
+                <div className="container px-4 mx-auto">
+                    <div className="text-center max-w-3xl mx-auto mb-16">
+                        <p className="text-primary font-bold text-sm uppercase tracking-[0.2em] mb-3">
+                            {subtitle}
+                        </p>
+                        <h2 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight mb-4">
+                            {title}
+                        </h2>
+                        <p className="text-lg text-slate-600">
+                            {description}
+                        </p>
+                    </div>
                 </div>
             </section>
         );
     }
 
     return (
-        <section className="py-24 bg-white">
+        <section id="results" className="py-24 bg-white">
             <div className="container px-4 mx-auto">
-                <div className="flex flex-col md:flex-row items-end justify-between gap-6 mb-16">
-                    <div className="max-w-2xl">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100 text-blue-700 font-bold text-xs uppercase tracking-widest mb-4">
-                            <TrendingUp className="w-4 h-4" /> Live Board
-                        </div>
-                        <h2 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight">
-                            Latest Quiz & Exam Performance
-                        </h2>
-                        <p className="text-lg text-slate-600 mt-4">
-                            Real student performance data directly from our testing platform. Updates in real-time as students complete their assessments.
-                        </p>
-                    </div>
+                <div className="text-center max-w-3xl mx-auto mb-16">
+                    <p className="text-primary font-bold text-sm uppercase tracking-[0.2em] mb-3">
+                        {subtitle}
+                    </p>
+                    <h2 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight mb-4">
+                        {title}
+                    </h2>
+                    <p className="text-lg text-slate-600">
+                        {description}
+                    </p>
                 </div>
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -92,6 +105,12 @@ export default function PublicResultsGrid({ results }: PublicResultsGridProps) {
                             </div>
                         </motion.div>
                     ))}
+                </div>
+                <div className="mt-12 text-center">
+                    <Link href="/results" className="text-primary font-bold hover:underline inline-flex items-center gap-2">
+                        View Full Performance Board
+                        <ChevronRight className="w-4 h-4" />
+                    </Link>
                 </div>
             </div>
         </section>

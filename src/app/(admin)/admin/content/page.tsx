@@ -17,7 +17,7 @@ export default function AdvancedCmsPage() {
     const [blocks, setBlocks] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const sectionTypes = ["HeroSection", "CourseGrid", "FacultyGrid", "GalleryGrid", "TestimonialSlider", "CTASection", "AboutSection", "WhyChooseSection", "ContactSection", "AchievementsSection", "CoursesSection", "FacultySection", "EventsSection", "InfrastructureSection", "PublicResultsGrid", "NotificationScroller", "TrustIndicators"];
+    const sectionTypes = ["HeroSection", "CourseGrid", "FacultyGrid", "GalleryGrid", "TestimonialSlider", "CTASection", "AboutSection", "WhyChooseSection", "ContactSection", "AchievementsSection", "CoursesSection", "FacultySection", "EventsSection", "InfrastructureSection", "PublicResultsGrid", "PublicExamsGrid", "NotificationScroller", "TrustIndicators"];
 
     const DATA_DRIVEN_SECTIONS: Record<string, { label: string, link: string }> = {
         "CoursesSection": { label: "Courses", link: "/admin/courses" },
@@ -25,7 +25,10 @@ export default function AdvancedCmsPage() {
         "FacultySection": { label: "Faculty", link: "/admin/faculty" },
         "FacultyGrid": { label: "Faculty", link: "/admin/faculty" },
         "EventsSection": { label: "Events", link: "/admin/events" },
-        "PublicResultsGrid": { label: "Exam Results", link: "/admin/quizzes" }
+        "PublicResultsGrid": { label: "Exam Results", link: "/admin/results" },
+        "PublicExamsGrid": { label: "Available Exams", link: "/admin/quizzes" },
+        "GallerySection": { label: "Gallery", link: "/admin/gallery" },
+        "GalleryGrid": { label: "Gallery", link: "/admin/gallery" }
     };
 
     const HIDDEN_PAGES = ["courses", "faculty"];
