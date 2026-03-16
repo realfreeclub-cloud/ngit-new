@@ -8,6 +8,7 @@ import CoursesSection from "./CoursesSection";
 import GallerySection from "./GallerySection";
 import EventsSection from "./EventsSection";
 import RegistrationCTA from "./RegistrationCTA";
+import CTASection from "./CTASection";
 import ContactSection from "./ContactSection";
 import TrustIndicators from "./TrustIndicators";
 import NotificationScroller from "./NotificationScroller";
