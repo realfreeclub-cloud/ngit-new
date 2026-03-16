@@ -26,7 +26,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getCourses } from "@/app/actions/courses";
+import { getAllCourses } from "@/app/actions/courses";
 import { getQuestions } from "@/app/actions/questions";
 import { createPaperSet } from "@/app/actions/paperSets";
 
@@ -58,7 +58,7 @@ export default function NewPaperSetPage() {
     }, []);
 
     const loadData = async () => {
-        const [cRes, qRes] = await Promise.all([getCourses(), getQuestions()]);
+        const [cRes, qRes] = await Promise.all([getAllCourses(), getQuestions()]);
         if (cRes.success) setCourses(cRes.courses);
         if (qRes.success) setAllQuestions(qRes.questions);
     };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMockTestResultsAdmin, deleteMockTestResult, publishMockTestResults } from "@/app/actions/mockTestResults";
+import { getMockTestResultsAdmin, deleteMockTestResult, publishMockTestResults, unpublishMockTestResults } from "@/app/actions/mockTestResults";
 import { 
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";

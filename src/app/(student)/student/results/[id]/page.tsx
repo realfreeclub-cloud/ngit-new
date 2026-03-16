@@ -14,7 +14,8 @@ import {
     Zap,
     BookOpen,
     HelpCircle,
-    BarChart3
+    BarChart3,
+    Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +53,7 @@ export default function ResultAnalysisPage({ params }: { params: Promise<{ id: s
         );
     }
 
-    if (!result) {
+    if (!data || !data.result) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh]">
                 <AlertCircle className="w-16 h-16 text-rose-500 mb-4" />
@@ -74,9 +75,9 @@ export default function ResultAnalysisPage({ params }: { params: Promise<{ id: s
                             <ChevronLeft className="w-5 h-5" /> Back to History
                         </Button>
                     </Link>
-                    <h1 className="text-4xl font-black text-slate-900 tracking-tight">{result.mockTestId?.title} Analysis</h1>
+                    <h1 className="text-4xl font-black text-slate-900 tracking-tight">{data.result.mockTestId?.title} Analysis</h1>
                     <p className="text-slate-500 font-medium text-lg mt-2 italic flex items-center gap-2">
-                        <Calendar className="w-4 h-4" /> Attempted on {new Date(result.attemptDate).toLocaleDateString(undefined, { dateStyle: 'long' })}
+                        <Calendar className="w-4 h-4" /> Attempted on {new Date(data.result.attemptDate).toLocaleDateString(undefined, { dateStyle: 'long' })}
                     </p>
                 </div>
                 <div className="flex items-center gap-4">
@@ -87,7 +88,7 @@ export default function ResultAnalysisPage({ params }: { params: Promise<{ id: s
                             </div>
                             <div>
                                 <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Global Rank</p>
-                                <p className="text-3xl font-black">#{result.rank || "--"}</p>
+                                <p className="text-3xl font-black">#{data.result.rank || "--"}</p>
                             </div>
                         </div>
                      </div>
@@ -99,28 +100,28 @@ export default function ResultAnalysisPage({ params }: { params: Promise<{ id: s
                 <StatCard 
                     icon={<Target className="w-5 h-5 text-indigo-500" />} 
                     label="Score Analysis" 
-                    value={`${result.score}`} 
-                    subValue={`out of ${result.totalMarks}`}
+                    value={`${data.result.score}`} 
+                    subValue={`out of ${data.result.totalMarks}`}
                     color="bg-indigo-50"
                 />
                 <StatCard 
                     icon={<TrendingUp className="w-5 h-5 text-emerald-500" />} 
                     label="Accuracy Rate" 
-                    value={`${Math.round(result.analysis?.accuracy || 0)}%`} 
+                    value={`${Math.round(data.result.analysis?.accuracy || 0)}%`} 
                     subValue="Based on attempts"
                     color="bg-emerald-50"
                 />
                 <StatCard 
                     icon={<Timer className="w-5 h-5 text-amber-500" />} 
                     label="Total Time" 
-                    value={`${Math.floor(result.analysis?.timeTaken / 60)}m ${result.analysis?.timeTaken % 60}s`} 
+                    value={`${Math.floor(data.result.analysis?.timeTaken / 60)}m ${data.result.analysis?.timeTaken % 60}s`} 
                     subValue="Avg: 45s / Question"
                     color="bg-amber-50"
                 />
                 <StatCard 
                     icon={<Zap className="w-5 h-5 text-rose-500" />} 
                     label="Percentile" 
-                    value={`${result.percentile}%`} 
+                    value={`${data.result.percentile}%`} 
                     subValue="Better than others"
                     color="bg-rose-50"
                 />
@@ -138,24 +139,24 @@ export default function ResultAnalysisPage({ params }: { params: Promise<{ id: s
                         </div>
 
                         <div className="space-y-4">
-                            <BreakedownRow label="Correct Answers" count={result.analysis?.correctAnswers} color="bg-emerald-500" />
-                            <BreakedownRow label="Incorrect Answers" count={result.analysis?.incorrectAnswers} color="bg-rose-500" />
-                            <BreakedownRow label="Unattempted" count={result.analysis?.unattemptedQuestions} color="bg-slate-200" />
+                            <BreakedownRow label="Correct Answers" count={data.result.analysis?.correctAnswers} color="bg-emerald-500" />
+                            <BreakedownRow label="Incorrect Answers" count={data.result.analysis?.incorrectAnswers} color="bg-rose-500" />
+                            <BreakedownRow label="Unattempted" count={data.result.analysis?.unattemptedQuestions} color="bg-slate-200" />
                         </div>
 
                         <div className="pt-8 border-t border-slate-50">
                             <div className="h-4 w-full bg-slate-100 rounded-full flex overflow-hidden">
                                 <div 
                                     className="h-full bg-emerald-500" 
-                                    style={{ width: `${(result.analysis?.correctAnswers / result.totalQuestions) * 100}%` }} 
+                                    style={{ width: `${(data.result.analysis?.correctAnswers / data.result.totalQuestions) * 100}%` }} 
                                 />
                                 <div 
                                     className="h-full bg-rose-500" 
-                                    style={{ width: `${(result.analysis?.incorrectAnswers / result.totalQuestions) * 100}%` }} 
+                                    style={{ width: `${(data.result.analysis?.incorrectAnswers / data.result.totalQuestions) * 100}%` }} 
                                 />
                                 <div 
                                     className="h-full bg-slate-200" 
-                                    style={{ width: `${(result.analysis?.unattemptedQuestions / result.totalQuestions) * 100}%` }} 
+                                    style={{ width: `${(data.result.analysis?.unattemptedQuestions / data.result.totalQuestions) * 100}%` }} 
                                 />
                             </div>
                         </div>

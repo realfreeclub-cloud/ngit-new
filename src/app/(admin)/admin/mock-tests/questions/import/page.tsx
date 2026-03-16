@@ -15,9 +15,9 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { bulkInsertQuestions } from "@/app/actions/questions";
-import { getCourses } from "@/app/actions/courses";
+import { getAllCourses } from "@/app/actions/courses";
 import { useEffect } from "react";
 
 export default function ImportQuestionsPage() {
@@ -33,25 +33,69 @@ export default function ImportQuestionsPage() {
     }, []);
 
     const loadCourses = async () => {
-        const res = await getCourses();
+        const res = await getAllCourses(); // Fixed from getCourses to getAllCourses based on recent audit
         if (res.success) setCourses(res.courses);
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const excelToJson = async (file: File) => {
+        const workbook = new ExcelJS.Workbook();
+        const buffer = await file.arrayBuffer();
+        await workbook.xlsx.load(buffer);
+        const worksheet = workbook.getWorksheet(1);
+        if (!worksheet) return [];
+
+        const data: any[] = [];
+        const headers: string[] = [];
+        
+        // Get headers from first row
+        const headerRow = worksheet.getRow(1);
+        headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+            const val = cell.value;
+            // Handle rich text or objects
+            let headerValue = "";
+            if (val && typeof val === 'object' && 'richText' in val) {
+                headerValue = (val as any).richText.map((rt: any) => rt.text).join("");
+            } else {
+                headerValue = val ? val.toString().trim() : "";
+            }
+            headers[colNumber] = headerValue || `Column${colNumber}`;
+        });
+
+        // Get data rows
+        worksheet.eachRow((row, rowNumber) => {
+            if (rowNumber === 1) return;
+            const rowData: any = {};
+            let hasData = false;
+            row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                const header = headers[colNumber];
+                if (header) {
+                    let value = cell.value;
+                    // Handle cases where value might be an object
+                    if (value && typeof value === 'object') {
+                        if ('result' in value) value = (value as any).result;
+                        else if ('richText' in value) value = (value as any).richText.map((rt: any) => rt.text).join("");
+                        else if ('text' in value) value = (value as any).text;
+                    }
+                    rowData[header] = value;
+                    if (value !== null && value !== undefined && value !== '') hasData = true;
+                }
+            });
+            if (hasData) data.push(rowData);
+        });
+        return data;
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
         if (!selectedFile) return;
         setFile(selectedFile);
 
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-            const bstr = evt.target?.result;
-            const wb = XLSX.read(bstr, { type: "binary" });
-            const wsname = wb.SheetNames[0];
-            const ws = wb.Sheets[wsname];
-            const data = XLSX.utils.sheet_to_json(ws);
+        try {
+            const data = await excelToJson(selectedFile);
             setPreviewData(data.slice(0, 5)); // Show first 5 for preview
-        };
-        reader.readAsBinaryString(selectedFile);
+        } catch (err: any) {
+            toast.error("Failed to read file: " + err.message);
+        }
     };
 
     const handleImport = async () => {
@@ -65,53 +109,45 @@ export default function ImportQuestionsPage() {
         }
 
         setImporting(true);
-        const reader = new FileReader();
-        reader.onload = async (evt) => {
-            try {
-                const bstr = evt.target?.result;
-                const wb = XLSX.read(bstr, { type: "binary" });
-                const wsname = wb.SheetNames[0];
-                const ws = wb.Sheets[wsname];
-                const data: any[] = XLSX.utils.sheet_to_json(ws);
+        try {
+            const data = await excelToJson(file);
 
-                // Map Excel columns to Question model
-                const formattedQuestions = data.map(row => {
-                    // Basic validation & mapping
-                    const type = mapType(row.Type || row["Question Type"]);
-                    return {
-                        courseId: selectedCourseId,
-                        subject: row.Subject || "General",
-                        topic: row.Topic || "Uncategorized",
-                        type: type,
-                        difficulty: (row.Difficulty || "MEDIUM").toUpperCase(),
-                        content: { en: row.Question || row.Content },
-                        marks: row.Marks || 4,
-                        negativeMarks: row.NegativeMarks || 1,
-                        explanation: { en: row.Explanation || "" },
-                        options: [
-                            { text: { en: row.OptionA || row["Option A"] }, isCorrect: checkCorrect(row, "A") },
-                            { text: { en: row.OptionB || row["Option B"] }, isCorrect: checkCorrect(row, "B") },
-                            { text: { en: row.OptionC || row["Option C"] }, isCorrect: checkCorrect(row, "C") },
-                            { text: { en: row.OptionD || row["Option D"] }, isCorrect: checkCorrect(row, "D") },
-                        ].filter(o => o.text.en),
-                        numericAnswer: row.NumericAnswer || row.Answer,
-                    };
-                });
+            // Map Excel columns to Question model
+            const formattedQuestions = data.map(row => {
+                // Basic validation & mapping
+                const type = mapType(row.Type || row["Question Type"]);
+                return {
+                    courseId: selectedCourseId,
+                    subject: row.Subject || "General",
+                    topic: row.Topic || "Uncategorized",
+                    type: type,
+                    difficulty: (row.Difficulty || "MEDIUM").toUpperCase(),
+                    content: { en: row.Question || row.Content },
+                    marks: row.Marks || 4,
+                    negativeMarks: row.NegativeMarks || 1,
+                    explanation: { en: row.Explanation || "" },
+                    options: [
+                        { text: { en: row.OptionA || row["Option A"] }, isCorrect: checkCorrect(row, "A") },
+                        { text: { en: row.OptionB || row["Option B"] }, isCorrect: checkCorrect(row, "B") },
+                        { text: { en: row.OptionC || row["Option C"] }, isCorrect: checkCorrect(row, "C") },
+                        { text: { en: row.OptionD || row["Option D"] }, isCorrect: checkCorrect(row, "D") },
+                    ].filter(o => o.text.en),
+                    numericAnswer: row.NumericAnswer || row.Answer,
+                };
+            });
 
-                const res = await bulkInsertQuestions(formattedQuestions);
-                if (res.success) {
-                    toast.success(`${res.count} questions imported successfully!`);
-                    router.push("/admin/mock-tests/questions");
-                } else {
-                    toast.error(res.error);
-                }
-            } catch (err: any) {
-                toast.error("Failed to parse Excel file: " + err.message);
-            } finally {
-                setImporting(false);
+            const res = await bulkInsertQuestions(formattedQuestions);
+            if (res.success) {
+                toast.success(`${res.count} questions imported successfully!`);
+                router.push("/admin/mock-tests/questions");
+            } else {
+                toast.error(res.error);
             }
-        };
-        reader.readAsBinaryString(file);
+        } catch (err: any) {
+            toast.error("Failed to parse Excel file: " + err.message);
+        } finally {
+            setImporting(false);
+        }
     };
 
     const mapType = (typeStr: string) => {
@@ -131,28 +167,54 @@ export default function ImportQuestionsPage() {
         return correct.includes(label);
     };
 
-    const downloadSample = () => {
-        const sampleData = [
-            {
-                Question: "What is the unit of Force?",
-                Type: "MCQ_SINGLE",
-                "Option A": "Newton",
-                "Option B": "Joule",
-                "Option C": "Watt",
-                "Option D": "Pascal",
-                "Correct Answer": "A",
-                Explanation: "Newton (N) is the SI unit of force.",
-                Marks: 4,
-                NegativeMarks: 1,
-                Subject: "Physics",
-                Topic: "Mechanics",
-                Difficulty: "EASY"
-            }
+    const downloadSample = async () => {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Sample");
+
+        worksheet.columns = [
+            { header: "Question", key: "Question", width: 40 },
+            { header: "Type", key: "Type", width: 15 },
+            { header: "Option A", key: "OptionA", width: 20 },
+            { header: "Option B", key: "OptionB", width: 20 },
+            { header: "Option C", key: "OptionC", width: 20 },
+            { header: "Option D", key: "OptionD", width: 20 },
+            { header: "Correct Answer", key: "CorrectAnswer", width: 15 },
+            { header: "Explanation", key: "Explanation", width: 40 },
+            { header: "Marks", key: "Marks", width: 10 },
+            { header: "Negative Marks", key: "NegativeMarks", width: 15 },
+            { header: "Subject", key: "Subject", width: 15 },
+            { header: "Topic", key: "Topic", width: 15 },
+            { header: "Difficulty", key: "Difficulty", width: 12 },
         ];
-        const ws = XLSX.utils.json_to_sheet(sampleData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Sample");
-        XLSX.writeFile(wb, "question_import_sample.xlsx");
+
+        worksheet.addRow({
+            Question: "What is the unit of Force?",
+            Type: "MCQ_SINGLE",
+            OptionA: "Newton",
+            OptionB: "Joule",
+            OptionC: "Watt",
+            OptionD: "Pascal",
+            CorrectAnswer: "A",
+            Explanation: "Newton (N) is the SI unit of force.",
+            Marks: 4,
+            NegativeMarks: 1,
+            Subject: "Physics",
+            Topic: "Mechanics",
+            Difficulty: "EASY"
+        });
+
+        // Style the header
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.getRow(1).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFE0E0E0' }
+        };
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+        const saveAs = (await import("file-saver")).default;
+        saveAs(blob, "question_import_sample.xlsx");
     };
 
     return (

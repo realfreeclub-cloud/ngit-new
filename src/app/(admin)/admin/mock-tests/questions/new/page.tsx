@@ -26,7 +26,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createQuestion } from "@/app/actions/questions";
-import { getCourses } from "@/app/actions/courses";
+import { getAllCourses } from "@/app/actions/courses";
 
 const QUESTION_TYPES = [
     { value: "MCQ_SINGLE", label: "Single Correct", icon: CheckCircle2, desc: "Standard multiple choice with one correct answer." },
@@ -70,7 +70,7 @@ export default function NewQuestionPage() {
     }, []);
 
     const loadCourses = async () => {
-        const res = await getCourses();
+        const res = await getAllCourses();
         if (res.success) setCourses(res.courses);
     };
 

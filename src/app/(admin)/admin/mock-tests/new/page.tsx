@@ -26,9 +26,9 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getCourses } from "@/app/actions/courses";
+import { getAllCourses } from "@/app/actions/courses";
 import { getPaperSets } from "@/app/actions/paperSets";
-import { createQuiz } from "@/app/actions/admin-quizzes";
+import { createAdminQuiz } from "@/app/actions/admin-quizzes";
 
 export default function NewMockTestPage() {
     const router = useRouter();
@@ -76,7 +76,7 @@ export default function NewMockTestPage() {
     }, []);
 
     const loadData = async () => {
-        const [cRes, pRes] = await Promise.all([getCourses(), getPaperSets()]);
+        const [cRes, pRes] = await Promise.all([getAllCourses(), getPaperSets()]);
         if (cRes.success) setCourses(cRes.courses);
         if (pRes.success) setPaperSets(pRes.paperSets);
     };
@@ -110,7 +110,7 @@ export default function NewMockTestPage() {
             questions: paperSets.find(p => p._id === formData.paperSetId)?.questions || []
         };
         
-        const res = await createQuiz(payload);
+        const res = await createAdminQuiz(payload);
         if (res.success) {
             toast.success("Mock Test published successfully!");
             router.push("/admin/mock-tests");
