@@ -2,26 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { 
-    ChevronLeft, 
-    Save, 
-    Plus, 
-    Trash2, 
-    BrainCircuit,
-    LayoutGrid,
-    Type,
-    CheckCircle2,
-    Info,
-    Layout,
-    ListChecks,
-    Puzzle,
-    Scale
+    ChevronLeft, Save, Plus, Trash2, Info 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -29,13 +16,14 @@ import { createQuestion } from "@/app/actions/questions";
 import { getAllCourses } from "@/app/actions/courses";
 
 const QUESTION_TYPES = [
-    { value: "MCQ_SINGLE", label: "Single Correct", icon: CheckCircle2, desc: "Standard multiple choice with one correct answer." },
-    { value: "MCQ_MULTIPLE", label: "Multiple Correct", icon: ListChecks, desc: "Multiple choice where one or more answers can be correct." },
-    { value: "TRUE_FALSE", label: "True / False", icon: Scale, desc: "Simple binary choice question." },
-    { value: "NUMERIC", label: "Numeric Answer", icon: Type, desc: "Students must enter a numeric value." },
-    { value: "MATCH_THE_FOLLOWING", label: "Match Matrix", icon: Puzzle, desc: "Match items from Column A to Column B." },
-    { value: "ASSERTION_REASON", label: "Assertion-Reason", icon: Info, desc: "Evaluate the relationship between two statements." },
-    { value: "DESCRIPTIVE", label: "Descriptive", icon: Layout, desc: "Open-ended essay or long answer question." },
+    { value: "MCQ_SINGLE", label: "Single Correct MCQ" },
+    { value: "MCQ_MULTIPLE", label: "Multiple Correct MCQ" },
+    { value: "TRUE_FALSE", label: "True / False" },
+    { value: "NUMERIC", label: "Numeric Answer" },
+    { value: "SHORT_ANSWER", label: "Short Answer" },
+    { value: "DESCRIPTIVE", label: "Descriptive" },
+    { value: "MATCH_THE_FOLLOWING", label: "Match the Following" },
+    { value: "ASSERTION_REASON", label: "Assertion / Reason" },
 ];
 
 export default function NewQuestionPage() {
@@ -61,6 +49,7 @@ export default function NewQuestionPage() {
             { text: { en: "" }, isCorrect: false },
         ],
         numericAnswer: "",
+        shortAnswer: "",
         assertion: { en: "" },
         reason: { en: "" },
     });
@@ -79,7 +68,6 @@ export default function NewQuestionPage() {
         if (field === "text") {
             newOptions[index].text.en = value;
         } else if (field === "isCorrect") {
-            // If MCQ_SINGLE, uncheck others
             if (formData.type === "MCQ_SINGLE") {
                 newOptions.forEach((opt, i) => opt.isCorrect = i === index);
             } else {
@@ -105,8 +93,8 @@ export default function NewQuestionPage() {
     };
 
     const handleSubmit = async () => {
-        if (!formData.courseId || !formData.subject || !formData.content.en) {
-            toast.error("Please fill all required fields");
+        if (!formData.courseId || !formData.topic || !formData.content.en) {
+            toast.error("Please fill Course, Topic Tag, and Question Content");
             return;
         }
 
@@ -121,314 +109,342 @@ export default function NewQuestionPage() {
         setSubmitting(false);
     };
 
+    // Render True False Button helper
+    const handleTrueFalseSelect = (isTrue: boolean) => {
+        setFormData({
+            ...formData,
+            options: [
+                { text: { en: "True" }, isCorrect: isTrue },
+                { text: { en: "False" }, isCorrect: !isTrue }
+            ]
+        });
+    };
+
+    // Auto initialize true/false structure if needed
+    useEffect(() => {
+        if (formData.type === "TRUE_FALSE" && formData.options.length !== 2) {
+            handleTrueFalseSelect(true); // default option
+        }
+    }, [formData.type]);
+
     return (
-        <div className="max-w-5xl mx-auto py-12 px-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Nav */}
-            <div className="flex items-center justify-between mb-10">
-                <Link href="/admin/mock-tests/questions">
-                    <Button variant="ghost" className="rounded-xl gap-2 hover:bg-slate-100">
-                        <ChevronLeft className="w-5 h-5" /> Back to Bank
-                    </Button>
-                </Link>
-                <div className="flex gap-3">
-                    <Button 
-                        className="rounded-xl h-12 px-8 font-black gap-2 shadow-xl shadow-primary/20"
-                        onClick={handleSubmit}
-                        disabled={submitting}
-                    >
-                        <Save className="w-5 h-5" />
-                        {submitting ? "Saving..." : "Save Question"}
-                    </Button>
+        <div className="max-w-4xl mx-auto py-12 px-6 animate-in fade-in duration-500 pb-24">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                    <Link href="/admin/mock-tests/questions">
+                        <Button variant="outline" size="icon" className="rounded-xl border-slate-200">
+                            <ChevronLeft className="w-5 h-5 text-slate-600" />
+                        </Button>
+                    </Link>
+                    <div>
+                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Create Question</h1>
+                        <p className="text-sm font-medium text-slate-500">Design dynamic questions for assessments</p>
+                    </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                {/* Left: Settings */}
-                <div className="lg:col-span-1 space-y-8">
-                    <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm space-y-6">
-                        <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                            <LayoutGrid className="w-4 h-4" /> Context & Level
-                        </h3>
-                        
-                        <div className="space-y-2">
-                            <Label className="font-bold text-slate-700">Course</Label>
-                            <select 
-                                className="w-full h-12 rounded-xl bg-slate-50 border-none px-4 font-bold"
-                                value={formData.courseId}
-                                onChange={(e) => setFormData({...formData, courseId: e.target.value})}
-                            >
-                                <option value="">Select Course</option>
-                                {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
-                            </select>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label className="font-bold text-slate-700">Subject</Label>
-                                <Input 
-                                    className="h-12 rounded-xl bg-slate-50 border-none px-4 font-bold" 
-                                    placeholder="e.g. Physics"
-                                    value={formData.subject}
-                                    onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="font-bold text-slate-700">Topic</Label>
-                                <Input 
-                                    className="h-12 rounded-xl bg-slate-50 border-none px-4 font-bold"
-                                    placeholder="e.g. Optics"
-                                    value={formData.topic}
-                                    onChange={(e) => setFormData({...formData, topic: e.target.value})}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-4 pt-4 border-t border-slate-50">
-                            <Label className="font-bold text-slate-700">Difficulty Profile</Label>
-                            <div className="flex p-1 bg-slate-100 rounded-xl">
-                                {["EASY", "MEDIUM", "HARD"].map((level) => (
-                                    <button
-                                        key={level}
-                                        onClick={() => setFormData({...formData, difficulty: level})}
-                                        className={`flex-1 h-10 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                                            formData.difficulty === level ? "bg-white text-slate-900 shadow-sm" : "text-slate-400"
-                                        }`}
-                                    >
-                                        {level}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
-                            <div className="space-y-2">
-                                <Label className="font-bold text-slate-700">Marks</Label>
-                                <Input 
-                                    type="number"
-                                    className="h-12 rounded-xl bg-slate-50 border-none px-4 font-bold"
-                                    value={formData.marks}
-                                    onChange={(e) => setFormData({...formData, marks: parseInt(e.target.value)})}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="font-bold text-slate-700">Negative</Label>
-                                <Input 
-                                    type="number"
-                                    className="h-12 rounded-xl bg-slate-50 border-none px-4 font-bold text-rose-500"
-                                    value={formData.negativeMarks}
-                                    onChange={(e) => setFormData({...formData, negativeMarks: parseInt(e.target.value)})}
-                                />
-                            </div>
-                        </div>
+            <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8 space-y-10">
+                
+                {/* 1. Context Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                        <Label className="font-bold text-slate-700 ml-1">Course</Label>
+                        <select 
+                            className="w-full h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
+                            value={formData.courseId}
+                            onChange={(e) => setFormData({...formData, courseId: e.target.value})}
+                        >
+                            <option value="">Select Course</option>
+                            {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
+                        </select>
                     </div>
-
-                    <div className="bg-slate-900 rounded-[2rem] p-8 text-white space-y-6 shadow-xl">
-                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Question Type</h3>
-                        <div className="grid grid-cols-1 gap-3">
-                            {QUESTION_TYPES.map((type) => (
-                                <button
-                                    key={type.value}
-                                    onClick={() => setFormData({...formData, type: type.value})}
-                                    className={`flex items-start gap-4 p-4 rounded-2xl border transition-all text-left group ${
-                                        formData.type === type.value 
-                                        ? "bg-primary border-primary" 
-                                        : "bg-white/5 border-white/10 hover:border-white/20"
-                                    }`}
-                                >
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                                        formData.type === type.value ? "bg-white/20" : "bg-white/10"
-                                    }`}>
-                                        <type.icon className="w-5 h-5 text-white" />
-                                    </div>
-                                    <div>
-                                        <p className="font-black text-sm">{type.label}</p>
-                                        <p className="text-[10px] font-bold text-white/50 mt-0.5 line-clamp-1 group-hover:line-clamp-none transition-all">{type.desc}</p>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
+                    <div className="space-y-2 lg:col-span-2">
+                        <Label className="font-bold text-slate-700 ml-1">Topic Tag</Label>
+                        <Input 
+                            placeholder="e.g. Thermodynamics, Algebra, Quantum Physics"
+                            className="h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold shadow-none"
+                            value={formData.topic}
+                            onChange={(e) => setFormData({...formData, topic: e.target.value, subject: e.target.value})} // syncing subject & topic for simpler UX
+                        />
                     </div>
                 </div>
 
-                {/* Right: Content & Answers */}
-                <div className="lg:col-span-2 space-y-8">
-                    {/* Question Content */}
-                    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-6">
-                        <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                            <Plus className="w-4 h-4" /> Question content
-                        </h3>
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <div className="flex justify-between items-center mb-1">
-                                    <Label className="font-bold text-slate-700">Main Content (English)</Label>
-                                    <Badge variant="outline" className="text-[9px] font-black uppercase">Required</Badge>
-                                </div>
-                                <Textarea 
-                                    className="min-h-[200px] rounded-3xl bg-slate-50 border-none p-6 font-medium text-lg focus-visible:ring-primary/20"
-                                    placeholder="Enter the question detail here... Support HTML, equations!"
-                                    value={formData.content.en}
-                                    onChange={(e) => setFormData({...formData, content: { ...formData.content, en: e.target.value }})}
-                                    id="question-editor"
-                                />
-                            </div>
-                        </div>
+                {/* 2. Question Type */}
+                <div className="space-y-2 border-b border-slate-100 pb-10">
+                    <Label className="font-bold text-slate-700 ml-1">Question Type</Label>
+                    <select 
+                        className="w-full md:w-1/2 h-14 rounded-2xl bg-slate-900 text-white border-none px-5 font-bold outline-none cursor-pointer appearance-none shadow-xl shadow-slate-900/10"
+                        value={formData.type}
+                        onChange={(e) => setFormData({...formData, type: e.target.value})}
+                    >
+                        {QUESTION_TYPES.map(type => (
+                            <option key={type.value} value={type.value}>{type.label}</option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* 3. Question Content */}
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                        <Label className="font-bold text-slate-700 text-lg ml-1">Question Content</Label>
+                        <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest text-rose-500 border-none bg-rose-50 px-3 py-1">Required</Badge>
                     </div>
+                    <Textarea 
+                        placeholder="Type the question content here... You can use HTML formatting."
+                        className="min-h-[160px] rounded-[1.5rem] bg-slate-50 border-none p-6 font-medium text-lg focus-visible:ring-primary/20 shadow-none leading-relaxed"
+                        value={formData.content.en}
+                        onChange={(e) => setFormData({...formData, content: { ...formData.content, en: e.target.value }})}
+                    />
+                </div>
 
-                    {/* Answer Configuration - Dynamic based on Type */}
-                    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-8">
-                        <div className="flex justify-between items-center">
-                            <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                <CheckCircle2 className="w-4 h-4" /> Answer Configuration
-                            </h3>
-                            {["MCQ_SINGLE", "MCQ_MULTIPLE", "MATCH_THE_FOLLOWING"].includes(formData.type) && (
-                                <Button variant="ghost" className="h-8 rounded-lg gap-2 font-black text-[10px] uppercase text-primary hover:bg-primary/5" onClick={addOption}>
-                                    <Plus className="w-3 h-3" /> Add Choice
+                {/* 4. DYNAMIC AREA */}
+                <div className="bg-slate-50/50 -mx-8 px-8 py-8 border-y border-slate-50 space-y-4">
+                    
+                    {/* Multi / Single Choice Options */}
+                    {["MCQ_SINGLE", "MCQ_MULTIPLE"].includes(formData.type) && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <Label className="font-bold text-slate-700 text-lg">Options</Label>
+                                    <p className="text-sm font-medium text-slate-500">Select the correct choice{formData.type === "MCQ_MULTIPLE" ? "s" : ""}</p>
+                                </div>
+                                <Button variant="outline" className="h-10 gap-2 uppercase font-black text-[10px] rounded-xl bg-white" onClick={addOption}>
+                                    <Plus className="w-3 h-3" /> Add Option
                                 </Button>
-                            )}
-                        </div>
-
-                        {/* MCQ Rendering */}
-                        {["MCQ_SINGLE", "MCQ_MULTIPLE"].includes(formData.type) && (
-                            <div className="space-y-4">
-                                {formData.options.map((opt: any, i: number) => (
-                                    <div key={i} className={`flex items-start gap-4 p-4 rounded-3xl border transition-all ${opt.isCorrect ? "bg-emerald-50 border-emerald-100" : "bg-slate-50 border-slate-50"}`}>
-                                        <div className="pt-2">
-                                            <Switch 
-                                                checked={opt.isCorrect} 
-                                                onCheckedChange={(val) => handleOptionChange(i, "isCorrect", val)}
-                                                className="data-[state=checked]:bg-emerald-500"
-                                            />
-                                        </div>
-                                        <div className="flex-1">
-                                            <Input 
-                                                className="bg-transparent border-none text-slate-900 font-bold p-0 h-auto focus-visible:ring-0 placeholder:text-slate-400" 
-                                                placeholder={`Option ${String.fromCharCode(65 + i)}`}
-                                                value={opt.text.en}
-                                                onChange={(e) => handleOptionChange(i, "text", e.target.value)}
-                                            />
-                                        </div>
-                                        {formData.options.length > 2 && (
-                                            <Button variant="ghost" className="h-8 w-8 p-0 rounded-lg hover:bg-rose-100 hover:text-rose-600 self-center" onClick={() => removeOption(i)}>
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                        )}
+                            </div>
+                            {formData.options.map((opt: any, i: number) => (
+                                <div key={i} className={`flex items-start gap-4 p-4 rounded-2xl border-2 transition-all shadow-sm ${opt.isCorrect ? "border-emerald-500 bg-emerald-50/30" : "border-slate-100 bg-white"}`}>
+                                    <div className="pt-3.5 pl-2">
+                                        <input 
+                                            type={formData.type === "MCQ_SINGLE" ? "radio" : "checkbox"}
+                                            name="mcq_option"
+                                            checked={opt.isCorrect}
+                                            onChange={(e) => handleOptionChange(i, "isCorrect", e.target.checked)}
+                                            className={`w-5 h-5 accent-emerald-500 cursor-pointer ${formData.type === "MCQ_SINGLE" ? "rounded-full" : "rounded"}`}
+                                        />
                                     </div>
-                                ))}
-                            </div>
-                        )}
+                                    <div className="flex-1">
+                                        <Input 
+                                            placeholder={`Option ${String.fromCharCode(65 + i)}`}
+                                            className="bg-transparent border-none text-slate-800 font-bold px-2 shadow-none focus-visible:ring-0 text-base"
+                                            value={opt.text.en}
+                                            onChange={(e) => handleOptionChange(i, "text", e.target.value)}
+                                        />
+                                    </div>
+                                    {formData.options.length > 2 && (
+                                        <Button variant="ghost" size="icon" className="mt-1 hover:bg-rose-100 hover:text-rose-600 text-slate-400 rounded-xl" onClick={() => removeOption(i)}>
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
-                        {/* Numeric Rendering */}
-                        {formData.type === "NUMERIC" && (
-                            <div className="bg-slate-50 p-10 rounded-[2rem] flex flex-col items-center text-center space-y-4 border-2 border-dashed border-slate-200">
-                                <Label className="text-xl font-black text-slate-900">Exact Numeric Value</Label>
-                                <Input 
-                                    className="max-w-[200px] h-20 rounded-3xl bg-white border-2 border-slate-200 text-center text-4xl font-black focus-visible:ring-primary/20"
-                                    type="number"
-                                    step="0.01"
-                                    value={formData.numericAnswer}
-                                    onChange={(e) => setFormData({...formData, numericAnswer: e.target.value})}
-                                />
-                                <p className="text-sm font-bold text-slate-400">System will match this value for auto-grading.</p>
+                    {/* True / False */}
+                    {formData.type === "TRUE_FALSE" && formData.options.length >= 2 && (
+                        <div className="space-y-4">
+                            <Label className="font-bold text-slate-700 text-lg">Select Correct Answer</Label>
+                            <div className="flex gap-4">
+                                <button 
+                                    type="button"
+                                    onClick={() => handleTrueFalseSelect(true)}
+                                    className={`flex-1 h-14 rounded-2xl text-lg font-black transition-all border-2 ${formData.options[0]?.isCorrect ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20" : "bg-white text-slate-600 border-slate-200 hover:border-emerald-200"}`}
+                                >
+                                    True
+                                </button>
+                                <button 
+                                    type="button"
+                                    onClick={() => handleTrueFalseSelect(false)}
+                                    className={`flex-1 h-14 rounded-2xl text-lg font-black transition-all border-2 ${formData.options[1]?.isCorrect ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20" : "bg-white text-slate-600 border-slate-200 hover:border-emerald-200"}`}
+                                >
+                                    False
+                                </button>
                             </div>
-                        )}
+                        </div>
+                    )}
 
-                        {/* Assertion Reason Rendering */}
-                        {formData.type === "ASSERTION_REASON" && (
-                            <div className="space-y-6">
+                    {/* Numeric Answer */}
+                    {formData.type === "NUMERIC" && (
+                        <div className="space-y-3">
+                            <Label className="font-bold text-slate-700 text-lg">Exact Correct Answer</Label>
+                            <Input 
+                                type="number"
+                                step="any"
+                                placeholder="e.g. 3.14"
+                                className="h-16 max-w-sm rounded-[1rem] bg-white border border-slate-200 px-6 font-black text-2xl focus-visible:ring-primary/20 shadow-sm"
+                                value={formData.numericAnswer}
+                                onChange={(e) => setFormData({...formData, numericAnswer: e.target.value})}
+                            />
+                            <p className="text-sm text-slate-500 font-medium">The system will precisely match this numeric value during auto-grading.</p>
+                        </div>
+                    )}
+
+                    {/* Short Answer */}
+                    {formData.type === "SHORT_ANSWER" && (
+                        <div className="space-y-3">
+                            <Label className="font-bold text-slate-700 text-lg">Correct Text Answer</Label>
+                            <Input 
+                                placeholder="e.g. Newton"
+                                className="h-14 rounded-[1rem] bg-white border border-slate-200 px-6 font-bold text-lg focus-visible:ring-primary/20 shadow-sm"
+                                value={formData.shortAnswer || ""}
+                                onChange={(e) => setFormData({...formData, shortAnswer: e.target.value})}
+                            />
+                            <p className="text-sm text-slate-500 font-medium">The system expects this exact word or phrase (case-insensitive usually).</p>
+                        </div>
+                    )}
+
+                    {/* Descriptive */}
+                    {formData.type === "DESCRIPTIVE" && (
+                        <div className="bg-indigo-50/80 p-6 rounded-2xl border border-indigo-100 flex gap-4 items-start">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0">
+                                <Info className="w-5 h-5 text-indigo-600" />
+                            </div>
+                            <div>
+                                <h4 className="font-black text-indigo-900 text-lg">Descriptive Essay Format</h4>
+                                <p className="text-indigo-700/80 font-medium leading-relaxed mt-1">
+                                    No automatic options required. Students will be provided a rich text area during the exam to write their detailed structured answer, which will be manually evaluated by an examiner.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Match the Following */}
+                    {formData.type === "MATCH_THE_FOLLOWING" && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between mb-4">
+                                <Label className="font-bold text-slate-700 text-lg">Match Matrix</Label>
+                                <Button variant="outline" className="h-10 gap-2 uppercase font-black text-[10px] rounded-xl bg-white" onClick={addOption}>
+                                    <Plus className="w-3 h-3" /> Add Pair
+                                </Button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-8 mb-2 pl-12 pr-12">
+                                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Left Column (Item)</Label>
+                                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Right Column (Match)</Label>
+                            </div>
+                            {formData.options.map((opt: any, i: number) => (
+                                <div key={i} className="flex gap-4 items-center bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
+                                    <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-black text-xs shrink-0">{i+1}</div>
+                                    <Input 
+                                        placeholder={`Item ${i+1}`}
+                                        className="flex-1 h-12 rounded-xl bg-slate-50 border-none font-bold"
+                                        value={opt.text.en}
+                                        onChange={(e) => handleOptionChange(i, "text", e.target.value)}
+                                    />
+                                    <div className="w-4 h-px bg-slate-200 shrink-0"></div>
+                                    <Input 
+                                        placeholder={`Match ${i+1}`}
+                                        className="flex-1 h-12 rounded-xl bg-slate-50 border-none font-bold text-indigo-700"
+                                        value={opt.pair?.en}
+                                        onChange={(e) => handleOptionChange(i, "pair", e.target.value)}
+                                    />
+                                    <Button variant="ghost" size="icon" className="hover:bg-rose-100 hover:text-rose-600 text-slate-400 rounded-xl" onClick={() => removeOption(i)}>
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Assertion Reason */}
+                    {formData.type === "ASSERTION_REASON" && (
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <Label className="font-bold text-indigo-500 uppercase text-[10px] tracking-widest">Statement 1: Assertion</Label>
+                                    <Label className="font-bold text-indigo-700 ml-1">Statement 1: Assertion (A)</Label>
                                     <Textarea 
-                                        className="rounded-2xl bg-slate-50 border-none font-bold p-6" 
-                                        placeholder="Enter the assertion statement..."
-                                        value={formData.assertion.en}
+                                        className="min-h-[120px] rounded-[1.5rem] bg-indigo-50/50 border border-indigo-100 p-5 font-medium text-indigo-950 focus-visible:ring-indigo-500/20 shadow-inner"
+                                        placeholder="Enter assertion..."
+                                        value={formData.assertion?.en || ""}
                                         onChange={(e) => setFormData({...formData, assertion: {en: e.target.value}})}
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="font-bold text-purple-500 uppercase text-[10px] tracking-widest">Statement 2: Reason</Label>
+                                    <Label className="font-bold text-purple-700 ml-1">Statement 2: Reason (R)</Label>
                                     <Textarea 
-                                        className="rounded-2xl bg-slate-50 border-none font-bold p-6" 
-                                        placeholder="Enter the reason statement..."
-                                        value={formData.reason.en}
+                                        className="min-h-[120px] rounded-[1.5rem] bg-purple-50/50 border border-purple-100 p-5 font-medium text-purple-950 focus-visible:ring-purple-500/20 shadow-inner"
+                                        placeholder="Enter reason..."
+                                        value={formData.reason?.en || ""}
                                         onChange={(e) => setFormData({...formData, reason: {en: e.target.value}})}
                                     />
                                 </div>
-                                <div className="space-y-4 pt-4 border-t">
-                                    <Label className="font-bold text-slate-700">Correct Outcome Selection</Label>
-                                    <div className="grid grid-cols-1 gap-2">
-                                        {[
-                                            "A: Both are true, R is correct explanation",
-                                            "B: Both are true, R is NOT correct explanation",
-                                            "C: A is true, but R is false",
-                                            "D: A is false, but R is true"
-                                        ].map((opt, i) => (
-                                            <button 
-                                                key={i}
-                                                className={`p-4 rounded-2xl text-left font-bold text-sm transition-all border ${formData.numericAnswer === i ? "bg-slate-900 text-white border-slate-900" : "bg-white border-slate-100 hover:bg-slate-50"}`}
-                                                onClick={() => setFormData({...formData, numericAnswer: i})}
-                                            >
-                                                {opt}
-                                            </button>
-                                        ))}
-                                    </div>
+                            </div>
+                            <div className="space-y-3 pt-2">
+                                <Label className="font-bold text-slate-700 ml-1">Correct Logical Outcome</Label>
+                                <div className="space-y-2">
+                                    {[
+                                        "A: Both are true, R is the correct explanation",
+                                        "B: Both are true, R is NOT the correct explanation",
+                                        "C: A is true, but R is false",
+                                        "D: A is false, but R is true"
+                                    ].map((opt, i) => (
+                                        <div 
+                                            key={i}
+                                            onClick={() => setFormData({...formData, numericAnswer: i})}
+                                            className={`p-4 rounded-2xl border-2 cursor-pointer transition-all font-bold text-sm flex items-center gap-3 ${
+                                                formData.numericAnswer === i ? "border-emerald-500 bg-emerald-50 text-emerald-900 shadow-sm" : "border-slate-100 bg-white hover:border-slate-300 text-slate-600"
+                                            }`}
+                                        >
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${formData.numericAnswer === i ? "border-emerald-500 bg-emerald-500" : "border-slate-300"}`}>
+                                                {formData.numericAnswer === i && <div className="w-2 h-2 bg-white rounded-full" />}
+                                            </div>
+                                            {opt}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
-                        )}
+                        </div>
+                    )}
 
-                        {/* Match Matrix Rendering */}
-                        {formData.type === "MATCH_THE_FOLLOWING" && (
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-8 mb-4">
-                                    <Label className="text-center font-black text-[10px] uppercase text-slate-400 tracking-widest">Column A (Item)</Label>
-                                    <Label className="text-center font-black text-[10px] uppercase text-slate-400 tracking-widest">Column B (Match)</Label>
-                                </div>
-                                {formData.options.map((opt: any, i: number) => (
-                                    <div key={i} className="flex gap-4 items-center">
-                                        <div className="flex-none w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-black text-xs">{i+1}</div>
-                                        <Input 
-                                            className="flex-1 h-12 rounded-xl bg-slate-50 border-none font-bold px-4" 
-                                            placeholder={`Item ${i+1}`}
-                                            value={opt.text.en}
-                                            onChange={(e) => handleOptionChange(i, "text", e.target.value)}
-                                        />
-                                        <ArrowRight className="w-5 h-5 text-slate-300" />
-                                        <Input 
-                                            className="flex-1 h-12 rounded-xl bg-slate-50 border-none font-bold px-4" 
-                                            placeholder={`Match ${i+1}`}
-                                            value={opt.pair?.en}
-                                            onChange={(e) => handleOptionChange(i, "pair", e.target.value)}
-                                        />
-                                        <Button variant="ghost" className="h-10 w-10 p-0 rounded-xl hover:bg-rose-50 hover:text-rose-600" onClick={() => removeOption(i)}>
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                </div>
+                {/* 5. Scoring System */}
+                <div className="grid grid-cols-2 gap-6 pt-4">
+                    <div className="space-y-2">
+                        <Label className="font-bold text-slate-700 ml-1">Marks (Positive)</Label>
+                        <Input 
+                            type="number"
+                            className="h-14 rounded-2xl bg-slate-50 border-none px-5 font-black text-emerald-600 text-xl shadow-none"
+                            value={formData.marks}
+                            onChange={(e) => setFormData({...formData, marks: parseInt(e.target.value) || 0})}
+                        />
                     </div>
-
-                    {/* Explanation */}
-                    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-4">
-                        <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                            <Info className="w-4 h-4" /> Concept Explanation
-                        </h3>
-                        <Textarea 
-                            className="min-h-[150px] rounded-3xl bg-slate-50 border-none p-6 font-medium focus-visible:ring-primary/20"
-                            placeholder="Explain the solution steps and the core concept..."
-                            value={formData.explanation.en}
-                            onChange={(e) => setFormData({...formData, explanation: {en: e.target.value}})}
+                    <div className="space-y-2">
+                        <Label className="font-bold text-slate-700 ml-1">Negative Marks</Label>
+                        <Input 
+                            type="number"
+                            className="h-14 rounded-2xl bg-slate-50 border-none px-5 font-black text-rose-500 text-xl shadow-none"
+                            value={formData.negativeMarks}
+                            onChange={(e) => setFormData({...formData, negativeMarks: parseInt(e.target.value) || 0})}
                         />
                     </div>
                 </div>
+
+                {/* 6. Explanation */}
+                <div className="space-y-3 border-t border-slate-100 pt-10">
+                    <Label className="font-bold text-slate-700 text-lg ml-1">Answer Explanation</Label>
+                    <p className="text-sm text-slate-500 font-medium ml-1">Students will see this detailed explanation when they review their test results.</p>
+                    <Textarea 
+                        placeholder="Provide a step-by-step solution, mathematical working, or conceptual reasoning..."
+                        className="min-h-[160px] rounded-[1.5rem] bg-slate-50 border-none p-6 font-medium text-[15px] focus-visible:ring-primary/20 shadow-none leading-relaxed"
+                        value={formData.explanation.en}
+                        onChange={(e) => setFormData({...formData, explanation: {en: e.target.value}})}
+                    />
+                </div>
+                
+                {/* 7. Action */}
+                <div className="pt-6">
+                    <Button 
+                        onClick={handleSubmit} 
+                        disabled={submitting}
+                        className="w-full h-16 rounded-2xl text-xl font-black shadow-xl shadow-primary/20 gap-2 transition-transform hover:scale-[1.01]"
+                    >
+                        {submitting ? "Saving Blueprint..." : "Save Question Blueprint"}
+                        <Save className="w-5 h-5 ml-2 opacity-80" />
+                    </Button>
+                </div>
+
             </div>
         </div>
     );
-}
-
-function ArrowRight({ className }: { className?: string }) {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-        </svg>
-    )
 }

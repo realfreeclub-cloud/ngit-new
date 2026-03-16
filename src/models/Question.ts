@@ -5,6 +5,7 @@ export enum QuestionType {
     MCQ_MULTIPLE = "MCQ_MULTIPLE",
     TRUE_FALSE = "TRUE_FALSE",
     NUMERIC = "NUMERIC",
+    SHORT_ANSWER = "SHORT_ANSWER",
     DESCRIPTIVE = "DESCRIPTIVE",
     MATCH_THE_FOLLOWING = "MATCH_THE_FOLLOWING",
     ASSERTION_REASON = "ASSERTION_REASON",
@@ -33,6 +34,7 @@ export interface IQuestion extends Document {
         pair?: { en: string; hi?: string }; // For Match Following
     }[];
     numericAnswer?: number;
+    shortAnswer?: string; // For Short Answer
     assertion?: { en: string; hi?: string }; // For Assertion Reason
     reason?: { en: string; hi?: string };    // For Assertion Reason
     marks: number;
@@ -78,6 +80,7 @@ const QuestionSchema = new Schema<IQuestion>(
             },
         ],
         numericAnswer: { type: Number },
+        shortAnswer: { type: String },
         assertion: {
             en: { type: String },
             hi: { type: String },
