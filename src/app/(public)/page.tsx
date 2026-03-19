@@ -49,13 +49,30 @@ export default async function PublicHomePage() {
 
     const cmsSections = dynamicData.success && dynamicData.sections ? dynamicData.sections : [];
 
+    // Map DB members to UI format if provided
+    const displayFaculty = facultyMembers && facultyMembers.length > 0 ? facultyMembers.map((m: any, i: number) => ({
+        id: m._id || i,
+        name: m.name,
+        subject: m.position,
+        qualification: m.qualification || "Ph.D.",
+        experience: m.experience || "N/A",
+        specialization: m.bio ? m.bio.substring(0, 80) + "..." : "Expert Faculty",
+        image: m.image
+    })) : []; // Assuming no defaultFaculty is available, provide an empty array if no members
+
+    const mappedNotifications = (notifications || []).map((n: any) => ({
+        id: n._id || n.id,
+        text: n.title || n.description || n.text || "Notification",
+        link: n.button_link || n.image || n.link || ""
+    }));
+
     return (
         <div className="min-h-screen">
             <DynamicRenderer 
                 sections={cmsSections} 
                 extraData={{
                     courses: publicCourses,
-                    faculty: facultyMembers,
+                    faculty: displayFaculty, // Use displayFaculty here
                     events: publicEvents,
                     gallery: galleryImages,
                     publicResults: firstSectionResults as any[],
@@ -64,13 +81,17 @@ export default async function PublicHomePage() {
                 staticFallback={
                     <>
                         {/* Hero Section */}
-                        <HeroSection />
+                        <HeroSection blocks={slides || []} />
 
                         {/* Notification Scroller */}
-                        <NotificationScroller notifications={notifications} />
+                        <NotificationScroller notifications={(notifications || []).map((n: any) => ({
+                            id: n._id || n.id,
+                            text: n.title || n.description || n.text || "Notification",
+                            link: n.button_link || n.image || n.link || ""
+                        }))} />
 
                         {/* Trust Indicators */}
-                        <TrustIndicators stats={stats} />
+                        <TrustIndicators stats={stats || []} />
 
                         {/* About Section */}
                         <AboutSection data={about} />

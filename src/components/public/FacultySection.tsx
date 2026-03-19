@@ -63,13 +63,14 @@ export default function FacultySection({ members, data }: FacultySectionProps) {
 
     // Map DB members to UI format if provided
     const displayFaculty = members && members.length > 0 ? members.map((m, i) => ({
-        id: i,
+        id: m._id || i,
         name: m.name,
         subject: m.position,
-        qualification: m.qualification || "Ph.D.",
-        experience: "N/A", // Not in DB yet
-        specialization: m.bio ? m.bio.substring(0, 30) + "..." : "Expert Faculty"
-    })) : defaultFaculty;
+        qualification: m.qualification || m.degree || "Degree",
+        experience: m.experience || "N/A",
+        specialization: m.bio ? m.bio.substring(0, 100) + "..." : "Expert Faculty",
+        image: m.image
+    })) : (defaultFaculty as any[]).map(f => ({ ...f, image: null }));
 
     const canGoNext = startIndex + itemsPerPage < displayFaculty.length;
     const canGoPrev = startIndex > 0;
@@ -132,35 +133,47 @@ export default function FacultySection({ members, data }: FacultySectionProps) {
                             <div
                                 key={faculty.id}
                                 className={cn(
-                                    "card-default text-center group animate-fade-in",
-                                    "hover:border-primary transition-all duration-300"
+                                    "card-default text-center group animate-fade-in bg-white border border-slate-100 hover:shadow-2xl hover:border-primary/50",
+                                    "transition-all duration-500 rounded-3xl p-8"
                                 )}
                                 style={{ animationDelay: `${index * 100}ms` }}
                             >
                                 {/* Avatar */}
-                                <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white group-hover:scale-110 transition-transform">
-                                    <GraduationCap className="w-12 h-12" />
+                                <div className="relative w-32 h-32 mx-auto mb-6 rounded-[2rem] overflow-hidden bg-slate-100 border-4 border-white shadow-xl group-hover:scale-105 transition-transform duration-500">
+                                    {faculty.image ? (
+                                        <img 
+                                            src={faculty.image} 
+                                            alt={faculty.name} 
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white">
+                                            <GraduationCap className="w-12 h-12" />
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Info */}
-                                <h3 className="heading-5 text-gray-900 mb-1">
+                                <h3 className="text-xl font-black text-slate-900 mb-1 group-hover:text-primary transition-colors">
                                     {faculty.name}
                                 </h3>
-                                <p className="text-sm font-semibold text-primary mb-3">
+                                <p className="text-sm font-bold text-slate-500 mb-6 uppercase tracking-widest">
                                     {faculty.subject}
                                 </p>
-                                <div className="space-y-2 text-left">
-                                    <div className="flex justify-between text-xs">
-                                        <span className="text-gray-500 font-medium">Qualification:</span>
-                                        <span className="text-gray-700 font-semibold">{faculty.qualification}</span>
+                                
+                                <div className="space-y-3 mb-6">
+                                    <div className="flex items-center justify-between text-xs py-2 px-4 bg-slate-50 rounded-xl">
+                                        <span className="text-slate-400 font-bold uppercase tracking-tighter">Degree</span>
+                                        <span className="text-slate-900 font-black">{faculty.qualification}</span>
                                     </div>
-                                    <div className="flex justify-between text-xs">
-                                        <span className="text-gray-500 font-medium">Experience:</span>
-                                        <span className="text-gray-700 font-semibold">{faculty.experience}</span>
+                                    <div className="flex items-center justify-between text-xs py-2 px-4 bg-slate-50 rounded-xl">
+                                        <span className="text-slate-400 font-bold uppercase tracking-tighter">Exp</span>
+                                        <span className="text-slate-900 font-black">{faculty.experience}</span>
                                     </div>
                                 </div>
-                                <p className="text-xs text-gray-600 mt-4 pt-4 border-t border-gray-100">
-                                    {faculty.specialization}
+
+                                <p className="text-sm text-slate-500 italic line-clamp-2">
+                                    "{faculty.specialization}"
                                 </p>
                             </div>
                         ))}
