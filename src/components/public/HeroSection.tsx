@@ -10,12 +10,11 @@ import Image from "next/image";
 export default function HeroSection({ data, blocks }: { data?: any, blocks?: any[] }) {
     const [current, setCurrent] = useState(0);
 
-    // Fallback if no blocks are provided
     const fallback = {
         title: "National Genius Institute of Technology",
-        subtitle: "A Place to Learn and Grow Your Future",
+        subtitle: "Future Ready Education Hub",
         description: "A professional IT training institute providing computer courses, government exam preparation, typing classes, and skill-based education.",
-        image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070",
+        image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071",
         button_text: "New Admission",
         button_link: "/register"
     };
@@ -32,7 +31,7 @@ export default function HeroSection({ data, blocks }: { data?: any, blocks?: any
 
     useEffect(() => {
         if (slides.length <= 1) return;
-        const timer = setInterval(nextSlide, 6000);
+        const timer = setInterval(nextSlide, 7000);
         return () => clearInterval(timer);
     }, [nextSlide, slides.length]);
 
@@ -40,7 +39,7 @@ export default function HeroSection({ data, blocks }: { data?: any, blocks?: any
     const extra = typeof content.extra_data === 'string' ? JSON.parse(content.extra_data || "{}") : (content.extra_data || {});
 
     return (
-        <div className="relative min-h-[95vh] lg:min-h-screen flex items-center justify-center overflow-hidden bg-slate-950">
+        <div className="relative h-[85vh] md:h-[95vh] flex items-center justify-center overflow-hidden bg-[#020617]">
             <AnimatePresence mode="wait">
                 <motion.div
                     key={current}
@@ -50,68 +49,58 @@ export default function HeroSection({ data, blocks }: { data?: any, blocks?: any
                     transition={{ duration: 1.2 }}
                     className="absolute inset-0 z-0"
                 >
-                    {/* Refined Overlays for better visibility */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent to-slate-950/80 z-[5]" />
-                    <div className="absolute inset-0 bg-slate-950/40 z-[4]" />
-                    
-                    {/* Enhanced Glows */}
-                    <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/30 rounded-full blur-[140px] mix-blend-screen animate-pulse duration-[5000ms]" />
-                    <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-indigo-500/20 rounded-full blur-[140px] mix-blend-screen animate-pulse duration-[7000ms]" style={{ animationDelay: '2.5s' }} />
-                    
+                    {/* Background Image with optimized rendering */}
                     {content.image && (
                         <Image 
                             src={content.image} 
-                            alt={content.title || "Slide Background"} 
+                            alt={content.title || "Background"} 
                             fill 
-                            className="object-cover opacity-80 scale-105 motion-safe:animate-[zoom_20s_infinite_alternate]" 
+                            className="object-cover opacity-60 scale-100" 
                             priority 
                         />
                     )}
+
+                    {/* Sophisticated Overlays */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent to-slate-950/90 z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/20 to-slate-950 z-10" />
+                    
+                    {/* Ambient Glows */}
+                    <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[140px] mix-blend-screen animate-pulse duration-[5000ms] pointer-events-none" />
                 </motion.div>
             </AnimatePresence>
 
-            <div className="container relative z-20 px-6 mx-auto pt-20">
+            <div className="container relative z-20 px-6 mx-auto">
                 <div className="max-w-5xl mx-auto text-center">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={current}
-                            initial={{ opacity: 0, scale: 0.95, y: 30 }}
+                            initial={{ opacity: 0, scale: 0.98, y: 30 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 1.05, y: -30 }}
-                            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                            className="space-y-10"
+                            exit={{ opacity: 0, scale: 1.02, y: -30 }}
+                            transition={{ duration: 0.8, ease: "circOut" }}
+                            className="flex flex-col items-center"
                         >
                             {content.subtitle && (
-                                <motion.div 
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.4 }}
-                                    className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-white/10 backdrop-blur-2xl border border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.05)]"
-                                >
-                                    <Sparkles className="w-5 h-5 text-amber-300" />
-                                    <span className="text-white font-black uppercase tracking-[0.3em] text-[10px]">
+                                <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/5 backdrop-blur-2xl border border-white/10 mb-10 shadow-xl transition-transform hover:scale-105">
+                                    <Sparkles className="w-4 h-4 text-amber-400 group-hover:rotate-12" />
+                                    <span className="text-white text-[11px] font-black uppercase tracking-[0.3em] opacity-80">
                                         {content.subtitle}
                                     </span>
-                                </motion.div>
+                                </div>
                             )}
 
-                            <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-black text-white tracking-tighter leading-[0.85] drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
-                                {content.title?.split(' ').map((word: string, i: number) => (
-                                    <span key={i} className={i % 2 !== 0 ? "text-primary italic font-serif block md:inline" : ""}>
-                                        {word}{" "}
-                                    </span>
-                                ))}
+                            <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-white tracking-tight leading-[0.85] mb-8 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+                                {content.title}
                             </h1>
 
-                            <p className="text-xl md:text-2xl text-slate-200 font-medium max-w-3xl mx-auto leading-relaxed drop-shadow-lg opacity-90">
+                            <p className="text-lg md:text-2xl text-slate-300 font-medium max-w-2xl mx-auto leading-relaxed opacity-70 mb-12">
                                 {content.description}
                             </p>
 
-                            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-10">
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                                 {content.button_text && (
                                     <Link href={content.button_link || "/register"} className="w-full sm:w-auto">
-                                        <Button className="w-full sm:w-auto h-20 px-12 rounded-[2rem] text-xl font-black bg-white text-slate-900 hover:bg-slate-100 shadow-[0_20px_50px_rgba(255,255,255,0.1)] transition-all hover:scale-105 active:scale-95 group">
-                                            <UserPlus className="w-7 h-7 mr-3 transition-transform group-hover:rotate-12" />
+                                        <Button className="w-full sm:w-auto h-16 px-12 rounded-2xl text-lg font-black bg-white text-slate-950 hover:bg-slate-200 shadow-[0_20px_40px_-15px_rgba(255,255,255,0.2)] transition-all hover:-translate-y-1">
                                             {content.button_text}
                                         </Button>
                                     </Link>
@@ -119,9 +108,9 @@ export default function HeroSection({ data, blocks }: { data?: any, blocks?: any
                                 
                                 {extra.secondary_button_text && (
                                     <Link href={extra.secondary_button_link || "/register"} className="w-full sm:w-auto">
-                                        <Button variant="outline" className="w-full sm:w-auto h-20 px-12 rounded-[2rem] text-xl font-black text-white border-white/20 bg-white/5 backdrop-blur-xl hover:bg-white/10 transition-all hover:scale-105 active:scale-95">
+                                        <Button variant="outline" className="w-full sm:w-auto h-16 px-12 rounded-2xl text-lg font-black text-white border-white/20 bg-white/5 backdrop-blur-md hover:bg-white/10 transition-all hover:-translate-y-1">
                                             {extra.secondary_button_text}
-                                            <ChevronRight className="w-7 h-7 ml-3" />
+                                            <ChevronRight className="w-6 h-6 ml-2" />
                                         </Button>
                                     </Link>
                                 )}
@@ -131,41 +120,25 @@ export default function HeroSection({ data, blocks }: { data?: any, blocks?: any
                 </div>
             </div>
 
-            {/* Slider Controls */}
+            {/* Premium Arrows */}
             {slides.length > 1 && (
-                <>
+                <div className="hidden md:block">
                     <button 
                         onClick={prevSlide}
-                        className="absolute left-8 top-1/2 -translate-y-1/2 z-30 w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-primary hover:border-primary transition-all backdrop-blur-xl group"
+                        className="absolute left-8 top-1/2 -translate-y-1/2 z-30 w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all backdrop-blur-md hover:scale-110"
                     >
-                        <ChevronLeft className="w-10 h-10 group-active:scale-90" />
+                        <ChevronLeft className="w-8 h-8" />
                     </button>
                     <button 
                         onClick={nextSlide}
-                        className="absolute right-8 top-1/2 -translate-y-1/2 z-30 w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-primary hover:border-primary transition-all backdrop-blur-xl group"
+                        className="absolute right-8 top-1/2 -translate-y-1/2 z-30 w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all backdrop-blur-md hover:scale-110"
                     >
-                        <ChevronRight className="w-10 h-10 group-active:scale-90" />
+                        <ChevronRight className="w-8 h-8" />
                     </button>
-
-                    {/* Indicators */}
-                    <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-30 flex gap-4">
-                        {slides.map((_, i) => (
-                            <button
-                                key={i}
-                                onClick={() => setCurrent(i)}
-                                className={`transition-all duration-700 rounded-full h-1.5 ${current === i ? "w-16 bg-primary shadow-[0_0_25px_rgba(59,130,246,0.8)]" : "w-4 bg-white/20 hover:bg-white/40"}`}
-                            />
-                        ))}
-                    </div>
-                </>
+                </div>
             )}
 
-            <style jsx global>{`
-                @keyframes zoom {
-                    from { transform: scale(1.05); }
-                    to { transform: scale(1.2); }
-                }
-            `}</style>
+            {/* Bottom Navigator Dots Removed per User Request */}
         </div>
     );
 }
