@@ -35,7 +35,7 @@ export default function CourseDetailClient({ course, lessons }: { course: any, l
 
         if (res.instant) {
             toast.success("Enrolled successfully!");
-            router.push(`/student/dashboard`);
+            router.push(`/student`);
             router.refresh();
             setIsProcessing(false);
             return;
@@ -58,7 +58,7 @@ export default function CourseDetailClient({ course, lessons }: { course: any, l
 
                 if (verifyRes.success) {
                     toast.success("Enrollment successful!");
-                    router.push(`/student/dashboard`);
+                    router.push(`/student`);
                     router.refresh();
                 } else {
                     toast.error("Payment verification failed");
@@ -81,11 +81,11 @@ export default function CourseDetailClient({ course, lessons }: { course: any, l
                     "mock_signature_success"
                 );
                 if (verifyRes.success) {
-                    toast.success("Auto-confirmed simulated payment!");
-                    router.push(`/student/dashboard`);
+                    toast.success("Successfully Enrolled (Sandbox Mode)");
+                    router.push(`/student`);
                     router.refresh();
                 }
-            }, 1500);
+            }, 1000);
             setIsProcessing(false);
             return;
         }

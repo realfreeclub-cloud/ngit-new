@@ -4,7 +4,9 @@ import crypto from "crypto";
 const razorpayKeyId = process.env.RAZORPAY_KEY_ID || "";
 const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET || "";
 
-const razorpay = razorpayKeyId ? new Razorpay({
+const isDummyKey = !razorpayKeyId || razorpayKeyId === "your_razorpay_key_id";
+
+const razorpay = !isDummyKey ? new Razorpay({
     key_id: razorpayKeyId,
     key_secret: razorpayKeySecret,
 }) : null;
