@@ -13,6 +13,7 @@ import EventsSection from "@/components/public/EventsSection";
 import RegistrationCTA from "@/components/public/RegistrationCTA";
 import ContactSection from "@/components/public/ContactSection";
 import NotificationScroller from "@/components/public/NotificationScroller";
+import DirectorMessageSection from "@/components/public/DirectorMessageSection";
 import DynamicRenderer from "@/components/public/DynamicRenderer";
 
 import { getCMSContent } from "@/services/CMSService";
@@ -101,6 +102,16 @@ export default async function PublicHomePage() {
 
                         {/* Infrastructure Section */}
                         <InfrastructureSection />
+
+                        {/* Director's Message Section Component */}
+                        <DirectorMessageSection 
+                            director={facultyMembers.find((f: any) => 
+                                f.position?.toLowerCase().includes("director") || 
+                                f.position?.toLowerCase().includes("md") ||
+                                f.name?.toLowerCase().includes("javed")
+                            ) || facultyMembers[0]} 
+                            data={{ bg_color: "bg-slate-950 rounded-[4rem] mb-20 mx-4" }} 
+                        />
 
                         {/* Faculty Section */}
                         <FacultySection members={facultyMembers} />
