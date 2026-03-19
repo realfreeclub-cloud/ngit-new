@@ -37,6 +37,12 @@
     --border: 214 32% 91%;
     --input: 214 32% 91%;
     --ring: 210 84% 40%;
+    
+    --primary-foreground: 0 0% 100%;
+    --secondary-foreground: 222 47% 11%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
     --radius: 0.5rem;
 

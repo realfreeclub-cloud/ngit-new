@@ -1,25 +1,42 @@
 "use client";
 
-import { useState } from "react";
-import { User, Lock, Bell, Moon, LogOut } from "lucide-react";
+import { useEffect, useState } from "react";
+import { User, Lock, Bell, Moon, LogOut, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+import { updateUserDetails } from "@/app/actions/user";
 
 export default function StudentSettingsPage() {
+    const { data: session, update } = useSession();
+    const [loading, setLoading] = useState(false);
+    const [name, setName] = useState(session?.user?.name || "");
     const [notifications, setNotifications] = useState(true);
     const [darkMode, setDarkMode] = useState(false);
 
-    const handleSave = () => {
-        toast.success("Settings updated successfully!");
+    useEffect(() => {
+        if (session?.user?.name) setName(session.user.name);
+    }, [session]);
+
+    const handleSave = async () => {
+        if (!name) return toast.error("Name cannot be empty");
+        setLoading(true);
+        const res = await updateUserDetails({ name });
+        if (res.success) {
+            await update({ name });
+            toast.success("Settings updated successfully!");
+        } else {
+            toast.error(res.error || "Failed to update settings");
+        }
+        setLoading(false);
     };
 
     return (
         <div className="max-w-4xl space-y-8 animate-in fade-in duration-500 pb-20">
             <div>
                 <h1 className="text-3xl font-black text-slate-900">Account Settings</h1>
-                <p className="text-slate-500 mt-2">Manage your preferences and security</p>
+                <p className="text-slate-500 mt-2 font-medium">Manage your preferences and security</p>
             </div>
 
             <div className="space-y-6">
@@ -31,7 +48,7 @@ export default function StudentSettingsPage() {
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-slate-900">Personal Information</h2>
-                            <p className="text-sm text-slate-500">Update your public profile</p>
+                            <p className="text-sm text-slate-500 font-medium">Update your public profile details</p>
                         </div>
                     </div>
 
@@ -40,25 +57,19 @@ export default function StudentSettingsPage() {
                             <label className="text-sm font-bold text-slate-700 ml-1">Full Name</label>
                             <input
                                 type="text"
-                                defaultValue="Student Name"
-                                className="w-full h-12 px-4 rounded-xl bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white transition-all outline-none font-medium text-slate-900"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="w-full h-12 px-4 rounded-xl bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white transition-all outline-none font-bold text-slate-900"
+                                placeholder="Enter your name"
                             />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-slate-700 ml-1">Email Address</label>
                             <input
                                 type="email"
-                                defaultValue="student@ngitPlugin.com"
+                                defaultValue={session?.user?.email || ""}
                                 disabled
                                 className="w-full h-12 px-4 rounded-xl bg-slate-100 border-2 border-transparent text-slate-400 font-medium cursor-not-allowed"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700 ml-1">Phone Number</label>
-                            <input
-                                type="tel"
-                                placeholder="+91 98765 43210"
-                                className="w-full h-12 px-4 rounded-xl bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white transition-all outline-none font-medium text-slate-900"
                             />
                         </div>
                     </div>
@@ -72,17 +83,19 @@ export default function StudentSettingsPage() {
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-slate-900">Preferences</h2>
-                            <p className="text-sm text-slate-500">Customize your experience</p>
+                            <p className="text-sm text-slate-500 font-medium">Customize your learning experience</p>
                         </div>
                     </div>
 
                     <div className="space-y-6">
                         <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors">
                             <div className="flex items-center gap-4">
-                                <Bell className="w-5 h-5 text-slate-400" />
+                                <div className="p-2 bg-white rounded-lg shadow-sm">
+                                    <Bell className="w-5 h-5 text-slate-400" />
+                                </div>
                                 <div>
                                     <p className="font-bold text-slate-900">Email Notifications</p>
-                                    <p className="text-xs text-slate-500 font-medium">Receive updates about your course progress</p>
+                                    <p className="text-xs text-slate-500 font-bold">Receive updates about your course progress</p>
                                 </div>
                             </div>
                             <Switch checked={notifications} onCheckedChange={setNotifications} />
@@ -90,10 +103,12 @@ export default function StudentSettingsPage() {
 
                         <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors">
                             <div className="flex items-center gap-4">
-                                <Moon className="w-5 h-5 text-slate-400" />
+                                <div className="p-2 bg-white rounded-lg shadow-sm">
+                                    <Moon className="w-5 h-5 text-slate-400" />
+                                </div>
                                 <div>
                                     <p className="font-bold text-slate-900">Dark Mode</p>
-                                    <p className="text-xs text-slate-500 font-medium">Switch between light and dark themes</p>
+                                    <p className="text-xs text-slate-500 font-bold">Switch between light and dark themes</p>
                                 </div>
                             </div>
                             <Switch checked={darkMode} onCheckedChange={setDarkMode} />
@@ -109,28 +124,34 @@ export default function StudentSettingsPage() {
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-slate-900">Security</h2>
-                            <p className="text-sm text-slate-500">Protect your account</p>
+                            <p className="text-sm text-slate-500 font-medium">Protect your account access</p>
                         </div>
                     </div>
 
                     <div className="space-y-4">
-                        <Button variant="outline" className="w-full h-12 justify-start px-6 rounded-xl font-bold text-slate-600 border-2 hover:bg-slate-50 hover:text-slate-900">
-                            Change Password
+                        <Button variant="outline" className="w-full h-14 justify-start px-6 rounded-2xl font-bold text-slate-600 border-2 border-slate-100 hover:bg-slate-50 hover:text-slate-900 transition-all">
+                            <Lock className="w-5 h-5 mr-3 opacity-50" />
+                            Change Security Password
                         </Button>
                         <Button
                             variant="destructive"
-                            className="w-full h-12 justify-start px-6 rounded-xl font-bold bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border-transparent"
-                            onClick={() => signOut()}
+                            className="w-full h-14 justify-start px-6 rounded-2xl font-bold bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 border-transparent transition-all"
+                            onClick={() => signOut({ callbackUrl: '/login' })}
                         >
                             <LogOut className="w-5 h-5 mr-3" />
-                            Sign Out
+                            Sign Out of Account
                         </Button>
                     </div>
                 </div>
 
                 <div className="flex justify-end pt-4">
-                    <Button onClick={handleSave} className="h-14 px-8 rounded-2xl font-black text-lg shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">
-                        Save Changes
+                    <Button 
+                        onClick={handleSave} 
+                        disabled={loading}
+                        className="h-16 px-10 rounded-2xl font-black text-lg shadow-2xl shadow-primary/20 hover:scale-[1.02] transition-all bg-primary hover:bg-primary/95"
+                    >
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
+                        Save Account Changes
                     </Button>
                 </div>
             </div>

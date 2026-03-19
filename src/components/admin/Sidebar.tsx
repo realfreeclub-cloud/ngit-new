@@ -104,7 +104,7 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
                                             className={cn(
                                                 "block px-3 py-2 rounded-lg text-xs font-bold transition-all",
                                                 pathname === subItem.href
-                                                    ? "bg-primary text-white shadow-md shadow-primary/20"
+                                                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
                                                     : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                                             )}
                                         >
@@ -120,11 +120,11 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
                                 className={cn(
                                     "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold transition-all",
                                     pathname === item.href
-                                        ? "bg-primary text-white shadow-lg shadow-primary/30"
+                                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
                                         : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                                 )}
                             >
-                                <item.icon className={cn("w-5 h-5", pathname === item.href ? "text-white" : "text-slate-400")} />
+                                <item.icon className={cn("w-5 h-5", pathname === item.href ? "text-primary-foreground" : "text-slate-400")} />
                                 {item.label}
                             </Link>
                         )}

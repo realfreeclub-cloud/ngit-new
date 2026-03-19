@@ -180,7 +180,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
                                         <Button
                                             onClick={handleEnroll}
                                             disabled={isProcessing}
-                                            className="w-full h-16 rounded-[1.50rem] text-xl font-black shadow-2xl shadow-primary/20 hover:scale-[1.02] transition-transform bg-primary hover:bg-primary/95 text-white border-none"
+                                            className="w-full h-16 rounded-[1.50rem] text-xl font-black shadow-2xl shadow-primary/20 hover:scale-[1.02] transition-transform bg-primary hover:bg-primary/95 text-primary-foreground border-none"
                                         >
                                             {isProcessing ? (
                                                 <span className="flex items-center gap-3"><Loader2 className="w-5 h-5 animate-spin" /> Processing...</span>
