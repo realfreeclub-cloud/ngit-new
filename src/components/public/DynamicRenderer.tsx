@@ -12,6 +12,7 @@ import CTASection from "./CTASection";
 import ContactSection from "./ContactSection";
 import TrustIndicators from "./TrustIndicators";
 import NotificationScroller from "./NotificationScroller";
+import DirectorMessageSection from "./DirectorMessageSection";
 
 import CourseGrid from "./CourseGrid";
 import FacultyGrid from "./FacultyGrid";
@@ -46,6 +47,15 @@ export default function DynamicRenderer({ sections, staticFallback, extraData }:
                         return <FacultyGrid {...props} />;
                     case "FacultySection":
                         return <FacultySection {...props} members={extraData?.faculty || []} />;
+                    case "DirectorMessageSection": {
+                        const members = extraData?.faculty || [];
+                        const director = members.find((f: any) => 
+                            f.position?.toLowerCase().includes("director") || 
+                            f.position?.toLowerCase().includes("md") ||
+                            f.name?.toLowerCase().includes("javed")
+                        ) || members[0];
+                        return <DirectorMessageSection {...props} director={director} />;
+                    }
                     case "GalleryGrid":
                         return <GalleryGrid {...props} />;
                     case "GallerySection":
