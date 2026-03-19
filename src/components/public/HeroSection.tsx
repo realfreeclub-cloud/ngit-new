@@ -52,20 +52,20 @@ export default function HeroSection({ data, blocks }: { data?: any, blocks?: any
                 >
                     {/* Background layers */}
                     <div className="absolute inset-0 bg-slate-950 z-0" />
-                    
+
                     {content.image && (
-                        <Image 
-                            src={content.image} 
-                            alt={content.title || "Slide Background"} 
-                            fill 
-                            className="object-cover opacity-80 scale-105 motion-safe:animate-[zoom_20s_infinite_alternate] z-10" 
-                            priority 
+                        <Image
+                            src={content.image}
+                            alt={content.title || "Slide Background"}
+                            fill
+                            className="object-cover opacity-80 scale-105 motion-safe:animate-[zoom_20s_infinite_alternate] z-10"
+                            priority
                         />
                     )}
 
                     {/* Gradient Overlay for Text Readability */}
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-slate-950/20 z-20" />
-                    
+
                     {/* Radial Glows */}
                     <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] mix-blend-screen animate-pulse duration-[4000ms] z-30" />
                     <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-indigo-500/20 rounded-full blur-[120px] mix-blend-screen animate-pulse duration-[6000ms] z-30" style={{ animationDelay: '2s' }} />
@@ -113,7 +113,7 @@ export default function HeroSection({ data, blocks }: { data?: any, blocks?: any
                                         </Button>
                                     </Link>
                                 )}
-                                
+
                                 {extra.secondary_button_text && (
                                     <Link href={extra.secondary_button_link || "/register"} className="w-full sm:w-auto">
                                         <Button variant="outline" className="w-full sm:w-auto h-16 px-10 rounded-2xl text-lg font-black text-white border-white/20 bg-white/5 backdrop-blur-md hover:bg-white/10 transition-all hover:scale-105">
@@ -131,13 +131,13 @@ export default function HeroSection({ data, blocks }: { data?: any, blocks?: any
             {/* Slider Controls */}
             {slides.length > 1 && (
                 <>
-                    <button 
+                    <button
                         onClick={prevSlide}
                         className="absolute left-6 top-1/2 -translate-y-1/2 z-50 w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-all backdrop-blur-md"
                     >
                         <ChevronLeft className="w-8 h-8" />
                     </button>
-                    <button 
+                    <button
                         onClick={nextSlide}
                         className="absolute right-6 top-1/2 -translate-y-1/2 z-50 w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-all backdrop-blur-md"
                     >
