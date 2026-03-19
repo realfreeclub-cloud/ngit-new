@@ -31,7 +31,7 @@ export async function createQuestion(data: any) {
         if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
         const newQuestion = await Question.create(data);
-        revalidatePath("/admin/questions");
+        revalidatePath("/admin/mock-tests/questions");
         return { success: true, question: JSON.parse(JSON.stringify(newQuestion)) };
     } catch (error: any) {
         return { success: false, error: error.message };
@@ -45,7 +45,7 @@ export async function deleteQuestion(id: string) {
         if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
         await Question.findByIdAndDelete(id);
-        revalidatePath("/admin/questions");
+        revalidatePath("/admin/mock-tests/questions");
         return { success: true };
     } catch (error: any) {
         return { success: false, error: error.message };
@@ -59,7 +59,7 @@ export async function bulkInsertQuestions(questions: any[]) {
         if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
         const inserted = await Question.insertMany(questions);
-        revalidatePath("/admin/questions");
+        revalidatePath("/admin/mock-tests/questions");
         return { success: true, count: inserted.length };
     } catch (error: any) {
         return { success: false, error: error.message };

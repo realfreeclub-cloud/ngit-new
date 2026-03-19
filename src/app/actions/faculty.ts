@@ -39,3 +39,27 @@ export async function getFaculty() {
         return { success: false, error: "Failed to fetch faculty" };
     }
 }
+
+export async function getFacultyById(id: string) {
+    try {
+        await connectDB();
+        const faculty = await Faculty.findById(id).lean();
+        if (!faculty) return { success: false, error: "Faculty not found" };
+        return { success: true, faculty: JSON.parse(JSON.stringify(faculty)) };
+    } catch (error) {
+        console.error("Failed to load faculty", error);
+        return { success: false, error: "Failed to fetch faculty" };
+    }
+}
+
+export async function updateFaculty(id: string, data: any) {
+    try {
+        await connectDB();
+        const faculty = await Faculty.findByIdAndUpdate(id, data, { new: true });
+        revalidatePath("/admin/faculty");
+        return { success: true, faculty: JSON.parse(JSON.stringify(faculty)) };
+    } catch (error: any) {
+        console.error("Update Faculty Error:", error);
+        return { success: false, error: error.message || "Failed to update faculty" };
+    }
+}

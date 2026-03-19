@@ -110,6 +110,11 @@ export default function AdminFacultyPage() {
                                 </div>
 
                                 <div className="pt-3 flex gap-2">
+                                    <Link href={`/admin/faculty/${member._id}/edit`}>
+                                        <Button variant="outline" size="sm" className="h-8 rounded-lg text-[10px] font-bold uppercase tracking-wider border-slate-200">
+                                            Edit Profile
+                                        </Button>
+                                    </Link>
                                     <Button variant="ghost" size="sm" onClick={() => handleDelete(member._id)} className="h-8 rounded-lg text-[10px] font-bold uppercase tracking-wider text-red-400 hover:text-red-500 hover:bg-red-50">
                                         Remove Profile
                                     </Button>

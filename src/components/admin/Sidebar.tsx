@@ -29,7 +29,7 @@ const menuItems = [
         icon: BrainCircuit,
         subItems: [
             { label: "Dashboard", href: "/admin/mock-tests" },
-            { label: "Question Bank", href: "/admin/questions" },
+            { label: "Question Bank", href: "/admin/mock-tests/questions" },
             { label: "Paper Sets", href: "/admin/mock-tests/papers" },
             { label: "Mock Tests", href: "/admin/mock-tests/list" },
             { label: "Paid Test Requests", href: "/admin/mock-tests/requests" },
