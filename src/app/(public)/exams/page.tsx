@@ -12,7 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
+import { useSession } from "next-auth/react";
+
 export default function PublicExamsPage() {
+    const { data: session } = useSession();
     const [exams, setExams] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -107,70 +110,76 @@ export default function PublicExamsPage() {
                     </div>
                 ) : (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {filteredExams.map((exam, idx) => (
-                            <motion.div
-                                key={exam._id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.05 }}
-                                className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group flex flex-col"
-                            >
-                                <div className="flex justify-between items-start mb-8">
-                                    <div className="space-y-3">
-                                        <Badge className="bg-primary/5 text-primary border-none text-[10px] font-black tracking-widest uppercase px-3 py-1">
-                                            {exam.courseId?.title || "General Mock Test"}
-                                        </Badge>
-                                        <h3 className="text-2xl font-black text-slate-900 leading-tight group-hover:text-primary transition-colors">
-                                            {exam.title}
-                                        </h3>
-                                    </div>
-                                    <div className="w-16 h-16 rounded-[1.5rem] bg-slate-50 text-slate-400 group-hover:bg-primary group-hover:text-white transition-all duration-500 flex items-center justify-center shrink-0 shadow-inner">
-                                        <Sparkles className="w-8 h-8" />
-                                    </div>
-                                </div>
+                        {filteredExams.map((exam, idx) => {
+                            const startUrl = session?.user?.role === "STUDENT" 
+                                ? `/student/quizzes` 
+                                : "/student/login";
 
-                                <div className="space-y-4 mb-8">
-                                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100/50">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-                                                <Clock className="w-5 h-5 text-blue-500" />
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Duration</p>
-                                                <p className="font-bold text-slate-700">{exam.settings?.timeLimit || 0} Minutes</p>
-                                            </div>
+                            return (
+                                <motion.div
+                                    key={exam._id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                    className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group flex flex-col"
+                                >
+                                    <div className="flex justify-between items-start mb-8">
+                                        <div className="space-y-3">
+                                            <Badge className="bg-primary/5 text-primary border-none text-[10px] font-black tracking-widest uppercase px-3 py-1">
+                                                {exam.courseId?.title || "General Mock Test"}
+                                            </Badge>
+                                            <h3 className="text-2xl font-black text-slate-900 leading-tight group-hover:text-primary transition-colors">
+                                                {exam.title}
+                                            </h3>
                                         </div>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-                                                <Target className="w-5 h-5 text-emerald-500" />
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Total Marks</p>
-                                                <p className="font-bold text-slate-700">{exam.settings?.totalMarks || 0} Points</p>
-                                            </div>
+                                        <div className="w-16 h-16 rounded-[1.5rem] bg-slate-50 text-slate-400 group-hover:bg-primary group-hover:text-white transition-all duration-500 flex items-center justify-center shrink-0 shadow-inner">
+                                            <Sparkles className="w-8 h-8" />
                                         </div>
                                     </div>
-                                    
-                                    <div className="flex items-center gap-3 text-slate-500 font-medium px-2">
-                                        <BookOpen className="w-4 h-4" />
-                                        <span className="text-sm">English, Hindi Medium Avaliable</span>
-                                    </div>
-                                </div>
 
-                                <div className="mt-auto pt-6 flex items-center gap-3">
-                                    <Link href="/student/login" className="flex-1">
-                                        <Button className="w-full h-14 rounded-2xl font-black text-base shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all">
-                                            Start Exam
-                                        </Button>
-                                    </Link>
-                                    <Link href="/courses">
-                                        <Button variant="outline" className="h-14 w-14 rounded-2xl p-0 border-2 hover:bg-slate-50">
-                                            <ChevronRight className="w-6 h-6 text-slate-400" />
-                                        </Button>
-                                    </Link>
-                                </div>
-                            </motion.div>
-                        ))}
+                                    <div className="space-y-4 mb-8">
+                                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100/50">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                                                    <Clock className="w-5 h-5 text-blue-500" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Duration</p>
+                                                    <p className="font-bold text-slate-700">{exam.settings?.timeLimit || 0} Minutes</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                                                    <Target className="w-5 h-5 text-emerald-500" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Total Marks</p>
+                                                    <p className="font-bold text-slate-700">{exam.settings?.totalMarks || 0} Points</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex items-center gap-3 text-slate-500 font-medium px-2">
+                                            <BookOpen className="w-4 h-4" />
+                                            <span className="text-sm">English, Hindi Medium Avaliable</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-auto pt-6 flex items-center gap-3">
+                                        <Link href={startUrl} className="flex-1">
+                                            <Button className="w-full h-14 rounded-2xl font-black text-base shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all">
+                                                {session?.user ? "Go to Dashboard" : "Start Exam"}
+                                            </Button>
+                                        </Link>
+                                        <Link href="/courses">
+                                            <Button variant="outline" className="h-14 w-14 rounded-2xl p-0 border-2 hover:bg-slate-50">
+                                                <ChevronRight className="w-6 h-6 text-slate-400" />
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
                     </div>
                 )}
             </div>

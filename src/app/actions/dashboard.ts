@@ -73,7 +73,7 @@ export async function getStudentDashboardData() {
         const userId = session.user.id;
 
         const [enrollments, attempts, attendance] = await Promise.all([
-            Enrollment.find({ userId }).populate({ path: "courseId", select: "title thumbnail" }).lean(),
+            Enrollment.find({ userId }).populate({ path: "courseId", select: "title thumbnail _id slug" }).lean(),
             Attempt.find({ studentId: userId }).lean(),
             Attendance.find({ studentId: userId }).lean()
         ]);
@@ -86,6 +86,15 @@ export async function getStudentDashboardData() {
         const attendancePercentage = attendance.length > 0
             ? Math.round((attendance.filter(a => a.status === 'PRESENT' || a.status === 'LATE').length / attendance.length) * 100)
             : 0;
+
+        const enrolledCourseIds = enrollments.map(e => (e.courseId as any)?._id);
+        const attemptedQuizIds = attempts.map(a => a.quizId.toString());
+
+        const upcomingQuiz = await Quiz.findOne({
+            courseId: { $in: enrolledCourseIds },
+            isPublished: true,
+            _id: { $nin: attemptedQuizIds }
+        }).sort({ createdAt: -1 }).lean();
 
         const testsCompleted = attempts.length;
 
@@ -100,6 +109,7 @@ export async function getStudentDashboardData() {
         return {
             success: true,
             stats,
+            upcomingQuiz: JSON.parse(JSON.stringify(upcomingQuiz)),
             enrollments: JSON.parse(JSON.stringify(enrollments)),
             userName: session.user.name,
             userId: session.user.id,

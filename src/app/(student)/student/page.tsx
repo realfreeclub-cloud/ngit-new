@@ -195,18 +195,34 @@ export default function StudentDashboard() {
                     <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full -mr-16 -mt-16 blur-3xl" />
                         <h3 className="text-xl font-bold relative z-10">Upcoming Test</h3>
-                        <div className="mt-6 flex items-center gap-4 relative z-10">
-                            <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
-                                <Trophy className="w-6 h-6 text-primary" />
+                        {data?.upcomingQuiz ? (
+                            <div className="mt-6 flex flex-col gap-4 relative z-10">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
+                                        <Trophy className="w-6 h-6 text-primary" />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold">{data.upcomingQuiz.title}</p>
+                                        <p className="text-xs text-slate-400">Time Limit: {data.upcomingQuiz.settings?.timeLimit || 0} mins</p>
+                                    </div>
+                                </div>
+                                <Link href="/student/quizzes">
+                                    <Button className="w-full h-12 rounded-xl bg-white text-slate-900 hover:bg-slate-100 font-bold relative z-10">
+                                        Start Now
+                                    </Button>
+                                </Link>
                             </div>
-                            <div>
-                                <p className="font-bold">IIT-JEE Unit Test 4</p>
-                                <p className="text-xs text-slate-400">Tomorrow at 10:00 AM</p>
+                        ) : (
+                            <div className="mt-6 flex items-center gap-4 relative z-10 opacity-50">
+                                <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
+                                    <CalendarCheck className="w-6 h-6 text-slate-400" />
+                                </div>
+                                <div>
+                                    <p className="font-bold">No Tests Pending</p>
+                                    <p className="text-xs text-slate-400">Check back later!</p>
+                                </div>
                             </div>
-                        </div>
-                        <Button className="w-full h-12 rounded-xl mt-8 bg-white text-slate-900 hover:bg-slate-100 font-bold relative z-10">
-                            Set Reminder
-                        </Button>
+                        )}
                     </div>
 
                     <div className="bg-primary/5 rounded-[2.5rem] p-8 space-y-4">
