@@ -12,9 +12,12 @@ export async function getMyNotifications() {
         const session = await getServerSession(authOptions);
         if (!session?.user) return { success: false, error: "Unauthorized" };
 
+        // Optimized with .lean() and lean selection
         const notifications = await Notification.find({ userId: session.user.id })
             .sort({ createdAt: -1 })
-            .limit(20);
+            .limit(20)
+            .select('title message type isRead link createdAt')
+            .lean();
 
         return { success: true, notifications: JSON.parse(JSON.stringify(notifications)) };
     } catch (error) {
@@ -25,7 +28,9 @@ export async function getMyNotifications() {
 export async function markAsRead(notificationId: string) {
     try {
         await connectDB();
-        await Notification.findByIdAndUpdate(notificationId, { isRead: true });
+        // Use findOneAndUpdate with projection if possible, but here update is fine
+        await Notification.updateOne({ _id: notificationId }, { $set: { isRead: true } });
+        
         revalidatePath("/");
         return { success: true };
     } catch (error) {

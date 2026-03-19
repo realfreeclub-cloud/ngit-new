@@ -32,10 +32,19 @@ export async function createCourse(data: z.infer<typeof CourseSchema>) {
     }
 }
 
-export async function getCourses() {
+export async function getCourses(page: number = 1, limit: number = 20) {
     try {
         await connectDB();
-        const courses = await Course.find().sort({ createdAt: -1 });
+        
+        const skip = (page - 1) * limit;
+        
+        const courses = await Course.find()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .select('title description price category thumbnail isPublished level instructor duration lessonCount enrollmentCount')
+            .lean();
+            
         return JSON.parse(JSON.stringify(courses));
     } catch (error) {
         return [];

@@ -7,10 +7,14 @@ import {
     TrendingUp,
     ShieldAlert,
     Award,
-    ChevronRight
+    ChevronRight,
+    BrainCircuit,
+    Trophy,
+    ClipboardList
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 

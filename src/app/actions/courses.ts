@@ -22,17 +22,17 @@ export async function getCourseDetails(courseId: string) {
             return { success: false, error: "Invalid Course ID" };
         }
 
-        const course = await Course.findById(courseId).lean();
+        // Parallelize independent queries
+        const [course, lessons, enrollment] = await Promise.all([
+            Course.findById(courseId).lean(),
+            Lesson.find({ courseId }).sort({ order: 1 }).lean(),
+            Enrollment.findOne({
+                userId: session.user.id,
+                courseId
+            }).populate({ path: "lastWatchedLessonId", model: Lesson }).lean()
+        ]);
+
         if (!course) return { success: false, error: "Course not found" };
-
-        // Fetch Lessons ordered
-        const lessons = await Lesson.find({ courseId }).sort({ order: 1 }).lean();
-
-        // Fetch Enrollment Status
-        const enrollment = await Enrollment.findOne({
-            userId: session.user.id,
-            courseId
-        }).populate({ path: "lastWatchedLessonId", model: Lesson }).lean();
 
         // Extract completed lesson IDs as plain strings for easy comparison
         const completedLessonIds: string[] = (enrollment?.completedLessons ?? []).map(
@@ -227,13 +227,14 @@ export async function getCourseForAdmin(courseId: string) {
             return { success: false, error: "Invalid Course ID" };
         }
 
-        const course = await Course.findById(courseId).lean();
+        // Parallelize queries for admin view
+        const [course, lessons, enrollmentCount] = await Promise.all([
+            Course.findById(courseId).lean(),
+            Lesson.find({ courseId }).sort({ order: 1 }).lean(),
+            Enrollment.countDocuments({ courseId })
+        ]);
+
         if (!course) return { success: false, error: "Course not found" };
-
-        const lessons = await Lesson.find({ courseId }).sort({ order: 1 }).lean();
-
-        // Real enrollment count
-        const enrollmentCount = await Enrollment.countDocuments({ courseId });
 
         return {
             success: true,
@@ -339,7 +340,9 @@ export async function getPublicCourses() {
     try {
         await connectDB();
         const courses = await Course.find({ isPublished: true })
+            .select('title description price category thumbnail slug level lessonCount duration')
             .sort({ createdAt: -1 })
+            .lean();
         return { success: true, courses: JSON.parse(JSON.stringify(courses)) };
     } catch (error) {
         return { success: false, courses: [] };

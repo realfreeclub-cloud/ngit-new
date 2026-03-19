@@ -53,6 +53,9 @@ const LessonSchema = new Schema<ILesson>(
     { timestamps: true }
 );
 
+// Faster course content loading and ordering
+LessonSchema.index({ courseId: 1, order: 1 });
+
 const Lesson: Model<ILesson> = mongoose.models.Lesson || mongoose.model<ILesson>("Lesson", LessonSchema);
 
 export default Lesson;

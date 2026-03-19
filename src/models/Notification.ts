@@ -35,6 +35,9 @@ const NotificationSchema = new Schema<INotification>(
     { timestamps: true }
 );
 
+// Optimize retrieval by user and sort by newest first
+NotificationSchema.index({ userId: 1, createdAt: -1 });
+
 const Notification: Model<INotification> = mongoose.models.Notification || mongoose.model<INotification>("Notification", NotificationSchema);
 
 export default Notification;
