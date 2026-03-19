@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { getQuiz, submitQuiz } from "@/app/actions/student/quizzes";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function StudentQuizLivePage({ params }: { params: Promise<{ quizId: string }> }) {
@@ -35,6 +36,7 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
     const [language, setLanguage] = useState<"en" | "hi">("en");
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [warnings, setWarnings] = useState(0);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchQuiz = async () => {
@@ -43,7 +45,8 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
                 setQuiz(res.quiz);
                 setTimeLeft((res.quiz.settings?.timeLimit || 30) * 60);
             } else {
-                toast.error(res.error || "Failed to load quiz");
+                setError(res.message || res.error || "Failed to load quiz");
+                toast.error(res.message || res.error || "Failed to load quiz");
             }
             setLoading(false);
         };
