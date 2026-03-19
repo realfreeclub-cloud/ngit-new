@@ -63,20 +63,19 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     title: {
-        fontSize: 36,
-        fontWeight: 'bold',
         color: '#d4af37', // Gold
         textAlign: 'center',
-        marginVertical: 20,
+        marginVertical: 10,
         textTransform: 'uppercase',
         fontFamily: 'Times-Roman',
+        fontSize: 32,
         letterSpacing: 2,
     },
     body: {
-        marginTop: 10,
+        marginTop: 0,
         textAlign: 'center',
-        fontSize: 16,
-        lineHeight: 1.8,
+        fontSize: 14,
+        lineHeight: 1.6,
         color: '#333',
     },
     studentName: {
@@ -115,7 +114,7 @@ const styles = StyleSheet.create({
     },
     footer: {
         position: 'absolute',
-        bottom: 60,
+        bottom: 50,
         left: 40,
         right: 40,
         flexDirection: 'row',
@@ -141,9 +140,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     qrCode: {
-        width: 70,
-        height: 70,
-        marginBottom: 5,
+        width: 60,
+        height: 60,
+        marginBottom: 2,
     },
     certId: {
         fontSize: 10,
