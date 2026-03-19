@@ -2,6 +2,7 @@ import { getDynamicPageData } from "@/app/actions/cms";
 import { getFaculty } from "@/app/actions/faculty";
 import DynamicRenderer from "@/components/public/DynamicRenderer";
 import FacultySection from "@/components/public/FacultySection";
+import DirectorMessageSection from "@/components/public/DirectorMessageSection";
 import { Quote } from "lucide-react";
 import Image from "next/image";
 
