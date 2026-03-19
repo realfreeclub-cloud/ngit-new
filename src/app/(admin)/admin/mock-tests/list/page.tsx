@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Search, Clock, FileText, CheckCircle2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { toast } from "sonner";
-import { getAdminQuizzes } from "@/app/actions/admin-quizzes";
+import { getAdminQuizzes, toggleQuizStatus } from "@/app/actions/admin-quizzes";
 
 export default function AdminQuizzesPage() {
     const [quizzes, setQuizzes] = useState<any[]>([]);
@@ -105,10 +106,13 @@ export default function AdminQuizzesPage() {
                                             </div>
                                             <div>
                                                 <p className="font-bold text-slate-900">{quiz.title}</p>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                                                    Course: {quiz.courseId?.title || "Standalone"}
-                                                    {quiz.examCode && <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary rounded-full">{quiz.examCode}</span>}
-                                                </p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                        Course: {quiz.courseId?.title || "Standalone"}
+                                                    </p>
+                                                    {quiz.isMockTest && <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none text-[8px] px-1.5 h-4">MOCK</Badge>}
+                                                    {quiz.isPublished ? <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none text-[8px] px-1.5 h-4">LIVE</Badge> : <Badge className="bg-slate-100 text-slate-400 hover:bg-slate-100 border-none text-[8px] px-1.5 h-4">DRAFT</Badge>}
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
@@ -121,20 +125,37 @@ export default function AdminQuizzesPage() {
                                         </span>
                                     </td>
                                     <td className="px-8 py-6">
-                                        {quiz.isMockTest ? (
-                                            <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-[10px] font-black uppercase tracking-wider">
-                                                Mock Test
-                                            </span>
-                                        ) : (
-                                            <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-black uppercase tracking-wider">
-                                                Standard Quiz
-                                            </span>
-                                        )}
+                                        <div className="flex flex-col gap-1 items-start">
+                                            {quiz.pricing?.type === "PAID" ? (
+                                                <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                                    PAID (₹{quiz.pricing.amount})
+                                                </span>
+                                            ) : (
+                                                <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                                    FREE TEST
+                                                  </span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-8 py-6 text-right">
-                                        <Button variant="ghost" className="h-9 px-4 rounded-xl text-xs font-bold text-slate-500 hover:text-primary">
-                                            Edit
-                                        </Button>
+                                        <div className="flex justify-end gap-2">
+                                            <Button 
+                                                onClick={async () => {
+                                                    const res = await toggleQuizStatus(quiz._id, !quiz.isPublished);
+                                                    if (res.success) {
+                                                        toast.success("Status updated");
+                                                        window.location.reload();
+                                                    }
+                                                }}
+                                                variant="outline" 
+                                                className={`h-9 px-3 rounded-xl text-[10px] font-black uppercase ${quiz.isPublished ? "text-rose-500 border-rose-100 font-black" : "text-emerald-500 border-emerald-100 font-black"}`}
+                                            >
+                                                {quiz.isPublished ? "Unpublish" : "Publish"}
+                                            </Button>
+                                            <Button variant="ghost" className="h-9 w-9 p-0 rounded-xl text-slate-400 hover:text-primary" asChild>
+                                                <Link href={`/admin/mock-tests/edit/${quiz._id}`}><FileText className="w-4 h-4" /></Link>
+                                            </Button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

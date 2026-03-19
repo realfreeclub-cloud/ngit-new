@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { 
     ChevronLeft, 
     Save, 
@@ -28,12 +28,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getAllCourses } from "@/app/actions/courses";
 import { getPaperSets } from "@/app/actions/paperSets";
-import { createAdminQuiz } from "@/app/actions/admin-quizzes";
+import { getAdminQuiz, updateAdminQuiz } from "@/app/actions/admin-quizzes";
 
-export default function NewMockTestPage() {
+export default function EditMockTestPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const router = useRouter();
     const [courses, setCourses] = useState<any[]>([]);
     const [paperSets, setPaperSets] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     
     // Form State
@@ -75,12 +77,35 @@ export default function NewMockTestPage() {
 
     useEffect(() => {
         loadData();
-    }, []);
+    }, [id]);
 
     const loadData = async () => {
-        const [cRes, pRes] = await Promise.all([getAllCourses(), getPaperSets()]);
+        setLoading(true);
+        const [cRes, pRes, qRes] = await Promise.all([
+            getAllCourses(), 
+            getPaperSets(),
+             getAdminQuiz(id)
+        ]);
+        
         if (cRes.success) setCourses(cRes.courses);
         if (pRes.success) setPaperSets(pRes.paperSets);
+        
+        if (qRes.success) {
+            const q = qRes.quiz;
+            setFormData({
+                ...q,
+                courseId: q.courseId?._id || q.courseId,
+                schedule: {
+                    ...q.schedule,
+                    startDate: q.schedule.startDate ? new Date(q.schedule.startDate).toISOString().slice(0, 16) : "",
+                    endDate: q.schedule.endDate ? new Date(q.schedule.endDate).toISOString().slice(0, 16) : ""
+                }
+            });
+        } else {
+            toast.error(qRes.error);
+            router.push("/admin/mock-tests");
+        }
+        setLoading(false);
     };
 
     const handlePaperSetSelect = (setId: string) => {
@@ -93,34 +118,30 @@ export default function NewMockTestPage() {
                     ...formData.settings,
                     timeLimit: selected.duration,
                     totalMarks: selected.totalMarks
-                }
+                },
+                questions: selected.questions || []
             });
         }
     };
 
     const handleSubmit = async () => {
-        if (!formData.title || !formData.courseId || !formData.paperSetId || !formData.schedule.startDate || !formData.schedule.endDate) {
-            toast.error("Please fill all required fields including schedule.");
+        if (!formData.title || !formData.courseId) {
+            toast.error("Please fill all required fields.");
             return;
         }
 
         setSubmitting(true);
-        // Map any extra fields if needed for the backend action
-        const payload = {
-            ...formData,
-            // Include questions from the paper set
-            questions: paperSets.find(p => p._id === formData.paperSetId)?.questions || []
-        };
-        
-        const res = await createAdminQuiz(payload);
+        const res = await updateAdminQuiz(id, formData);
         if (res.success) {
-            toast.success("Mock Test published successfully!");
+            toast.success("Mock Test updated successfully!");
             router.push("/admin/mock-tests");
         } else {
             toast.error(res.error);
         }
         setSubmitting(false);
     };
+
+    if (loading) return <div className="p-20 text-center font-black">Loading assessment...</div>;
 
     return (
         <div className="max-w-7xl mx-auto py-12 px-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -131,14 +152,17 @@ export default function NewMockTestPage() {
                         <ChevronLeft className="w-5 h-5" /> Mock Portal
                     </Button>
                 </Link>
-                <Button 
-                    className="rounded-2xl h-14 px-12 font-black gap-2 shadow-2xl shadow-primary/20 hover:scale-105 transition-all"
-                    onClick={handleSubmit}
-                    disabled={submitting}
-                >
-                    {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trophy className="w-5 h-5" />}
-                    Launch Mock Test
-                </Button>
+                <div className="flex gap-4">
+                     <Badge className="bg-primary/10 text-primary border-none self-center h-fit px-4 py-2 rounded-xl text-xs font-black">EDITING MODE</Badge>
+                    <Button 
+                        className="rounded-2xl h-14 px-12 font-black gap-2 shadow-2xl shadow-primary/20 hover:scale-105 transition-all"
+                        onClick={handleSubmit}
+                        disabled={submitting}
+                    >
+                        {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                        Save Changes
+                    </Button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -150,7 +174,7 @@ export default function NewMockTestPage() {
                                 <Gamepad2 className="w-8 h-8 text-primary" />
                                 Assessment Core Information
                             </h2>
-                            <p className="text-slate-500 font-medium mt-1">Provide the identity and basic details of this mock test.</p>
+                            <p className="text-slate-500 font-medium mt-1">Update the identity and basic details of this mock test.</p>
                         </div>
 
                         <div className="space-y-6">
@@ -200,13 +224,13 @@ export default function NewMockTestPage() {
                                     </select>
                                 </div>
                                 <div className="space-y-2 lg:col-span-2">
-                                    <Label className="font-bold text-slate-700 ml-2">Select Paper Set Blueprint</Label>
+                                    <Label className="font-bold text-slate-700 ml-2">Change Paper Set (Optional)</Label>
                                     <select 
                                         className="w-full h-14 rounded-2xl bg-indigo-50 border-none px-6 font-bold text-indigo-900 outline-none"
                                         value={formData.paperSetId}
                                         onChange={(e) => handlePaperSetSelect(e.target.value)}
                                     >
-                                        <option value="">Select Paper Set</option>
+                                        <option value="">No Change</option>
                                         {paperSets.map(p => <option key={p._id} value={p._id}>{p.name} ({p.questions?.length} Qs)</option>)}
                                     </select>
                                 </div>
@@ -236,7 +260,7 @@ export default function NewMockTestPage() {
                         <Textarea 
                             className="min-h-[250px] rounded-3xl bg-slate-50 border-none p-8 font-medium leading-relaxed"
                             placeholder="Enter detailed instructions here (Support HTML listing, emphasis)..."
-                            value={formData.instructions.en}
+                            value={formData.instructions?.en || ""}
                             onChange={(e) => setFormData({...formData, instructions: {en: e.target.value}})}
                         />
                     </div>
@@ -255,7 +279,7 @@ export default function NewMockTestPage() {
                                 <Input 
                                     type="datetime-local" 
                                     className="h-12 rounded-xl bg-slate-50 border-none px-4 font-bold" 
-                                    value={formData.schedule.startDate}
+                                    value={formData.schedule?.startDate || ""}
                                     onChange={(e) => setFormData({...formData, schedule: { ...formData.schedule, startDate: e.target.value }})}
                                     required
                                 />
@@ -265,7 +289,7 @@ export default function NewMockTestPage() {
                                 <Input 
                                     type="datetime-local" 
                                     className="h-12 rounded-xl bg-slate-50 border-none px-4 font-bold" 
-                                    value={formData.schedule.endDate}
+                                    value={formData.schedule?.endDate || ""}
                                     onChange={(e) => setFormData({...formData, schedule: { ...formData.schedule, endDate: e.target.value }})}
                                     required
                                 />
@@ -274,28 +298,28 @@ export default function NewMockTestPage() {
                     </div>
 
                     {/* Pricing */}
-                    <div className={`rounded-[2.5rem] p-8 border shadow-xl transition-all duration-500 ${formData.pricing.type === "PAID" ? "bg-emerald-600 border-emerald-500 text-white" : "bg-white border-slate-100"}`}>
+                    <div className={`rounded-[2.5rem] p-8 border shadow-xl transition-all duration-500 ${(formData.pricing?.type === "PAID") ? "bg-emerald-600 border-emerald-500 text-white" : "bg-white border-slate-100"}`}>
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className={`text-sm font-black uppercase tracking-widest flex items-center gap-2 ${formData.pricing.type === "PAID" ? "text-emerald-100" : "text-slate-400"}`}>
+                            <h3 className={`text-sm font-black uppercase tracking-widest flex items-center gap-2 ${(formData.pricing?.type === "PAID") ? "text-emerald-100" : "text-slate-400"}`}>
                                 <BadgeDollarSign className="w-5 h-5" /> Revenue Model
                             </h3>
-                            <div className={`p-1 rounded-xl flex ${formData.pricing.type === "PAID" ? "bg-white/10" : "bg-slate-100"}`}>
+                            <div className={`p-1 rounded-xl flex ${(formData.pricing?.type === "PAID") ? "bg-white/10" : "bg-slate-100"}`}>
                                 <button 
                                     onClick={() => setFormData({...formData, pricing: { ...formData.pricing, type: "FREE", amount: 0 }})}
-                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${formData.pricing.type === "FREE" ? "bg-white text-slate-900 shadow-sm" : "opacity-50"}`}
+                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${(formData.pricing?.type === "FREE") ? "bg-white text-slate-900 shadow-sm" : "opacity-50"}`}
                                 >
                                     Free
                                 </button>
                                 <button 
                                     onClick={() => setFormData({...formData, pricing: { ...formData.pricing, type: "PAID" }})}
-                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${formData.pricing.type === "PAID" ? "bg-emerald-500 text-white shadow-sm" : "opacity-50"}`}
+                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${(formData.pricing?.type === "PAID") ? "bg-emerald-500 text-white shadow-sm" : "opacity-50"}`}
                                 >
                                     Paid
                                 </button>
                             </div>
                         </div>
 
-                        {formData.pricing.type === "PAID" && (
+                        {formData.pricing?.type === "PAID" && (
                             <div className="space-y-4 animate-in slide-in-from-top-2">
                                 <div className="space-y-2">
                                     <Label className="font-bold text-emerald-50 text-xs">Test Access Price (INR)</Label>
@@ -310,15 +334,12 @@ export default function NewMockTestPage() {
                                 <p className="text-[10px] font-bold text-emerald-100 uppercase tracking-widest leading-relaxed">Students will need to pay and get admin approval before starting this test.</p>
                             </div>
                         )}
-                        {formData.pricing.type === "FREE" && (
-                            <p className="text-xs font-medium text-slate-500 italic">This test will be accessible to all enrolled students directly.</p>
-                        )}
                     </div>
 
                     {/* Examination Rules */}
                     <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white space-y-8 shadow-2xl">
                         <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                            <Shield className="w-5 h-5 text-indigo-400" /> Exam Security (Proctoring)
+                            <Shield className="w-5 h-5 text-indigo-400" /> Exam Security
                         </h3>
                         
                         <div className="space-y-6">
@@ -327,7 +348,7 @@ export default function NewMockTestPage() {
                                     <p className="font-black text-xs uppercase tracking-widest">Tab Lock</p>
                                     <p className="text-[10px] text-white/40 font-bold">Autosubmit on tab switch</p>
                                 </div>
-                                <Switch checked={formData.security.preventTabSwitch} onCheckedChange={(val) => setFormData({...formData, security: { ...formData.security, preventTabSwitch: val }})} className="data-[state=checked]:bg-primary" />
+                                <Switch checked={formData.security?.preventTabSwitch} onCheckedChange={(val) => setFormData({...formData, security: { ...formData.security, preventTabSwitch: val }})} className="data-[state=checked]:bg-primary" />
                             </div>
 
                             <div className="flex items-center justify-between group">
@@ -335,7 +356,7 @@ export default function NewMockTestPage() {
                                     <p className="font-black text-xs uppercase tracking-widest">Fullscreen</p>
                                     <p className="text-[10px] text-white/40 font-bold">Mandatory fullscreen mode</p>
                                 </div>
-                                <Switch checked={formData.security.requireFullscreen} onCheckedChange={(val) => setFormData({...formData, security: { ...formData.security, requireFullscreen: val }})} className="data-[state=checked]:bg-primary" />
+                                <Switch checked={formData.security?.requireFullscreen} onCheckedChange={(val) => setFormData({...formData, security: { ...formData.security, requireFullscreen: val }})} className="data-[state=checked]:bg-primary" />
                             </div>
 
                             <div className="flex items-center justify-between group">
@@ -343,15 +364,15 @@ export default function NewMockTestPage() {
                                     <p className="font-black text-xs uppercase tracking-widest">IP Tracking</p>
                                     <p className="text-[10px] text-white/40 font-bold">Record device & IP logs</p>
                                 </div>
-                                <Switch checked={formData.security.trackIpDevice} onCheckedChange={(val) => setFormData({...formData, security: { ...formData.security, trackIpDevice: val }})} className="data-[state=checked]:bg-primary" />
+                                <Switch checked={formData.security?.trackIpDevice} onCheckedChange={(val) => setFormData({...formData, security: { ...formData.security, trackIpDevice: val }})} className="data-[state=checked]:bg-primary" />
                             </div>
 
                             <div className="flex items-center justify-between group pt-4 border-t border-white/5">
                                 <div className="space-y-0.5">
                                     <p className="font-black text-xs uppercase tracking-widest">Shuffle</p>
-                                    <p className="text-[10px] text-white/40 font-bold">Randomize Qs for each student</p>
+                                    <p className="text-[10px] text-white/40 font-bold">Randomize questions</p>
                                 </div>
-                                <Switch checked={formData.settings.shuffleQuestions} onCheckedChange={(val) => setFormData({...formData, settings: { ...formData.settings, shuffleQuestions: val }})} className="data-[state=checked]:bg-primary" />
+                                <Switch checked={formData.settings?.shuffleQuestions} onCheckedChange={(val) => setFormData({...formData, settings: { ...formData.settings, shuffleQuestions: val }})} className="data-[state=checked]:bg-primary" />
                             </div>
                         </div>
 
@@ -363,7 +384,7 @@ export default function NewMockTestPage() {
                             <input 
                                 type="number" 
                                 className="w-12 bg-transparent text-right font-black text-xl outline-none" 
-                                value={formData.security.maxAttempts}
+                                value={formData.security?.maxAttempts || 1}
                                 onChange={(e) => setFormData({...formData, security: { ...formData.security, maxAttempts: parseInt(e.target.value) }})}
                             />
                         </div>

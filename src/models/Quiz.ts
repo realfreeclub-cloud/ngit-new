@@ -36,6 +36,7 @@ export interface IQuiz extends Document {
         en: string;
         hi?: string;
     };
+    isMockTest: boolean;
     isPublished: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -78,6 +79,7 @@ const QuizSchema = new Schema<IQuiz>(
             en: { type: String },
             hi: { type: String },
         },
+        isMockTest: { type: Boolean, default: false },
         isPublished: { type: Boolean, default: false },
     },
     { timestamps: true }

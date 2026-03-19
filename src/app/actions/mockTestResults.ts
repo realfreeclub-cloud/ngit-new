@@ -174,15 +174,25 @@ export async function getStudentResults() {
         const session = await getServerSession(authOptions);
         if (!session?.user) throw new Error("Unauthorized");
 
-        const results = await MockTestResult.find({
-            studentId: session.user.id,
-            publishStatus: "PUBLISHED"
-        })
-        .populate("mockTestId", "title")
-        .sort({ createdAt: -1 })
-        .lean();
+        const [results, attempts] = await Promise.all([
+            MockTestResult.find({
+                studentId: session.user.id,
+                publishStatus: "PUBLISHED"
+            })
+            .populate("mockTestId", "title")
+            .sort({ createdAt: -1 })
+            .lean(),
+            Attempt.find({ studentId: session.user.id, status: "SUBMITTED" })
+            .populate("quizId", "title")
+            .sort({ createdAt: -1 })
+            .lean()
+        ]);
 
-        return { success: true, results: JSON.parse(JSON.stringify(results)) };
+        return { 
+            success: true, 
+            results: JSON.parse(JSON.stringify(results)),
+            attempts: JSON.parse(JSON.stringify(attempts))
+        };
     } catch (error) {
         console.error("Get Student Results Error:", error);
         return { success: false, error: "Failed to load results" };

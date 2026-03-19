@@ -22,7 +22,10 @@ export async function getAvailableQuizzes() {
 
         const [quizzes, requests] = await Promise.all([
             Quiz.find({
-                courseId: { $in: enrolledCourseIds },
+                $or: [
+                    { courseId: { $in: enrolledCourseIds } },
+                    { isMockTest: true }
+                ],
                 isPublished: true
             }).sort({ createdAt: -1 }),
             PaidTestRequest.find({ studentId: session.user.id }).lean()

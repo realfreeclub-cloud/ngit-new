@@ -60,7 +60,7 @@ export default function PublicExamsGrid({ exams, data }: PublicExamsGridProps) {
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {exams.map((exam, idx) => {
                         const startUrl = session?.user?.role === "STUDENT" 
-                            ? `/student/quizzes` 
+                            ? `/student/quizzes/${exam._id}` 
                             : "/student/login";
 
                         return (
@@ -100,7 +100,7 @@ export default function PublicExamsGrid({ exams, data }: PublicExamsGridProps) {
                                 <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
                                     <Link href={startUrl}>
                                         <Button variant="outline" className="rounded-xl font-bold border-2 hover:bg-slate-50">
-                                            {session?.user ? "Go to Dashboard" : "Login to Start"}
+                                            {session?.user ? "Start Now" : "Login to Start"}
                                         </Button>
                                     </Link>
                                     <ArrowRight className="w-5 h-5 text-slate-200 group-hover:text-primary group-hover:translate-x-1 transition-all" />

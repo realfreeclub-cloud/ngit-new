@@ -150,7 +150,10 @@ export async function getQuizzesForCourse(courseId: string) {
         const session = await getServerSession(authOptions);
         if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
-        const quizzes = await Quiz.find({ courseId })
+        const quizzes = await Quiz.find({ 
+            courseId,
+            isMockTest: { $ne: true }
+        })
             .select("_id title settings isPublished")
             .sort({ createdAt: -1 })
             .lean();
@@ -165,6 +168,36 @@ export async function getQuizzesForCourse(courseId: string) {
         }));
 
         return { success: true, quizzes: JSON.parse(JSON.stringify(flatQuizzes)) };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function createCourseQuiz(courseId: string, data: any) {
+    try {
+        await connectDB();
+        const session = await getServerSession(authOptions);
+        if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
+
+        const quiz = await Quiz.create({
+            title: data.title,
+            courseId,
+            isMockTest: false,
+            isPublished: data.isPublished ?? true,
+            settings: data.settings || {
+                timeLimit: 30,
+                totalMarks: 0,
+                passingMarks: 0,
+                shuffleQuestions: true,
+                shuffleOptions: true,
+                availableLanguages: ["en"]
+            },
+            questions: data.questions || [],
+            instructions: data.instructions || { en: "Course Assessment" }
+        });
+
+        revalidatePath(`/admin/courses/${courseId}`);
+        return { success: true, quizId: quiz._id.toString() };
     } catch (error: any) {
         return { success: false, error: error.message };
     }

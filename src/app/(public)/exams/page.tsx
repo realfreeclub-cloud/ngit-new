@@ -112,7 +112,7 @@ export default function PublicExamsPage() {
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {filteredExams.map((exam, idx) => {
                             const startUrl = session?.user?.role === "STUDENT" 
-                                ? `/student/quizzes` 
+                                ? `/student/quizzes/${exam._id}` 
                                 : "/student/login";
 
                             return (
@@ -168,7 +168,7 @@ export default function PublicExamsPage() {
                                     <div className="mt-auto pt-6 flex items-center gap-3">
                                         <Link href={startUrl} className="flex-1">
                                             <Button className="w-full h-14 rounded-2xl font-black text-base shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all">
-                                                {session?.user ? "Go to Dashboard" : "Start Exam"}
+                                                {session?.user ? "Start Now" : "Start Exam"}
                                             </Button>
                                         </Link>
                                         <Link href="/courses">
