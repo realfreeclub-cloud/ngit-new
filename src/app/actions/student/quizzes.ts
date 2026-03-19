@@ -56,16 +56,34 @@ export async function getQuiz(quizId: string) {
         if (!session?.user) throw new Error("Unauthorized");
 
         const quiz = await Quiz.findById(quizId).populate("questions").lean();
-        if (!quiz) return { success: false, error: "Quiz not found" };
+        if (!quiz) return { success: false, error: "Assessment not found in our records." };
 
-        // Check Access if Paid
-        if (quiz.pricing?.type === "PAID") {
-            const request = await PaidTestRequest.findOne({ 
-                studentId: session.user.id, 
-                mockTestId: quizId,
-                status: RequestStatus.APPROVED 
+        // 2. Pricing/Access Check for Mock Tests
+        if (quiz.isMockTest) {
+            if (quiz.pricing?.type === "PAID") {
+                const request = await PaidTestRequest.findOne({ 
+                    studentId: session.user.id, 
+                    mockTestId: quizId,
+                    status: RequestStatus.APPROVED 
+                });
+                if (!request) return { 
+                    success: false, 
+                    error: "ACCESS_DENIED", 
+                    message: "This is a premium mock test. Access must be approved by admin after payment."
+                };
+            }
+        } else {
+            // 3. Enrollment Check for Course-specific Quizzes
+            const enrollment = await Enrollment.findOne({
+                userId: session.user.id,
+                courseId: quiz.courseId,
+                isActive: true
             });
-            if (!request) return { success: false, error: "You don't have access to this paid mock test." };
+            if (!enrollment) return {
+                success: false,
+                error: "ENROLLMENT_REQUIRED",
+                message: "This assessment is part of a course you are not enrolled in."
+            };
         }
 
         const questionsList = (quiz.questions as any[]).map((q: any) => ({

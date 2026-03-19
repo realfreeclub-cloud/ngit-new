@@ -157,12 +157,26 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
         );
     }
 
-    if (!quiz) {
+    if (error || !quiz) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
-                <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
-                <h2 className="text-2xl font-bold text-slate-900">Quiz Not Found</h2>
-                <Button onClick={() => router.back()} className="mt-4">Go Back</Button>
+            <div className="flex flex-col items-center justify-center min-h-screen bg-white p-8 text-center animate-in fade-in duration-500">
+                <div className="w-24 h-24 bg-red-50 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm border border-red-100">
+                    <AlertCircle className="w-12 h-12 text-red-500" />
+                </div>
+                <h2 className="text-3xl font-black text-slate-900 mb-2">Access Issue</h2>
+                <p className="max-w-md text-slate-500 font-medium mb-8 leading-relaxed">
+                    {error || "We couldn't locate this specific mock test. It might be unpublished or you might have used an invalid link."}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <Button onClick={() => router.back()} variant="outline" className="h-12 px-8 rounded-xl font-bold border-2 border-slate-100 hover:bg-slate-50">
+                        Go Back
+                    </Button>
+                    <Link href="/student/quizzes">
+                        <Button className="h-12 px-8 rounded-xl font-bold bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">
+                            Browse Tests
+                        </Button>
+                    </Link>
+                </div>
             </div>
         );
     }
