@@ -1,6 +1,9 @@
-import { Clock, Users, BookOpen, ArrowRight } from "lucide-react";
+"use client";
+
+import { BookOpen, Users, ArrowRight, Zap, Target, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 interface Course {
     _id: string;
@@ -13,95 +16,108 @@ interface Course {
 }
 
 export default function CoursesSection({ courses = [], data }: { courses?: Course[], data?: any }) {
-    const title = data?.section_name || "Choose Your Path to Success";
-    const subtitle = data?.subtitle || "Our Programs";
-    const description = data?.description || "Structured programs designed to help you achieve your academic goals with expert guidance";
+    const title = data?.section_name || "Choose Your Path to Mastery";
+    const subtitle = data?.subtitle || "Our Premium Programs";
+    const description = data?.description || "Precisely architected curriculum designed to bridge the gap between academic learning and industry demands.";
 
     return (
-        <section className="section-spacing bg-white">
-            <div className="container-custom">
+        <section id="courses" className="py-24 bg-white relative overflow-hidden">
+            <div className="container px-6 mx-auto relative z-10">
                 {/* Section Header */}
-                <div className="text-center max-w-3xl mx-auto mb-16 px-4">
-                    <p className="text-primary font-bold text-sm uppercase tracking-[0.2em] mb-3">
-                        {subtitle}
-                    </p>
-                    <h2 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight mb-4">
+                <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-100 mb-4">
+                        <Zap className="w-4 h-4 text-primary animate-pulse" />
+                        <span className="text-slate-500 font-black uppercase tracking-[0.2em] text-[10px]">
+                            {subtitle}
+                        </span>
+                    </div>
+                    
+                    <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter leading-none">
                         {title}
                     </h2>
-                    <p className="text-lg text-slate-600">
+                    
+                    <p className="text-lg text-slate-500 font-medium leading-relaxed max-w-2xl mx-auto">
                         {description}
                     </p>
                 </div>
 
                 {/* Courses Grid */}
-                <div className="grid md:grid-cols-3 gap-8">
-                    {courses.slice(0, 3).map((course, i) => {
-                        const colors = [
-                            { text: "text-primary", bg: "from-primary/10 to-primary/5" },
-                            { text: "text-secondary", bg: "from-secondary/10 to-secondary/5" },
-                            { text: "text-accent", bg: "from-accent/10 to-accent/5" }
-                        ];
-                        const theme = colors[i % colors.length];
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {courses.slice(0, 6).map((course, idx) => (
+                        <motion.div
+                            key={course._id}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: idx * 0.1 }}
+                            className="group"
+                        >
+                            <div className="h-full bg-white border border-slate-100 rounded-[2.5rem] p-8 hover:shadow-2xl hover:border-primary/20 transition-all duration-500 flex flex-col relative overflow-hidden">
+                                {/* Category Badge */}
+                                <div className="absolute top-8 right-8 px-3 py-1 rounded-full bg-slate-50 border border-slate-100 text-[9px] font-black text-slate-400 uppercase tracking-widest group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all duration-500">
+                                    {course.category}
+                                </div>
 
-                        return (
-                            <div
-                                key={course._id}
-                                className="card-default hover:shadow-extra transition-all duration-300 group"
-                            >
-                                {/* Header */}
-                                <div className={`bg-gradient-to-br ${theme.bg} rounded-xl p-6 mb-6 -mx-6 -mt-6`}>
-                                    <h3 className="heading-4 text-gray-900 mb-2">
+                                <div className="p-4 bg-slate-50 rounded-2xl w-fit mb-8 group-hover:bg-primary/10 transition-colors">
+                                    <BookOpen className="w-8 h-8 text-slate-400 group-hover:text-primary transition-colors" />
+                                </div>
+
+                                <div className="flex-1 space-y-4">
+                                    <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-tight group-hover:text-primary transition-colors">
                                         {course.title}
                                     </h3>
-                                    <p className="body-small text-gray-600 line-clamp-2">
+                                    <p className="text-slate-500 font-medium leading-relaxed line-clamp-3">
                                         {course.description}
                                     </p>
                                 </div>
 
-                                {/* Details */}
-                                <div className="space-y-4 mb-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center ${theme.text}`}>
-                                            <BookOpen className="w-5 h-5" />
+                                {/* Meta Info */}
+                                <div className="flex items-center gap-4 mt-8 pt-8 border-t border-slate-50">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                                            <Globe className="w-4 h-4" />
                                         </div>
                                         <div>
-                                            <p className="text-xs text-gray-500 font-medium">Category</p>
-                                            <p className="text-sm font-semibold text-gray-900">{course.category}</p>
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Mode</p>
+                                            <p className="text-[11px] font-black text-slate-900 uppercase italic">{course.type}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center ${theme.text}`}>
-                                            <Users className="w-5 h-5" />
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                            <Target className="w-4 h-4" />
                                         </div>
                                         <div>
-                                            <p className="text-xs text-gray-500 font-medium">Mode</p>
-                                            <p className="text-sm font-semibold text-gray-900">{course.type}</p>
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Success</p>
+                                            <p className="text-[11px] font-black text-slate-900 uppercase italic">Assured</p>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* CTA */}
-                                <Link href={`/courses/${course.slug}`}>
-                                    <Button className="w-full group-hover:shadow-md transition-shadow" variant="outline">
-                                        View Details
-                                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                                <Link href={`/courses/${course.slug}`} className="mt-8">
+                                    <Button className="w-full h-14 rounded-2xl text-[11px] font-black uppercase tracking-widest bg-slate-950 text-white hover:bg-slate-800 shadow-xl transition-all hover:scale-105 group/btn">
+                                        Explore Curriculum
+                                        <ArrowRight className="w-4 h-4 ml-3 transition-transform group-hover/btn:translate-x-1" />
                                     </Button>
                                 </Link>
                             </div>
-                        )
-                    })}
+                        </motion.div>
+                    ))}
                 </div>
 
                 {/* Bottom CTA */}
-                <div className="mt-12 text-center">
-                    <p className="text-gray-600 mb-4">Not sure which program is right for you?</p>
+                <div className="mt-20 pt-12 border-t border-slate-50 text-center">
+                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Need expert guidance?</p>
                     <Link href="/contact">
-                        <Button className="btn-primary">
-                            Talk to Our Counselor
+                        <Button className="h-16 px-12 rounded-[2rem] text-sm font-black uppercase tracking-widest bg-white border-2 border-slate-950 text-slate-950 hover:bg-slate-950 hover:text-white shadow-2xl transition-all hover:-translate-y-1">
+                            Talk to Career Counselor
                         </Button>
                     </Link>
                 </div>
             </div>
+            
+            {/* Background Decorations */}
+            <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-10" />
+            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px] -z-10" />
         </section>
     );
 }

@@ -1,7 +1,7 @@
 
 import Link from "next/link";
 import { getHeaderFooterData } from "@/app/actions/layoutContent";
-import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from "lucide-react";
+import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, Zap, ArrowUpRight } from "lucide-react";
 
 interface FooterLink {
     label: string;
@@ -31,94 +31,112 @@ export default async function Footer() {
     const result = await getHeaderFooterData();
     const footerData: FooterData | null = result.success ? result.footer : null;
 
-    if (!footerData) return null; // Or skeleton
+    if (!footerData) return null;
 
     const currentYear = new Date().getFullYear();
 
     return (
-        <footer className="bg-gray-900 text-gray-300">
-            {/* Main Footer */}
-            <div className="container-custom py-16">
-                <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-12">
-                    {/* Brand Column */}
-                    <div className="lg:col-span-2">
-                        <div className="flex items-center gap-3 mb-6">
+        <footer className="bg-slate-950 text-slate-400 border-t border-slate-900 pt-24">
+            <div className="container px-6 mx-auto">
+                <div className="grid md:grid-cols-2 lg:grid-cols-12 gap-16 mb-20">
+                    {/* Brand Identity */}
+                    <div className="lg:col-span-5 space-y-8">
+                        <div className="flex items-center gap-4">
                             {footerData.logoImage ? (
-                                <img src={footerData.logoImage} alt={footerData.logoText} className="h-12 w-auto object-contain" />
+                                <img src={footerData.logoImage} alt={footerData.logoText} className="h-10 w-auto brightness-0 invert" />
                             ) : (
-                                <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center font-bold text-white text-2xl shadow-md">
+                                <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center font-black text-white text-2xl shadow-xl shadow-primary/20">
                                     N
                                 </div>
                             )}
                             <div>
-                                <span className="text-2xl font-heading font-bold tracking-tight text-white">{footerData.logoText || "NGIT"}</span>
-                                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Institute of Technology</p>
+                                <h3 className="text-2xl font-black tracking-tighter text-white leading-none">
+                                    {footerData.logoText || "NGIT"}
+                                </h3>
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 mt-1">
+                                    Advanced Institute
+                                </p>
                             </div>
                         </div>
-                        <p className="text-sm text-gray-400 mb-6 leading-relaxed max-w-sm">
-                            {footerData.description || "Building future leaders since 2009."}
+
+                        <p className="text-lg text-slate-500 font-medium leading-relaxed max-w-sm">
+                            {footerData.description || "Empowering the next generation of technology leaders with industry-aligned education since 2009."}
                         </p>
 
-                        {/* Contact Info (Hardcoded mostly for now as schema is limited, but can be expanded) */}
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-3 text-sm">
-                                <Phone className="w-4 h-4 text-primary" />
-                                <a href="tel:+919876543210" className="hover:text-white transition-colors">
-                                    +91 98765 43210
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Dynamic Sections */}
-                    {footerData.sections?.map((section, idx) => (
-                        <div key={idx}>
-                            <h3 className="text-white font-heading font-semibold mb-6">{section.title}</h3>
-                            <ul className="space-y-3">
-                                {section.links?.map((link, linkIdx) => (
-                                    <li key={linkIdx}>
-                                        <Link
-                                            href={link.href}
-                                            className="text-sm hover:text-white hover:translate-x-1 inline-block transition-all"
-                                        >
-                                            {link.label}
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Social Links */}
-                <div className="mt-12 pt-8 border-t border-gray-800">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex gap-4">
+                        <div className="flex flex-wrap gap-4">
                             {footerData.social?.map((social, idx) => (
-                                <a
+                                <Link
                                     key={idx}
                                     href={social.url}
                                     target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center transition-all hover:text-primary hover:bg-gray-700"
+                                    className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:bg-primary hover:text-white hover:border-primary hover:-translate-y-1 transition-all duration-300"
                                 >
-                                    {/* Naive icon mapping or generic fallback */}
-                                    <span className="text-xs font-bold">{social.platform?.[0]}</span>
-                                </a>
+                                    <span className="text-xs font-black uppercase tracking-tighter tracking-[0.2em]">{social.platform?.[0]}</span>
+                                </Link>
                             ))}
                         </div>
                     </div>
-                </div>
-            </div>
 
-            {/* Bottom Bar */}
-            <div className="border-t border-gray-800">
-                <div className="container-custom py-6">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-400">
-                        <p>{footerData.copyright || `© ${currentYear} NGIT. All Rights Reserved.`}</p>
+                    {/* Navigation Clusters */}
+                    <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-12">
+                        {footerData.sections?.map((section, idx) => (
+                            <div key={idx} className="space-y-8">
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600">
+                                    {section.title}
+                                </h4>
+                                <ul className="space-y-4">
+                                    {section.links?.map((link, linkIdx) => (
+                                        <li key={linkIdx}>
+                                            <Link
+                                                href={link.href}
+                                                className="text-sm font-semibold hover:text-white transition-colors flex items-center gap-2 group"
+                                            >
+                                                {link.label}
+                                                <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                                            </Link>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+
+                        {/* Direct Contact Column */}
+                        <div className="space-y-8">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600">
+                                Connect
+                            </h4>
+                            <div className="space-y-4">
+                                <a href="tel:+919876543210" className="flex items-center gap-3 text-sm font-semibold hover:text-white transition-colors group">
+                                    <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                                        <Phone className="w-4 h-4" />
+                                    </div>
+                                    +91 98765 43210
+                                </a>
+                                <a href="mailto:info@ngit.edu" className="flex items-center gap-3 text-sm font-semibold hover:text-white transition-colors group">
+                                    <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center group-hover:bg-secondary group-hover:text-white transition-all">
+                                        <Mail className="w-4 h-4" />
+                                    </div>
+                                    info@ngit.edu
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Bottom Bar */}
+                <div className="py-12 border-t border-slate-900 flex flex-col md:flex-row justify-between items-center gap-8">
+                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-600">
+                        {footerData.copyright || `© ${currentYear} NGIT TECHNOLOGY HUB. ARCHITECTED FOR EXCELLENCE.`}
+                    </p>
+                    <div className="flex items-center gap-8">
+                        <Link href="/privacy" className="text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-white transition-colors">Privacy Paradigm</Link>
+                        <Link href="/terms" className="text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-white transition-colors">Operational Terms</Link>
                     </div>
                 </div>
             </div>
+            
+            {/* Dark background light effect */}
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent blur-sm" />
         </footer>
     );
 }
