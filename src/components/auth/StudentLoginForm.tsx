@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import {
     GraduationCap, ArrowRight, Eye, EyeOff,
     BookOpen, Trophy, BarChart2, Loader2
