@@ -53,10 +53,18 @@ export async function completeLesson(courseId: string, lessonId: string) {
             return { success: false, error: "Enrollment record not found" };
         }
 
-        // Recalculate progress
-        const completedCount = enrollment.completedLessons?.length ?? 0;
-        const newProgress = totalLessons > 0
-            ? Math.round((completedCount / totalLessons) * 100)
+        // Recalculate progress accurately by filtering against existing lessons
+        // This handles cases where lessons were deleted but their IDs remain in the student's history
+        const allLessonIds = (await Lesson.find({ courseId }).select("_id").lean()).map(l => l._id.toString());
+        const validCompletedIds = (enrollment.completedLessons || []).filter((id: any) => 
+            allLessonIds.includes(id.toString())
+        );
+
+        const completedCount = validCompletedIds.length;
+        const actualTotal = allLessonIds.length;
+        
+        const newProgress = actualTotal > 0
+            ? Math.round((completedCount / actualTotal) * 100)
             : 0;
 
         await Enrollment.findByIdAndUpdate(enrollment._id, {

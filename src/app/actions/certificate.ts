@@ -174,7 +174,8 @@ export async function getCertificatePDF(certId: string) {
                     grade: cert.grade,
                     percentage: cert.percentage.toString(),
                     qrCodeUrl: qrCodeDataUrl,
-                    duration: cert.courseDuration
+                    duration: cert.courseDuration,
+                    wpm: cert.wpm?.toString()
                 }) as any
             );
         }

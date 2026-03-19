@@ -168,6 +168,7 @@ interface CertificateProps {
     percentage: string;
     qrCodeUrl: string; // Base64 or URL
     duration: string;
+    wpm?: string;
 }
 
 export const CertificateTemplate = ({
@@ -178,7 +179,8 @@ export const CertificateTemplate = ({
     grade,
     percentage,
     qrCodeUrl,
-    duration
+    duration,
+    wpm
 }: CertificateProps) => (
     <Document>
         <Page size="A4" orientation="landscape" style={styles.page}>
@@ -231,6 +233,12 @@ export const CertificateTemplate = ({
                         <Text style={styles.detailLabel}>Grade</Text>
                         <Text style={styles.detailValue}>{grade}</Text>
                     </View>
+                    {wpm && (
+                        <View style={styles.detailItem}>
+                            <Text style={styles.detailLabel}>Typing Speed</Text>
+                            <Text style={styles.detailValue}>{wpm} WPM</Text>
+                        </View>
+                    )}
                 </View>
 
                 {/* Footer with Signatures & QR */}

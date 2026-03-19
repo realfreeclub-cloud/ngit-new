@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useParams } from "next/navigation";
 import { getCourseDetails } from "@/app/actions/courses";
 import Link from "next/link";
 import { CheckCircle, Lock, PlayCircle, FileText, Brain, ChevronLeft, Trophy } from "lucide-react";
@@ -36,7 +37,6 @@ const typeIcon = (type: string) => {
         default: return <PlayCircle className="w-3.5 h-3.5" />;
     }
 };
-
 export default function CourseSidebar({
     courseId,
     initialCompletedIds,
@@ -48,12 +48,21 @@ export default function CourseSidebar({
     activeLessonId,
     lessons,
 }: Props) {
+    const routerParams = useParams();
+    const currentLessonId = (routerParams.lessonId as string) || activeLessonId;
+
     const [completedIds, setCompletedIds] = useState<string[]>(initialCompletedIds);
     const [progress, setProgress] = useState(initialProgress);
     const [completedCount, setCompleted] = useState(initialCompletedCount);
 
+    // Sync local state when server props change (triggered by router.refresh())
+    useEffect(() => {
+        setCompletedIds(initialCompletedIds);
+        setCompleted(initialCompletedCount);
+        setProgress(initialProgress);
+    }, [initialCompletedIds, initialCompletedCount, initialProgress]);
+
     // Re-fetch from server every time the visible lessonId changes
-    // This keeps the sidebar in sync after every "Mark as Complete"
     const refresh = useCallback(async () => {
         const res = await getCourseDetails(courseId);
         if (res.success) {
@@ -66,7 +75,7 @@ export default function CourseSidebar({
 
     useEffect(() => {
         refresh();
-    }, [activeLessonId, refresh]);
+    }, [currentLessonId, refresh]);
 
     return (
         <aside className="w-full lg:w-80 xl:w-84 shrink-0 flex flex-col bg-white rounded-[2rem] border border-slate-200 overflow-hidden h-full shadow-sm">
