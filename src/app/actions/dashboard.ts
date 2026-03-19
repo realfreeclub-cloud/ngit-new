@@ -12,6 +12,30 @@ import Enrollment from "@/models/Enrollment";
 import Attendance from "@/models/Attendance";
 import MockTestResult from "@/models/MockTestResult";
 import Quiz from "@/models/Quiz";
+import Question from "@/models/Question";
+
+export async function getMockTestStats() {
+    try {
+        await connectDB();
+        const session = await getServerSession(authOptions);
+        if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
+
+        const [totalQuestions, totalQuizzes, totalAttempts, latestLogs] = await Promise.all([
+            Question.countDocuments(),
+            Quiz.countDocuments(),
+            Attempt.countDocuments(),
+            Question.find().sort({ createdAt: -1 }).limit(3).lean()
+        ]);
+
+        return { 
+            success: true, 
+            stats: { totalQuestions, totalQuizzes, totalAttempts },
+            logs: JSON.parse(JSON.stringify(latestLogs))
+        };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
 export async function getDashboardStats() {
     try {
         await connectDB();

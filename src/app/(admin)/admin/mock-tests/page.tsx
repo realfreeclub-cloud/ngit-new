@@ -1,16 +1,56 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { BrainCircuit, FileText, Users, Target, TrendingUp, Sparkles, ChevronRight, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { getMockTestStats } from "@/app/actions/dashboard";
 
 export default function MockTestDashboard() {
+    const [data, setData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            const res = await getMockTestStats();
+            if (res.success) {
+                setData(res);
+            }
+            setLoading(false);
+        };
+        fetchStats();
+    }, []);
+
     const stats = [
-        { label: "Total Questions", value: "1,248", icon: BrainCircuit, color: "text-blue-600", bg: "bg-blue-50" },
-        { label: "Active Mock Tests", value: "24", icon: FileText, color: "text-purple-600", bg: "bg-purple-50" },
-        { label: "Total Attempts", value: "8,432", icon: Users, color: "text-emerald-600", bg: "bg-emerald-50" },
-        { label: "Avg. Accuracy", value: "68%", icon: Target, color: "text-amber-600", bg: "bg-amber-50" },
+        { 
+            label: "Total Questions", 
+            value: data?.stats?.totalQuestions?.toLocaleString() || "0", 
+            icon: BrainCircuit, 
+            color: "text-blue-600", 
+            bg: "bg-blue-50" 
+        },
+        { 
+            label: "Active Mock Tests", 
+            value: data?.stats?.totalQuizzes?.toLocaleString() || "0", 
+            icon: FileText, 
+            color: "text-purple-600", 
+            bg: "bg-purple-50" 
+        },
+        { 
+            label: "Total Attempts", 
+            value: data?.stats?.totalAttempts?.toLocaleString() || "0", 
+            icon: Users, 
+            color: "text-emerald-600", 
+            bg: "bg-emerald-50" 
+        },
+        { 
+            label: "Avg. Accuracy", 
+            value: "68%", 
+            icon: Target, 
+            color: "text-amber-600", 
+            bg: "bg-amber-50" 
+        },
     ];
 
     const upcomingTests = [
@@ -49,7 +89,7 @@ export default function MockTestDashboard() {
                             <stat.icon className="w-7 h-7" />
                         </div>
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{stat.label}</p>
-                        <p className="text-3xl font-black text-slate-900 mt-1">{stat.value}</p>
+                        <p className="text-3xl font-black text-slate-900 mt-1">{loading ? "..." : stat.value}</p>
                     </motion.div>
                 ))}
             </div>
@@ -136,19 +176,17 @@ export default function MockTestDashboard() {
                     <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm">
                         <h3 className="text-lg font-black text-slate-900 mb-6 uppercase tracking-wider text-[10px] text-slate-400">Recent Logs</h3>
                         <div className="space-y-6">
-                            {[
-                                { msg: "New question added to Physics Bank", time: "2h ago" },
-                                { msg: "Mock Test 04 results published", time: "5h ago" },
-                                { msg: "Chemistry paper set updated", time: "1d ago" },
-                            ].map((log, i) => (
+                            {data?.logs?.length > 0 ? data.logs.map((log: any, i: number) => (
                                 <div key={i} className="flex gap-4">
                                     <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-700 leading-tight">{log.msg}</p>
-                                        <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">{log.time}</p>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-slate-700 leading-tight truncate" dangerouslySetInnerHTML={{ __html: log.content?.en }} />
+                                        <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Added in {log.subject}</p>
                                     </div>
                                 </div>
-                            ))}
+                            )) : (
+                                <p className="text-sm text-slate-400 italic">No recent activity logged.</p>
+                            )}
                         </div>
                     </div>
                 </div>

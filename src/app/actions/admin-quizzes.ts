@@ -55,7 +55,7 @@ export async function createAdminQuiz(data: any) {
             isPublished: true,
         });
 
-        revalidatePath("/admin/quizzes");
+        revalidatePath("/admin/mock-tests/list");
         return { success: true, quiz: JSON.parse(JSON.stringify(quiz)) };
     } catch (error: any) {
         return { success: false, error: error.message };

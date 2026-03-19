@@ -32,6 +32,7 @@ export async function createQuestion(data: any) {
 
         const newQuestion = await Question.create(data);
         revalidatePath("/admin/mock-tests/questions");
+        revalidatePath("/admin/mock-tests");
         return { success: true, question: JSON.parse(JSON.stringify(newQuestion)) };
     } catch (error: any) {
         return { success: false, error: error.message };
@@ -46,6 +47,7 @@ export async function deleteQuestion(id: string) {
 
         await Question.findByIdAndDelete(id);
         revalidatePath("/admin/mock-tests/questions");
+        revalidatePath("/admin/mock-tests");
         return { success: true };
     } catch (error: any) {
         return { success: false, error: error.message };
@@ -60,6 +62,7 @@ export async function bulkInsertQuestions(questions: any[]) {
 
         const inserted = await Question.insertMany(questions);
         revalidatePath("/admin/mock-tests/questions");
+        revalidatePath("/admin/mock-tests");
         return { success: true, count: inserted.length };
     } catch (error: any) {
         return { success: false, error: error.message };
