@@ -11,6 +11,7 @@ import { authOptions } from "@/lib/auth";
 import Enrollment from "@/models/Enrollment";
 import Attendance from "@/models/Attendance";
 import MockTestResult from "@/models/MockTestResult";
+import Quiz from "@/models/Quiz";
 export async function getDashboardStats() {
     try {
         await connectDB();
