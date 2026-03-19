@@ -49,32 +49,32 @@ export default function StudentSidebar({ isOpen, onClose }: StudentSidebarProps)
 
             {/* Sidebar */}
             <aside className={cn(
-                "fixed top-0 left-0 h-full w-72 bg-slate-900 text-white flex flex-col z-50 transition-transform duration-300 ease-in-out",
+                "fixed top-0 left-0 h-full w-72 bg-slate-950 text-white flex flex-col z-50 transition-transform duration-300 ease-in-out border-r border-white/5",
                 "lg:relative lg:translate-x-0 lg:w-64 lg:shrink-0",
                 isOpen ? "translate-x-0" : "-translate-x-full"
             )}>
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800">
+                <div className="flex items-center justify-between px-6 py-6 border-b border-white/5">
                     <Link href="/student" className="flex items-center gap-3 group" onClick={onClose}>
-                        <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/30 group-hover:scale-105 transition-transform">
-                            <GraduationCap className="w-5 h-5 text-white" />
+                        <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
+                            <GraduationCap className="w-6 h-6 text-white" />
                         </div>
-                        <div>
-                            <p className="text-base font-black tracking-tight text-white leading-none">Student Portal</p>
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">NGIT Institute</p>
+                        <div className="leading-tight">
+                            <p className="text-base font-black tracking-tight text-white leading-none">Student</p>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">Portal v2.0</p>
                         </div>
                     </Link>
                     {/* Close button — mobile only */}
                     <button
                         onClick={onClose}
-                        className="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                        className="lg:hidden p-2 rounded-xl text-slate-500 hover:text-white hover:bg-white/5 transition-colors border border-white/10"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+                <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto scrollbar-hide">
                     {menuItems.map((item) => {
                         const isActive = pathname === item.href || (item.href !== "/student" && pathname.startsWith(item.href));
                         return (
@@ -82,29 +82,34 @@ export default function StudentSidebar({ isOpen, onClose }: StudentSidebarProps)
                                 key={item.href}
                                 href={item.href}
                                 className={cn(
-                                    "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200",
+                                    "flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 group",
                                     isActive
-                                        ? "bg-primary text-white shadow-lg shadow-primary/25"
-                                        : "text-slate-400 hover:text-white hover:bg-slate-800"
+                                        ? "bg-gradient-to-r from-primary via-primary to-secondary text-white shadow-xl shadow-primary/30"
+                                        : "text-slate-500 hover:text-white hover:bg-white/5"
                                 )}
                             >
-                                <item.icon className={cn("w-5 h-5 shrink-0", isActive ? "text-white" : "text-slate-500")} />
+                                <item.icon className={cn("w-5 h-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-white" : "text-slate-600")} />
                                 {item.label}
-                                {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white/60" />}
+                                {isActive && (
+                                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-sm animate-pulse" />
+                                )}
                             </Link>
                         );
                     })}
                 </nav>
 
                 {/* Footer — student info */}
-                <div className="p-4 border-t border-slate-800">
-                    <div className="bg-slate-800 rounded-2xl p-4 flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-primary/20 flex items-center justify-center text-primary font-black text-sm shrink-0">
+                <div className="p-4 border-t border-white/5 bg-slate-900/40">
+                    <div className="bg-white/5 border border-white/5 rounded-3xl p-4 flex items-center gap-3 hover:bg-white/10 transition-colors">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-black text-sm shrink-0 border border-white/10 shadow-lg">
                             {session?.user?.name?.[0] || "S"}
                         </div>
                         <div className="min-w-0">
-                            <p className="text-sm font-bold text-white truncate">{session?.user?.name || "Student"}</p>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Active Session</p>
+                            <p className="text-sm font-black text-white truncate leading-none mb-1.5">{session?.user?.name || "Student"}</p>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest leading-none">Status: Active</p>
+                            </div>
                         </div>
                     </div>
                 </div>

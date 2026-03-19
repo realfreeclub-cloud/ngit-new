@@ -45,123 +45,137 @@ export default function StudentLoginForm() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col">
+        <div className="min-h-screen bg-slate-950 flex flex-col relative overflow-hidden">
+            {/* Background elements */}
+            <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/10 rounded-full -mr-96 -mt-96 blur-[150px] opacity-50" />
+            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full -ml-64 -mb-64 blur-[120px] opacity-30" />
+            
             {/* Top bar */}
-            <div className="flex items-center justify-between px-5 py-4 md:px-10">
-                <Link href="/" className="flex items-center gap-2.5 group">
-                    <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/30 group-hover:scale-105 transition-transform">
-                        <GraduationCap className="w-5 h-5 text-white" />
+            <header className="flex items-center justify-between px-8 py-8 md:px-12 relative z-10">
+                <Link href="/" className="flex items-center gap-4 group">
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center shadow-xl shadow-primary/20 group-hover:scale-110 transition-all duration-500">
+                        <GraduationCap className="w-7 h-7 text-white" />
                     </div>
                     <div>
-                        <p className="text-sm font-black text-white leading-none">Student Portal</p>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">NGIT Institute</p>
+                        <p className="text-xl font-black text-white leading-none tracking-tight">Student <span className="text-primary">Portal</span></p>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1.5">NGIT Education Hub</p>
                     </div>
                 </Link>
-                <Link href="/" className="text-xs font-bold text-slate-400 hover:text-white transition-colors">
-                    ← Back to Home
+                <Link href="/" className="text-[10px] font-black text-slate-500 hover:text-white transition-all uppercase tracking-widest bg-white/5 px-6 py-3 rounded-full border border-white/5 hover:bg-white/10">
+                    ← Back to Platform
                 </Link>
-            </div>
+            </header>
 
-            {/* Main */}
-            <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
-                <div className="w-full max-w-sm">
-                    {/* Hero text */}
-                    <div className="text-center mb-8">
-                        <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-primary/30">
-                            <GraduationCap className="w-8 h-8 text-primary" />
-                        </div>
-                        <h1 className="text-3xl font-black text-white tracking-tight">Student Login</h1>
-                        <p className="text-slate-400 mt-2 text-sm font-medium">
-                            Access your personalised learning dashboard
+            {/* Main Content Area */}
+            <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10">
+                <div className="w-full max-w-[450px]">
+                    {/* Welcome Header */}
+                    <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                        <h1 className="text-5xl font-black text-white tracking-tighter mb-4 leading-none">
+                            Welcome <span className="text-gradient">Back</span>
+                        </h1>
+                        <p className="text-slate-500 font-bold text-base tracking-tight max-w-sm mx-auto">
+                            Unlock your educational potential. Log in to your personal learning dashboard.
                         </p>
                     </div>
 
-                    {/* Card */}
-                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-6 md:p-8 shadow-2xl">
-                        <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Premium Login Card */}
+                    <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 md:p-12 shadow-2xl animate-in zoom-in-95 fade-in duration-700">
+                        <form onSubmit={handleSubmit} className="space-y-8">
                             {/* Email */}
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-black text-slate-300 uppercase tracking-widest ml-1">Email Address</label>
-                                <input
-                                    type="email"
-                                    placeholder="you@example.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                    className="w-full h-13 bg-white/8 border border-white/15 text-white placeholder:text-slate-500 rounded-2xl px-5 py-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
-                                />
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">Secure Account Identifier</label>
+                                <div className="relative group">
+                                    <input
+                                        type="email"
+                                        placeholder="Enter your student email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                        className="w-full h-16 bg-white/5 border border-white/5 text-white placeholder:text-slate-600 rounded-3xl px-6 text-sm font-black focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all duration-300 group-hover:bg-white/[0.08]"
+                                    />
+                                </div>
                             </div>
 
                             {/* Password */}
-                            <div className="space-y-1.5">
-                                <div className="flex items-center justify-between ml-1">
-                                    <label className="text-xs font-black text-slate-300 uppercase tracking-widest">Password</label>
-                                    <Link href="#" className="text-[10px] text-primary font-bold hover:underline">Forgot?</Link>
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between ml-2">
+                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Security Access Key</label>
+                                    <Link href="#" className="text-[10px] text-primary font-black hover:text-white uppercase tracking-widest">Forgot Access?</Link>
                                 </div>
-                                <div className="relative">
+                                <div className="relative group">
                                     <input
                                         type={showPassword ? "text" : "password"}
                                         placeholder="••••••••"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
-                                        className="w-full h-13 bg-white/8 border border-white/15 text-white placeholder:text-slate-500 rounded-2xl px-5 py-4 pr-12 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
+                                        className="w-full h-16 bg-white/5 border border-white/5 text-white placeholder:text-slate-700 rounded-3xl px-6 pr-14 text-sm font-black focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all duration-300 group-hover:bg-white/[0.08]"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(v => !v)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                                        className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition-colors"
                                     >
-                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                     </button>
                                 </div>
                             </div>
 
-                            {/* Submit */}
+                            {/* Submit Button */}
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-black rounded-2xl flex items-center justify-center gap-2 text-base shadow-xl shadow-primary/30 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed mt-2"
+                                className="w-full h-18 bg-primary hover:bg-slate-50 hover:text-slate-950 text-white font-black rounded-[1.5rem] flex items-center justify-center gap-3 text-lg shadow-2xl shadow-primary/20 transition-all duration-500 active:scale-95 disabled:opacity-50 mt-4 group"
                             >
                                 {loading ? (
-                                    <><Loader2 className="w-5 h-5 animate-spin" /> Signing in...</>
+                                    <><Loader2 className="w-6 h-6 animate-spin text-white" /> Accessing Portal...</>
                                 ) : (
-                                    <>Sign In <ArrowRight className="w-5 h-5" /></>
+                                    <>Enter Classroom <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" /></>
                                 )}
                             </button>
                         </form>
 
-                        {/* Divider */}
-                        <div className="flex items-center gap-3 my-6">
-                            <div className="flex-1 h-px bg-white/10" />
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Or</span>
-                            <div className="flex-1 h-px bg-white/10" />
+                        <div className="flex items-center gap-4 my-10">
+                            <div className="flex-1 h-px bg-white/5" />
+                            <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">Credentials Required</span>
+                            <div className="flex-1 h-px bg-white/5" />
                         </div>
 
-                        <p className="text-center text-sm text-slate-400">
-                            New to NGIT?{" "}
-                            <Link href="/register" className="text-primary font-black hover:underline">
-                                Register Now
+                        <div className="text-center">
+                            <p className="text-sm text-slate-500 font-bold mb-4">New student seeking enrollment?</p>
+                            <Link href="/register">
+                                <Button variant="outline" className="h-12 border-2 border-white/5 bg-transparent text-white font-black hover:bg-white/10 px-8 rounded-2xl">
+                                    Submit Application
+                                </Button>
                             </Link>
-                        </p>
+                        </div>
                     </div>
 
-                    {/* Feature pills */}
-                    <div className="flex flex-wrap justify-center gap-2 mt-8">
+                    {/* Features section */}
+                    <div className="grid grid-cols-3 gap-4 mt-12 opacity-60">
                         {features.map((f, i) => (
-                            <div key={i} className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2">
-                                <f.icon className="w-3.5 h-3.5 text-primary" />
-                                <span className="text-[11px] font-bold text-slate-300">{f.label}</span>
+                            <div key={i} className="flex flex-col items-center text-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-400">
+                                    <f.icon className="w-5 h-5" />
+                                </div>
+                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-tight">{f.label.split(' ')[0]} {f.label.split(' ')[1]}</span>
                             </div>
                         ))}
                     </div>
                 </div>
-            </div>
+            </main>
 
-            {/* Footer */}
-            <p className="text-center text-[10px] text-slate-600 pb-6 font-bold uppercase tracking-widest">
-                NGIT Institute · Secure Student Login · 2025
-            </p>
+            {/* Sticky Footer */}
+            <footer className="px-12 py-10 flex flex-col md:flex-row justify-between items-center gap-6 border-t border-white/[0.02]">
+                <p className="text-[10px] font-black text-slate-700 uppercase tracking-[0.2em]">
+                    NGIT Academy · Secure Portal Environment · 2025
+                </p>
+                <div className="flex items-center gap-6 text-[10px] font-black text-slate-700 uppercase tracking-widest">
+                    <Link href="#" className="hover:text-primary transition-colors">Privacy Framework</Link>
+                    <Link href="#" className="hover:text-primary transition-colors">Security Protocol</Link>
+                </div>
+            </footer>
         </div>
     );
 }

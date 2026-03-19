@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminDashboard() {
     const res = await getDashboardStats();
 
-    // Fallback if DB fetch fails or no internet/permissions
+    // Fallback if DB fetch fails
     const s = res.success ? (res.stats as any) : {
         totalStudents: 0,
         activeCourses: 0,
@@ -28,143 +28,133 @@ export default async function AdminDashboard() {
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto p-4 md:p-8">
-            <div className="flex justify-between items-center">
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto pb-20">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Admin Command Center</h1>
-                    <p className="text-slate-500 font-medium mt-1">Real-time overview of your institute's performance.</p>
+                    <h1 className="text-4xl font-black tracking-tight text-slate-900 leading-none">
+                        Command <span className="text-gradient">Center</span>
+                    </h1>
+                    <p className="text-slate-500 font-bold mt-3 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        System fully operational • Real-time metrics
+                    </p>
                 </div>
                 <div className="flex gap-4">
+                    <Link href="/admin/mock-tests/list">
+                        <Button variant="outline" className="h-12 border-2 rounded-xl font-bold px-6">
+                            View All Tasks
+                        </Button>
+                    </Link>
                     <Link href="/admin/mock-tests/new">
-                        <Button className="h-12 font-bold bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20">
-                            Create Exam
+                        <Button className="btn-primary h-12 px-8">
+                            New Assessment
                         </Button>
                     </Link>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <MetricCard
                     label="Active Students"
                     value={s.totalStudents}
-                    icon={<Users className="w-6 h-6 text-blue-500" />}
-                    trend="+15% this month"
+                    icon={<Users className="w-5 h-5 text-blue-600" />}
+                    trend="+12%"
+                    color="blue"
                 />
                 <MetricCard
                     label="Published Courses"
                     value={s.activeCourses}
-                    icon={<BookOpen className="w-6 h-6 text-purple-500" />}
-                    trend="2 drafts pending"
+                    icon={<BookOpen className="w-5 h-5 text-indigo-600" />}
+                    trend="Stable"
+                    color="indigo"
                 />
                 <MetricCard
-                    label="Gross Revenue"
+                    label="Total Revenue"
                     value={`₹${s.totalRevenue.toLocaleString()}`}
-                    icon={<Wallet className="w-6 h-6 text-emerald-500" />}
-                    trend="+25% vs last month"
+                    icon={<Wallet className="w-5 h-5 text-emerald-600" />}
+                    trend="+18%"
+                    color="emerald"
                 />
                 <MetricCard
-                    label="Pending Tasks"
+                    label="Pending Actions"
                     value={s.pendingApprovals}
-                    icon={<AlertCircle className="w-6 h-6 text-orange-500" />}
-                    trend="Needs attention"
+                    icon={<AlertCircle className="w-5 h-5 text-rose-600" />}
+                    trend="Needs Review"
+                    color="rose"
                     alert={true}
                 />
             </div>
 
-            {/* Mock Test Specific Analytics Widget */}
-            <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl shadow-slate-200/20 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl transition-all group-hover:bg-primary/10" />
-                
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
-                    <div>
-                        <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-                            <Award className="w-8 h-8 text-primary" />
-                            Mock Test Performance Hub
-                        </h2>
-                        <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-2">Comprehensive Assessment Metrics</p>
-                    </div>
-                    <Link href="/admin/results">
-                        <Button className="rounded-2xl h-14 px-8 font-black gap-2 shadow-lg shadow-primary/20 hover:scale-105 transition-all">
-                            Release Rankings <ChevronRight className="w-5 h-5" />
-                        </Button>
-                    </Link>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mt-12 relative z-10">
-                    <div className="space-y-2">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Conducted</p>
-                        <p className="text-3xl font-black text-slate-900">{s.mockMetrics?.totalTests || 0}</p>
-                        <p className="text-[10px] font-bold text-slate-500">Live Assessments</p>
-                    </div>
-                    <div className="space-y-2">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Attempts</p>
-                        <p className="text-3xl font-black text-slate-900">{s.mockMetrics?.totalAttempts || 0}</p>
-                        <p className="text-[10px] font-bold text-emerald-500">↑ High Engagement</p>
-                    </div>
-                    <div className="space-y-2">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Top Score</p>
-                        <p className="text-3xl font-black text-indigo-600 font-mono">{s.mockMetrics?.highestScore || 0}</p>
-                        <p className="text-[10px] font-bold text-slate-500">Peak Performance</p>
-                    </div>
-                    <div className="space-y-2">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Avg. Score</p>
-                        <p className="text-3xl font-black text-slate-900">{s.mockMetrics?.avgScore || 0}</p>
-                        <p className="text-[10px] font-bold text-slate-500">Cohort Median</p>
-                    </div>
-                    <div className="space-y-2 lg:pl-8 lg:border-l border-slate-100">
-                        <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Pending</p>
-                        <div className="flex items-center gap-2">
-                            <p className="text-3xl font-black text-rose-600">{s.mockMetrics?.pending || 0}</p>
-                            {s.mockMetrics?.pending > 0 && <span className="animate-ping w-2 h-2 rounded-full bg-rose-500" />}
+            {/* Premium Assessment Hub Widget */}
+            <div className="bg-slate-900 rounded-[2.5rem] p-1 shadow-2xl shadow-indigo-500/10 overflow-hidden group">
+                <div className="bg-white/95 backdrop-blur-sm rounded-[2.3rem] p-10 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-[40%] h-full bg-slate-50 -skew-x-12 translate-x-1/2 opacity-50" />
+                    
+                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10 relative z-10">
+                        <div className="space-y-3">
+                            <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-indigo-100/50">
+                                <BrainCircuit className="w-3.5 h-3.5" /> Assessment Engine
+                            </div>
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+                                Mock Test Performance Hub
+                            </h2>
+                            <p className="text-slate-500 font-medium max-w-md">Track global student progress and assessment health in real-time.</p>
                         </div>
-                        <p className="text-[10px] font-bold text-rose-400 uppercase">To Publish</p>
+                        <Link href="/admin/results">
+                            <Button className="btn-primary h-16 px-10 rounded-2xl gap-3 shadow-2xl shadow-primary/30">
+                                Global Analytics <TrendingUp className="w-5 h-5" />
+                            </Button>
+                        </Link>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mt-12 relative z-10">
+                        <StatItem label="Conducted" value={s.mockMetrics?.totalTests || 0} icon={<Award className="w-5 h-5 text-amber-500" />} />
+                        <StatItem label="Total Attempts" value={s.mockMetrics?.totalAttempts || 0} icon={<Users className="w-5 h-5 text-blue-500" />} />
+                        <StatItem label="Highest Score" value={s.mockMetrics?.highestScore || 0} icon={<Trophy className="w-5 h-5 text-indigo-500" />} unit="pts" />
+                        <StatItem label="Average Score" value={s.mockMetrics?.avgScore || 0} icon={<TrendingUp className="w-5 h-5 text-emerald-500" />} unit="%" />
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 {/* Global Live Feed */}
-                <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-8 border shadow-sm flex flex-col h-[500px]">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
-                            <TrendingUp className="w-5 h-5 text-indigo-500" /> Recent Exam Submissions
-                        </h2>
-                        <Link href="/admin/results"><Button variant="outline" size="sm">View All</Button></Link>
+                <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm flex flex-col h-[600px]">
+                    <div className="flex justify-between items-center mb-10">
+                        <div>
+                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Recent Submissions</h2>
+                            <p className="text-sm font-bold text-slate-400 mt-1 uppercase tracking-widest">Global Activity Stream</p>
+                        </div>
+                        <Link href="/admin/results"><Button variant="ghost" className="font-bold gap-2">View History <ChevronRight className="w-4 h-4" /></Button></Link>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+                    <div className="flex-1 overflow-y-auto space-y-5 pr-4 scrollbar-hide">
                         {s.recentAttempts.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                                <Award className="w-12 h-12 mb-4 opacity-20" />
-                                <p className="font-medium">No recent exam submissions.</p>
+                            <div className="h-full flex flex-col items-center justify-center text-slate-300">
+                                <ClipboardList className="w-16 h-16 mb-4 opacity-10" />
+                                <p className="font-black uppercase tracking-widest text-xs">Awaiting Activity</p>
                             </div>
                         ) : (
                             s.recentAttempts.map((attempt: any) => (
-                                <div key={attempt._id} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/30 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500">
-                                            {attempt.studentId?.name?.charAt(0) || "U"}
+                                <div key={attempt._id} className="flex items-center justify-between p-6 rounded-3xl border border-transparent bg-slate-50/50 hover:bg-white hover:border-slate-100 hover:shadow-xl hover:shadow-slate-200/20 transition-all duration-300 group">
+                                    <div className="flex items-center gap-5">
+                                        <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center font-black text-indigo-600 text-lg border-2 border-slate-50 group-hover:bg-primary group-hover:text-white group-hover:scale-105 transition-all">
+                                            {attempt.studentId?.name?.charAt(0) || "S"}
                                         </div>
                                         <div>
-                                            <p className="font-bold text-slate-900">{attempt.studentId?.name || "Unknown Student"}</p>
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">
-                                                Exam: {attempt.quizId?.title}
-                                            </p>
+                                            <p className="font-black text-slate-900 text-lg leading-tight">{attempt.studentId?.name || "Anonymous"}</p>
+                                            <div className="flex items-center gap-2 mt-2">
+                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate max-w-[150px]">
+                                                    {attempt.quizId?.title}
+                                                </span>
+                                                <div className="w-1 h-1 rounded-full bg-slate-300" />
+                                                <time className="text-[10px] font-bold text-slate-400">Just now</time>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className={`font-black text-lg ${attempt.isPassed ? 'text-emerald-500' : 'text-red-500'}`}>
+                                    <div className="flex flex-col items-end gap-3">
+                                        <div className={`px-4 py-1.5 rounded-xl text-sm font-black shadow-sm ${attempt.isPassed ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
                                             {attempt.totalScore} / {attempt.totalMarks}
-                                        </p>
-                                        {attempt.securityLogs?.tabSwitchCount > 0 ? (
-                                            <span className="text-[10px] uppercase font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded flex items-center justify-end gap-1 mt-1">
-                                                <ShieldAlert className="w-3 h-3" /> Flagged
-                                            </span>
-                                        ) : (
-                                            <span className="text-[10px] uppercase font-bold text-emerald-500 tracking-wider">
-                                                {attempt.isPassed ? "Passed" : "Failed"}
-                                            </span>
-                                        )}
+                                        </div>
                                     </div>
                                 </div>
                             ))
@@ -172,37 +162,38 @@ export default async function AdminDashboard() {
                     </div>
                 </div>
 
-                {/* Right panel - Recent Registrations */}
-                <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-lg text-white flex flex-col h-[500px]">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-lg font-black flex items-center gap-2">
-                            New Registrations
-                        </h2>
+                {/* Right panel - New Signups */}
+                <div className="bg-slate-900 rounded-[2.5rem] p-10 shadow-2xl text-white flex flex-col h-[600px] border border-white/5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full -mr-32 -mt-32 blur-[100px]" />
+                    
+                    <div className="mb-10 relative z-10">
+                        <h2 className="text-2xl font-black tracking-tight">New Members</h2>
+                        <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-2">Recently Registered Students</p>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+                    <div className="flex-1 overflow-y-auto space-y-4 pr-2 relative z-10 scrollbar-hide">
                         {s.recentStudents.length === 0 ? (
-                            <div className="h-full flex items-center justify-center text-slate-600 font-medium">
-                                No new signups.
+                            <div className="h-full flex items-center justify-center text-slate-700">
+                                <p className="font-black uppercase tracking-widest text-[10px]">Ghost Town</p>
                             </div>
                         ) : (
                             s.recentStudents.map((u: any) => (
-                                <div key={u._id} className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-bold text-emerald-400">
+                                <div key={u._id} className="bg-white/5 border border-white/5 p-5 rounded-3xl flex items-center gap-5 hover:bg-white/10 transition-colors">
+                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center font-black text-indigo-400 border border-indigo-500/30">
                                         {u.name?.charAt(0) || "S"}
                                     </div>
                                     <div className="overflow-hidden">
-                                        <p className="font-bold text-slate-100 truncate">{u.name}</p>
-                                        <p className="text-xs text-slate-400 truncate">{u.email}</p>
+                                        <p className="font-black text-slate-100 truncate text-base">{u.name}</p>
+                                        <p className="text-xs font-bold text-slate-500 truncate mt-1">{u.email}</p>
                                     </div>
                                 </div>
                             ))
                         )}
                     </div>
 
-                    <Link href="/admin/students" className="mt-4">
-                        <Button className="w-full bg-white text-slate-900 hover:bg-slate-100 font-bold h-12">
-                            Manage Directory
+                    <Link href="/admin/students" className="mt-8 relative z-10">
+                        <Button className="w-full bg-white text-slate-900 hover:bg-slate-100 font-black h-16 rounded-2xl shadow-xl shadow-black/50">
+                            User Directory
                         </Button>
                     </Link>
                 </div>
@@ -211,18 +202,52 @@ export default async function AdminDashboard() {
     );
 }
 
-function MetricCard({ label, value, icon, trend, alert }: any) {
+function MetricCard({ label, value, icon, trend, alert, color }: any) {
+    const variants: Record<string, string> = {
+        blue: "bg-blue-50/50 border-blue-100 text-blue-600 shadow-blue-500/5",
+        indigo: "bg-indigo-50/50 border-indigo-100 text-indigo-600 shadow-indigo-500/5",
+        emerald: "bg-emerald-50/50 border-emerald-100 text-emerald-600 shadow-emerald-500/5",
+        rose: "bg-rose-50/50 border-rose-100 text-rose-600 shadow-rose-500/5"
+    };
+
     return (
-        <div className={`p-6 rounded-[2rem] border relative overflow-hidden transition-all hover:shadow-md ${alert ? 'bg-orange-50/50 border-orange-100' : 'bg-white'}`}>
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${alert ? 'bg-orange-100' : 'bg-slate-50'}`}>
+        <div className={cn(
+            "p-8 rounded-[2.5rem] border bg-white relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-slate-200/50 group",
+            alert && "bg-rose-50/50 border-rose-100"
+        )}>
+            <div className={cn(
+                "w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-sm transition-transform group-hover:scale-110 duration-300",
+                variants[color] || "bg-slate-50"
+            )}>
                 {icon}
             </div>
-            <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${alert ? 'text-orange-700' : 'text-slate-400'}`}>
-                {label}
-            </p>
+            <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2">{label}</p>
             <p className="text-4xl font-black text-slate-900 tracking-tight">{value}</p>
-            <p className={`text-xs font-bold mt-4 ${alert ? 'text-orange-600' : 'text-emerald-600'}`}>
-                {trend}
+            <div className="mt-6 flex items-center gap-2">
+                <span className={cn(
+                    "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
+                    alert ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"
+                )}>
+                    {trend}
+                </span>
+                {!alert && <TrendingUp className="w-4 h-4 text-emerald-500" />}
+            </div>
+        </div>
+    );
+}
+
+function StatItem({ label, value, icon, unit }: any) {
+    return (
+        <div className="space-y-3 group/stat">
+            <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100 group-hover/stat:bg-white group-hover/stat:shadow-sm transition-all">
+                    {icon}
+                </div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
+            </div>
+            <p className="text-3xl font-black text-slate-900 tracking-tighter flex items-baseline gap-1">
+                {value}
+                {unit && <span className="text-sm font-bold text-slate-400 tracking-normal">{unit}</span>}
             </p>
         </div>
     );
