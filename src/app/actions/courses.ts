@@ -340,10 +340,33 @@ export async function getPublicCourses() {
         await connectDB();
         const courses = await Course.find({ isPublished: true })
             .sort({ createdAt: -1 })
-            .lean();
         return { success: true, courses: JSON.parse(JSON.stringify(courses)) };
     } catch (error) {
-        console.error("Fetch Public Courses Error:", error);
         return { success: false, courses: [] };
+    }
+}
+
+export async function getPublicCourse(identifier: string) {
+    try {
+        await connectDB();
+        
+        let course;
+        if (mongoose.Types.ObjectId.isValid(identifier)) {
+            course = await Course.findById(identifier).populate("instructorIds", "name image").lean();
+        } else {
+            course = await Course.findOne({ slug: identifier, isPublished: true }).populate("instructorIds", "name image").lean();
+        }
+
+        if (!course) return { success: false, error: "Course not found" };
+
+        const lessons = await Lesson.find({ courseId: course._id }).sort({ order: 1 }).select("title type duration isFree").lean();
+
+        return { 
+            success: true, 
+            course: JSON.parse(JSON.stringify(course)),
+            lessons: JSON.parse(JSON.stringify(lessons))
+        };
+    } catch (error) {
+        return { success: false, error: "Failed to fetch course" };
     }
 }

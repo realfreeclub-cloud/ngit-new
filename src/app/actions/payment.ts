@@ -9,6 +9,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "./notifications";
+import mongoose from "mongoose";
 
 export async function initiatePayment(courseId: string) {
     try {
@@ -19,9 +20,15 @@ export async function initiatePayment(courseId: string) {
             throw new Error("Unauthorized");
         }
 
-        const course = await Course.findById(courseId);
+        let course;
+        if (mongoose.Types.ObjectId.isValid(courseId)) {
+            course = await Course.findById(courseId);
+        } else {
+            course = await Course.findOne({ slug: courseId });
+        }
+
         if (!course) {
-            throw new Error("Course not found");
+            return { success: false, error: "Course not found. Check identifier." };
         }
 
         // Calculate pending balance instead of blindly tracking existing enrollment
