@@ -42,7 +42,21 @@ export async function initiatePayment(courseId: string) {
         const balance = course.price - totalPaid;
 
         if (balance <= 0) {
-            return { success: false, error: "Course is already fully paid" };
+            // Check if enrollment already exists
+            const existing = await Enrollment.findOne({ userId: session.user.id, courseId: course._id });
+            if (!existing) {
+                await Enrollment.create({
+                    userId: session.user.id,
+                    courseId: course._id,
+                    enrolledAt: new Date(),
+                    progress: 0,
+                    isActive: true
+                });
+                revalidatePath("/student", "layout");
+                revalidatePath("/", "layout");
+                return { success: true, instant: true };
+            }
+            return { success: false, error: "Course is already in your dashboard" };
         }
 
         // Create Razorpay Order with specific balance mapping

@@ -11,6 +11,9 @@ export interface ICourse extends Document {
     type: "ONLINE" | "OFFLINE";
     syllabusUrl?: string;
     instructorIds: mongoose.Types.ObjectId[];
+    outcomes: string[];
+    highlights: string[];
+    instructions?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -27,6 +30,9 @@ const CourseSchema = new Schema<ICourse>(
         type: { type: String, enum: ["ONLINE", "OFFLINE"], default: "ONLINE" },
         syllabusUrl: { type: String },
         instructorIds: [{ type: Schema.Types.ObjectId, ref: "User" }],
+        outcomes: [{ type: String }],
+        highlights: [{ type: String }],
+        instructions: { type: String, default: "" },
     },
     { timestamps: true }
 );

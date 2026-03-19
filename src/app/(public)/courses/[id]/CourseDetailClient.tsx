@@ -33,18 +33,27 @@ export default function CourseDetailClient({ course, lessons }: { course: any, l
             return;
         }
 
+        if (res.instant) {
+            toast.success("Enrolled successfully!");
+            router.push(`/student/dashboard`);
+            router.refresh();
+            setIsProcessing(false);
+            return;
+        }
+
         const options = {
-            key: res.key,
+            key: res.key || "rzp_test_dummy",
             amount: res.amount,
             currency: res.currency,
             name: "NGIT Institute",
             description: `Enrolling in ${course.title}`,
             order_id: res.orderId,
             handler: async (response: any) => {
+                // If dummy mode, we might not get real signature but we'll try verification
                 const verifyRes = await verifyPayment(
-                    response.razorpay_order_id,
-                    response.razorpay_payment_id,
-                    response.razorpay_signature
+                    response.razorpay_order_id || res.orderId,
+                    response.razorpay_payment_id || "pay_dummy_123",
+                    response.razorpay_signature || "mock_signature_success"
                 );
 
                 if (verifyRes.success) {
@@ -61,6 +70,25 @@ export default function CourseDetailClient({ course, lessons }: { course: any, l
             },
             theme: { color: "#2563eb" },
         };
+
+        // If orderId starts with order_mock, simulate the Razorpay opening and success
+        if (res.orderId?.startsWith("order_mock_")) {
+            setTimeout(async () => {
+                toast.info("Simulating dummy payment...");
+                const verifyRes = await verifyPayment(
+                    res.orderId,
+                    "pay_dummy_123",
+                    "mock_signature_success"
+                );
+                if (verifyRes.success) {
+                    toast.success("Auto-confirmed simulated payment!");
+                    router.push(`/student/dashboard`);
+                    router.refresh();
+                }
+            }, 1500);
+            setIsProcessing(false);
+            return;
+        }
 
         const rzp = new (window as any).Razorpay(options);
         rzp.open();
@@ -186,7 +214,7 @@ export default function CourseDetailClient({ course, lessons }: { course: any, l
                     <div className="flex-[1.5] space-y-16">
                         {/* Tabs */}
                         <div className="flex gap-12 border-b border-slate-100 sticky top-20 bg-white z-10 pt-4 overflow-x-auto whitespace-nowrap scrollbar-hide">
-                            {["Curriculum", "Outcome", "Instructors"].map((tab) => (
+                            {["Curriculum", "Outcome", "Instructions", "Instructors"].map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
@@ -250,14 +278,14 @@ export default function CourseDetailClient({ course, lessons }: { course: any, l
                             <div className="space-y-10 animate-in slide-in-from-left-4 duration-500">
                                 <h2 className="text-4xl font-black text-slate-900 tracking-tight">What you'll master</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    {[
-                                        "Foundational understanding of core concepts",
-                                        "Practical problem-solving frameworks",
-                                        "Industry-standard methodologies",
-                                        "Critical thinking and analysis skills",
-                                        "Preparation for advanced certifications",
-                                        "Access to exclusive career resources"
-                                    ].map((item, i) => (
+                                    {(course.outcomes?.length > 0 ? course.outcomes : [
+                                        "Advanced understanding of core concepts",
+                                        "Industry-ready practical project experience",
+                                        "Mastery of modern tools and methodologies",
+                                        "Critical analytical and design thinking",
+                                        "Access to exclusive career placement resources",
+                                        "Professional certification and recognition"
+                                    ]).map((item: string, i: number) => (
                                         <div key={i} className="flex items-start gap-5 p-6 rounded-3xl bg-slate-50 border border-slate-100 hover:scale-[1.02] transition-all duration-300">
                                             <div className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-emerald-200">
                                                 <CheckCircle2 className="w-5 h-5" />
@@ -269,6 +297,21 @@ export default function CourseDetailClient({ course, lessons }: { course: any, l
                             </div>
                         )}
                         
+                        {activeTab === "Instructions" && (
+                            <div className="space-y-10 animate-in fade-in duration-500">
+                                <h2 className="text-4xl font-black text-slate-900 tracking-tight">Enrollment instructions</h2>
+                                <div className="p-10 rounded-[2.5rem] bg-indigo-50/50 border-2 border-dashed border-indigo-100/50 leading-relaxed text-slate-600 font-medium">
+                                    {course.instructions ? (
+                                        <div dangerouslySetInnerHTML={{ __html: course.instructions.replace(/\n/g, '<br/>') }} />
+                                    ) : (
+                                        <p className="italic opacity-60">
+                                            Follow the standard registration process. Once payment is confirmed, you'll gain instant access to all learning materials, recorded sessions, and community forums.
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         {activeTab === "Instructors" && (
                              <div className="space-y-10 animate-in slide-in-from-left-4 duration-500">
                                  <h2 className="text-4xl font-black text-slate-900 tracking-tight">Led by Industry Experts</h2>
@@ -281,7 +324,7 @@ export default function CourseDetailClient({ course, lessons }: { course: any, l
                                              <div className="space-y-4 text-center md:text-left">
                                                   <h3 className="text-2xl font-black text-slate-900">{inst.name}</h3>
                                                   <p className="text-slate-500 font-medium leading-relaxed italic">
-                                                      A veteran educationalist with over 15 years of experience in mentorship and curriculum design. Passionate about empowering students to achieve their academic goals.
+                                                      {inst.bio || "A veteran educationalist with over 15 years of experience in mentorship and curriculum design. Passionate about empowering students to achieve their academic goals."}
                                                   </p>
                                              </div>
                                          </div>

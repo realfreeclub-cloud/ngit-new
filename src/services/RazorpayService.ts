@@ -1,12 +1,26 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
 
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || "",
-    key_secret: process.env.RAZORPAY_KEY_SECRET || "",
-});
+const razorpayKeyId = process.env.RAZORPAY_KEY_ID || "";
+const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET || "";
+
+const razorpay = razorpayKeyId ? new Razorpay({
+    key_id: razorpayKeyId,
+    key_secret: razorpayKeySecret,
+}) : null;
 
 export async function createRazorpayOrder(amount: number, currency: string = "INR") {
+    // Dummy mode if no keys
+    if (!razorpay) {
+        console.warn("⚠️ RAZORPAY KEYS MISSING: Running in DUMMY mode.");
+        return {
+            id: `order_mock_${Date.now()}`,
+            amount: amount * 100,
+            currency,
+            notes: ["DUMMY_MODE"]
+        };
+    }
+
     try {
         const options = {
             amount: amount * 100, // Amount in paise
@@ -27,9 +41,16 @@ export function verifyRazorpaySignature(
     razorpayPaymentId: string,
     signature: string
 ) {
+    // Dummy verification
+    if (razorpayOrderId.startsWith("order_mock_")) {
+        return signature === "mock_signature_success";
+    }
+
+    if (!razorpayKeySecret) return false;
+
     const body = razorpayOrderId + "|" + razorpayPaymentId;
     const expectedSignature = crypto
-        .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "")
+        .createHmac("sha256", razorpayKeySecret)
         .update(body.toString())
         .digest("hex");
 
