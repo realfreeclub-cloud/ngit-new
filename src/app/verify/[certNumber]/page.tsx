@@ -1,111 +1,185 @@
-import { verifyCertificate } from "@/app/actions/certificates";
-import CertificateRender from "@/components/shared/CertificateRender";
-import { format } from "date-fns";
-import { ShieldCheck, Download, Printer } from "lucide-react";
+"use client";
+
+import { useEffect, useState, use } from "react";
+import { verifyCertificate } from "@/app/actions/certificate";
+import { 
+    CheckCircle2, 
+    XCircle, 
+    Award, 
+    BookOpen, 
+    Calendar,
+    Trophy,
+    ShieldCheck,
+    Loader2,
+    Printer,
+    Download
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export default async function VerifyCertificatePage({ params }: { params: Promise<{ certNumber: string }> }) {
-    const { certNumber } = await params;
-    const res = await verifyCertificate(certNumber);
+export default function VerificationPage({ params }: { params: Promise<{ certNumber: string }> }) {
+    const { certNumber } = use(params);
+    const [cert, setCert] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    if (!res.success) {
+    useEffect(() => {
+        async function check() {
+            setLoading(true);
+            const res = await verifyCertificate(certNumber);
+            if (res.success) {
+                setCert(res.certificate);
+            } else {
+                setError(res.error || "Certificate could not be verified.");
+            }
+            setLoading(false);
+        }
+        check();
+    }, [certNumber]);
+
+    if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-6 text-center">
-                <ShieldCheck className="w-24 h-24 text-red-500 mb-6 opacity-80" />
-                <h1 className="text-4xl font-black text-slate-900 tracking-tight">Invalid Certificate</h1>
-                <p className="text-slate-500 max-w-md mt-4 font-medium mb-8">
-                    The certificate number <span className="text-red-600 font-bold font-mono bg-red-50 px-2 py-1 rounded mx-1">{certNumber}</span> could not be verified in our blockchain registry. It may have been revoked or forged.
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                <p className="font-bold text-slate-500">Connecting to secure credential registry...</p>
+            </div>
+        );
+    }
+
+    if (error || !cert) {
+        return (
+            <div className="max-w-xl mx-auto py-20 px-6 text-center animate-in fade-in duration-500">
+                <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-rose-100 shadow-sm">
+                    <XCircle className="w-10 h-10 text-rose-500 shadow-sm" />
+                </div>
+                <h1 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Verification Unsuccessful</h1>
+                <p className="text-slate-500 text-lg mb-8 leading-relaxed">
+                    The provided certificate identifier <span className="font-mono text-rose-600 bg-rose-50 px-2 py-1 rounded">{certNumber}</span> does not match our official records or has been revoked. 
+                    Please ensure the ID or QR code is correct.
                 </p>
-                <Link href="/" className="px-6 py-3 bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-transform">
-                    Return Home
+                <Link href="/">
+                    <Button className="rounded-2xl h-14 px-10 font-bold shadow-xl shadow-rose-100 bg-slate-900 text-white border-none">Back to Portal</Button>
                 </Link>
             </div>
         );
     }
 
-    const { certificate } = res;
-    const dateIssued = format(new Date(certificate.issuedDate), "MMMM do, yyyy");
+    const isIssued = cert.status === "ISSUED";
 
     return (
-        <div className="min-h-screen bg-slate-900 print:bg-white text-white print:text-black">
-            {/* Minimal Header (Hidden on Print) */}
-            <div className="h-16 border-b border-white/10 px-8 flex items-center justify-between print:hidden">
-                <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                    <span className="font-bold tracking-widest uppercase text-xs">Official Verification Registry</span>
+        <div className="max-w-4xl mx-auto py-16 px-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Verification Header */}
+            <div className="text-center mb-16 space-y-4">
+                <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-600 px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest border border-emerald-100 mb-6 group transition-all shadow-sm">
+                    <ShieldCheck className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    Securely Verified Credential
                 </div>
-                <div className="flex items-center gap-4">
-                    <button
-                        className="px-4 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl font-bold text-xs flex items-center gap-2 transition-colors hover:bg-emerald-500 hover:text-white"
-                        // Since this is a server component, we inline a script for the print trigger
-                        style={{ cursor: 'pointer' }}
-                    >
-                        <Printer className="w-4 h-4" /> Print / Save PDF
-                    </button>
-                    <Link href="/">
-                        <button className="text-sm font-medium text-slate-400 hover:text-white">Close</button>
-                    </Link>
-                </div>
-            </div>
-
-            {/* Print trigger using an inline client component pattern for UX */}
-            <div className="print:hidden p-8 flex flex-col items-center">
-                <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-6 py-4 rounded-2xl flex items-center gap-4 max-w-2xl w-full mx-auto mb-10 shadow-2xl">
-                    <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center shrink-0">
-                        <CheckCircleIcon className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <h2 className="font-black text-lg">Certificate Verified Successfully</h2>
-                        <p className="text-sm opacity-80">This document has been authenticated against our tamper-proof secure registry. Details match ID: {certificate.certificateNumber}</p>
-                    </div>
-                </div>
-
-                <div className="w-full max-w-6xl shadow-[0_0_100px_rgba(0,0,0,0.5)]">
-                    <CertificateRender
-                        studentName={certificate.studentId.name}
-                        courseName={certificate.courseId.title}
-                        issuedDate={dateIssued}
-                        certificateNumber={certificate.certificateNumber}
-                        grade={certificate.grade}
-                        duration={certificate.courseDuration}
-                        percentage={certificate.percentage}
-                    />
-                </div>
-
-                {/* Print Hint */}
-                <p className="mt-8 text-slate-500 text-xs font-mono uppercase tracking-widest pb-20">
-                    Press <span className="text-white">CTRL+P</span> (Windows) or <span className="text-white">CMD+P</span> (Mac) to export as PDF. Adjust margins to 'None'.
+                <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-none">
+                    Digital Certificate Registry
+                </h1>
+                <p className="text-slate-500 text-lg font-medium max-w-xl mx-auto">
+                    Authenticating achievements and validating academic excellence within our global ecosystem.
                 </p>
             </div>
 
-            {/* The actual certificate rendered perfectly raw for the Print view. Rest of UI is hidden using tailwind "print:hidden" */}
-            <div className="hidden print:block w-[11in] h-[8.5in] m-0 p-0 overflow-hidden box-border page-landscape">
-                <CertificateRender
-                    studentName={certificate.studentId.name}
-                    courseName={certificate.courseId.title}
-                    issuedDate={dateIssued}
-                    certificateNumber={certificate.certificateNumber}
-                    grade={certificate.grade}
-                    duration={certificate.courseDuration}
-                    percentage={certificate.percentage}
-                />
+            {/* Main Credential Card */}
+            <div className="relative group">
+                {/* Decorative background blur */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-indigo-500/20 rounded-[3rem] blur-2xl group-hover:blur-3xl transition-all duration-500 opacity-60" />
+                
+                <div className="relative bg-white border border-slate-100 rounded-[3rem] overflow-hidden shadow-2xl">
+                    <div className="h-4 bg-gradient-to-r from-primary via-indigo-500 to-cyan-500" />
+                    
+                    <div className="p-8 md:p-16">
+                        <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-10">
+                            {/* Left: Certificate Graphic */}
+                            <div className="w-full md:w-1/3 shrink-0">
+                                <div className="aspect-[4/3] bg-slate-900 rounded-[2.5rem] overflow-hidden relative shadow-2xl flex items-center justify-center p-6 text-center border-4 border-slate-800">
+                                    <Award className="w-16 h-16 text-amber-400 opacity-40 absolute" />
+                                    <div className="relative z-10">
+                                        <div className="text-amber-400 font-black text-2xl mb-1 italic">NGIT</div>
+                                        <div className="text-white/40 font-bold text-[8px] uppercase tracking-[0.3em]">OFFICIAL CREDENTIAL</div>
+                                    </div>
+                                    <div className="absolute bottom-4 left-4 right-4 text-[9px] font-mono text-white/20 break-all">{cert.certificateNumber}</div>
+                                </div>
+                            </div>
+
+                            {/* Right: Details */}
+                            <div className="flex-1 space-y-10 text-center md:text-left">
+                                <div>
+                                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-3">Issued To</p>
+                                    <h2 className="text-4xl md:text-5xl font-black text-slate-900 leading-none mb-3">{cert.studentId?.name}</h2>
+                                    <p className="text-slate-500 font-medium italic">Credential Holder since {new Date(cert.createdAt).getFullYear()}</p>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 justify-center md:justify-start">
+                                            <BookOpen className="w-3.5 h-3.5" /> Certification Course
+                                        </p>
+                                        <p className="font-bold text-slate-900 text-lg leading-snug">{cert.courseId?.title}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 justify-center md:justify-start">
+                                            <Calendar className="w-3.5 h-3.5" /> Conferral Date
+                                        </p>
+                                        <p className="font-bold text-slate-900 text-lg">{new Date(cert.issuedDate).toLocaleDateString("en-GB", { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 justify-center md:justify-start">
+                                            <Trophy className="w-3.5 h-3.5" /> Achievement Score
+                                        </p>
+                                        <div className="flex items-center gap-4 justify-center md:justify-start">
+                                            <span className="font-black text-slate-900 text-3xl">{cert.grade}</span>
+                                            <div className="text-left">
+                                                <div className="text-[9px] font-black text-slate-400 uppercase">Percentile</div>
+                                                <div className="text-xs font-bold text-slate-900 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">{cert.percentage}% Score</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 justify-center md:justify-start">
+                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Registry Status
+                                        </p>
+                                        <Badge className={`bg-emerald-500 text-white border-none px-4 py-1 font-black text-[11px] tracking-widest uppercase rounded-full shadow-lg shadow-emerald-100`}>
+                                            {cert.status}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Additional Meta / Technical details */}
+                        <div className="mt-16 pt-10 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-8">
+                            <div className="text-center md:text-left">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Digital Signature Reference / Registry ID</p>
+                                <p className="font-mono text-[10px] text-slate-400 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100 group-hover:text-primary transition-colors select-all cursor-copy">{cert._id}</p>
+                            </div>
+                            <div className="flex gap-4 w-full md:w-auto">
+                                <Button variant="outline" onClick={() => window.print()} className="flex-1 md:flex-none rounded-2xl font-bold h-12 border-2 gap-2 shadow-sm">
+                                    <Printer className="w-4 h-4" /> Print Record
+                                </Button>
+                                <Link href="/contact" className="flex-1 md:flex-none">
+                                    <Button className="w-full rounded-2xl font-bold h-12 bg-slate-900 hover:bg-black text-white px-8 shadow-xl shadow-slate-200">Verify Issuer</Button>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <style dangerouslySetInnerHTML={{
-                __html: `
-                @media print {
-                    @page { size: landscape; margin: 0; }
-                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white !important;}
-                }
-            `}} />
+            {/* Footer Institutional Detail */}
+            <div className="mt-20 text-center space-y-4">
+                <div className="w-16 h-1.5 bg-gradient-to-r from-primary to-indigo-500 mx-auto rounded-full mb-8" />
+                <h4 className="font-black text-slate-900 uppercase tracking-[0.3em] text-xs">NGIT Institute Credentialing Administration</h4>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] leading-relaxed max-w-2xl mx-auto">
+                    ISO 9001:2015 Certified Organization • Registered Under Chowdhry Law Chambers • Authorized Academic Certification Provider • Digital Compliance Standard 4.1
+                </p>
+                <div className="pt-6">
+                     <p className="text-[9px] text-slate-300 font-medium">© {new Date().getFullYear()} NGIT Institute. All achievements securely archived.</p>
+                </div>
+            </div>
         </div>
     );
-}
-
-function CheckCircleIcon(props: any) {
-    return (
-        <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-    )
 }
