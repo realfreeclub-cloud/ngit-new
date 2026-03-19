@@ -136,9 +136,18 @@ export async function getCertificatePDF(certId: string) {
 
         let pdfStream;
 
-        // Check if dynamic template is associated
-        if (cert.metadata && cert.metadata.templateId) {
-            const template = await CertificateTemplate.findById(cert.metadata.templateId);
+        // 1. Check if a specific template or a default template should be used
+        let templateIdToUse = cert.metadata?.templateId;
+        
+        if (!templateIdToUse) {
+            const defaultTemplate = await CertificateTemplate.findOne({ isDefault: true }).select("_id");
+            if (defaultTemplate) {
+                templateIdToUse = defaultTemplate._id.toString();
+            }
+        }
+
+        if (templateIdToUse) {
+            const template = await CertificateTemplate.findById(templateIdToUse);
 
             if (template) {
                 // Render Dynamic PDF
@@ -146,16 +155,16 @@ export async function getCertificatePDF(certId: string) {
                     React.createElement(DynamicCertificateTemplate, {
                         elements: template.elements,
                         backgroundImage: template.backgroundImage,
-                        config: template.config, // Pass config for page size/orientation
+                        config: template.config,
                         placeholders: {
                             student_name: (cert.studentId as any).name,
                             course_name: (cert.courseId as any).title,
                             grade: cert.grade,
                             percentage: cert.percentage.toString(),
-                            enrollment_number: (cert.studentId as any).email, // fallback
+                            enrollment_number: (cert.studentId as any).email || (cert.studentId as any)._id.toString(),
                             certificate_number: cert.certificateNumber,
                             issue_date: dateStr,
-                            qr_code: qrCodeDataUrl, // will key match 'qr_code' logic in template
+                            qr_code: qrCodeDataUrl,
                             institute_name: "NGIT Institute"
                         }
                     }) as any

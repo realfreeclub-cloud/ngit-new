@@ -2,11 +2,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { listTemplates, createTemplate, deleteTemplate } from "@/app/actions/certificateTemplate";
+import { listTemplates, createTemplate, deleteTemplate, setDefaultTemplate } from "@/app/actions/certificateTemplate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Plus, Edit, Trash, FileText } from "lucide-react";
+import { Plus, Edit, Trash, FileText, CheckCircle2, Award } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -54,6 +54,16 @@ export default function TemplatesPage() {
         }
     };
 
+    const handleSetDefault = async (id: string) => {
+        const res = await setDefaultTemplate(id);
+        if (res.success) {
+            toast.success("Default template updated");
+            loadTemplates();
+        } else {
+            toast.error("Failed to set default");
+        }
+    };
+
     return (
         <div className="p-8 max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-8">
@@ -91,9 +101,16 @@ export default function TemplatesPage() {
                 {templates.map((template) => (
                     <Card key={template._id} className="hover:shadow-md transition-shadow">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <FileText className="w-5 h-5 text-primary" />
-                                {template.name}
+                            <CardTitle className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <FileText className="w-5 h-5 text-primary" />
+                                    {template.name}
+                                </div>
+                                {template.isDefault && (
+                                    <div className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-widest font-black border border-emerald-100 shadow-sm animate-in zoom-in-95 duration-500">
+                                        <CheckCircle2 className="w-3 h-3" /> Default
+                                    </div>
+                                )}
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -108,15 +125,32 @@ export default function TemplatesPage() {
                                 Elements: {template.elements?.length || 0}
                             </p>
                         </CardContent>
-                        <CardFooter className="flex justify-between border-t pt-4">
-                            <Link href={`/admin/certificates/templates/${template._id}/edit`}>
-                                <Button variant="outline" size="sm">
-                                    <Edit className="w-4 h-4 mr-2" /> Edit Design
+                        <CardFooter className="flex flex-col gap-3 border-t pt-4">
+                            <div className="flex justify-between w-full gap-2">
+                                <Link href={`/admin/certificates/templates/${template._id}/edit`} className="flex-1">
+                                    <Button variant="outline" size="sm" className="w-full h-10 rounded-xl font-bold border-2">
+                                        <Edit className="w-4 h-4 mr-2" /> Design
+                                    </Button>
+                                </Link>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-10 w-10 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
+                                    onClick={() => handleDelete(template._id)}
+                                >
+                                    <Trash className="w-4 h-4" />
                                 </Button>
-                            </Link>
-                            <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleDelete(template._id)}>
-                                <Trash className="w-4 h-4" />
-                            </Button>
+                            </div>
+                            
+                            {!template.isDefault && (
+                                <Button 
+                                    className="w-full h-10 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/10" 
+                                    size="sm"
+                                    onClick={() => handleSetDefault(template._id)}
+                                >
+                                    <Award className="w-4 h-4 mr-2" /> Set as Default Template
+                                </Button>
+                            )}
                         </CardFooter>
                     </Card>
                 ))}

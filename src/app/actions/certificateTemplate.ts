@@ -69,4 +69,17 @@ export async function deleteTemplate(id: string) {
     } catch (error: any) {
         return { success: false, error: error.message };
     }
+}export async function setDefaultTemplate(id: string) {
+    try {
+        await connectDB();
+        // Reset all others
+        await CertificateTemplate.updateMany({}, { $set: { isDefault: false } });
+        // Set this one
+        await CertificateTemplate.findByIdAndUpdate(id, { $set: { isDefault: true } });
+        
+        revalidatePath("/admin/certificates/templates");
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
 }
