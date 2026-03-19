@@ -38,51 +38,74 @@ export default function ImportQuestionsPage() {
     };
 
     const excelToJson = async (file: File) => {
-        const workbook = new ExcelJS.Workbook();
-        const buffer = await file.arrayBuffer();
-        await workbook.xlsx.load(buffer);
-        const worksheet = workbook.getWorksheet(1);
-        if (!worksheet) return [];
-
-        const data: any[] = [];
-        const headers: string[] = [];
-        
-        // Get headers from first row
-        const headerRow = worksheet.getRow(1);
-        headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-            const val = cell.value;
-            // Handle rich text or objects
-            let headerValue = "";
-            if (val && typeof val === 'object' && 'richText' in val) {
-                headerValue = (val as any).richText.map((rt: any) => rt.text).join("");
-            } else {
-                headerValue = val ? val.toString().trim() : "";
+        try {
+            const workbook = new ExcelJS.Workbook();
+            const buffer = await file.arrayBuffer();
+            
+            // ExcelJS primarily supports XLSX. If it's something else, it might throw.
+            try {
+                await workbook.xlsx.load(buffer);
+            } catch (e) {
+                throw new Error("Only .xlsx files are supported. If you have an .xls file, please save it as .xlsx and try again.");
             }
-            headers[colNumber] = headerValue || `Column${colNumber}`;
-        });
 
-        // Get data rows
-        worksheet.eachRow((row, rowNumber) => {
-            if (rowNumber === 1) return;
-            const rowData: any = {};
-            let hasData = false;
-            row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-                const header = headers[colNumber];
-                if (header) {
-                    let value = cell.value;
-                    // Handle cases where value might be an object
-                    if (value && typeof value === 'object') {
-                        if ('result' in value) value = (value as any).result;
-                        else if ('richText' in value) value = (value as any).richText.map((rt: any) => rt.text).join("");
-                        else if ('text' in value) value = (value as any).text;
-                    }
-                    rowData[header] = value;
-                    if (value !== null && value !== undefined && value !== '') hasData = true;
+            const worksheet = workbook.getWorksheet(1);
+            if (!worksheet) return [];
+
+            const data: any[] = [];
+            const headers: string[] = [];
+            
+            // Get headers from first row
+            const headerRow = worksheet.getRow(1);
+            headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                let val = cell.value;
+                let headerValue = "";
+                if (val && typeof val === 'object' && 'richText' in (val as any)) {
+                    headerValue = (val as any).richText.map((rt: any) => rt.text).join("");
+                } else if (val && typeof val === 'object' && 'result' in (val as any)) {
+                    headerValue = (val as any).result?.toString() || "";
+                } else {
+                    headerValue = val ? val.toString().trim() : "";
                 }
+                // Store header name - we'll do case-insensitive lookups later
+                headers[colNumber] = headerValue;
             });
-            if (hasData) data.push(rowData);
-        });
-        return data;
+
+            // Get data rows
+            worksheet.eachRow((row, rowNumber) => {
+                if (rowNumber === 1) return;
+                const rowData: any = {};
+                let hasData = false;
+                
+                row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                    const header = headers[colNumber];
+                    if (header) {
+                        let value = cell.value;
+                        // Handle cases where value might be an object
+                        if (value && typeof value === 'object') {
+                            if ('result' in (value as any)) value = (value as any).result;
+                            else if ('richText' in (value as any)) value = (value as any).richText.map((rt: any) => rt.text).join("");
+                            else if ('text' in (value as any)) value = (value as any).text;
+                        }
+                        rowData[header] = value;
+                        if (value !== null && value !== undefined && value !== '') hasData = true;
+                    }
+                });
+                if (hasData) data.push(rowData);
+            });
+            return data;
+        } catch (err: any) {
+            throw new Error(err.message || "Failed to parse Excel file.");
+        }
+    };
+
+    const getValueCaseInsensitive = (row: any, keys: string[]) => {
+        const rowKeys = Object.keys(row);
+        for (const targetKey of keys) {
+            const foundKey = rowKeys.find(k => k.toLowerCase().replace(/[^a-z0-9]/g, '') === targetKey.toLowerCase().replace(/[^a-z0-9]/g, ''));
+            if (foundKey) return row[foundKey];
+        }
+        return undefined;
     };
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,9 +115,11 @@ export default function ImportQuestionsPage() {
 
         try {
             const data = await excelToJson(selectedFile);
-            setPreviewData(data.slice(0, 5)); // Show first 5 for preview
+            setPreviewData(data.slice(0, 5));
         } catch (err: any) {
-            toast.error("Failed to read file: " + err.message);
+            toast.error(err.message);
+            setFile(null);
+            setPreviewData([]);
         }
     };
 
@@ -111,35 +136,65 @@ export default function ImportQuestionsPage() {
         setImporting(true);
         try {
             const data = await excelToJson(file);
+            if (data.length === 0) {
+                throw new Error("The Excel file seems to be empty or has no data rows.");
+            }
 
+            const validExamCodes = ["M1-R5", "M2-R5", "M3-R5", "M4-R5"];
+            
             // Map Excel columns to Question model
-            const formattedQuestions = data.map(row => {
-                // Basic validation & mapping
-                const type = mapType(row.Type || row["Question Type"]);
-                const examCode = row.ExamCode || row["Exam Code"];
+            const formattedQuestions = data.map((row, index) => {
+                const rowNum = index + 2; // Row number in Excel
                 
-                if (!examCode) {
-                    throw new Error(`Row missing Exam Code. Problematic row Question: ${row.Question?.substring(0, 20)}...`);
+                // Flexible mapping for various header names
+                const questionText = getValueCaseInsensitive(row, ["Question", "Content", "Q", "Problem"]);
+                const typeRaw = getValueCaseInsensitive(row, ["Type", "QuestionType", "QType", "Format"]);
+                let examCodeRaw = getValueCaseInsensitive(row, ["ExamCode", "Exam Code", "Code", "Module"]);
+                const subject = getValueCaseInsensitive(row, ["Subject", "Sub"]);
+                const topic = getValueCaseInsensitive(row, ["Topic", "Unit"]);
+                const difficulty = getValueCaseInsensitive(row, ["Difficulty", "Level", "Diff"]);
+                const marks = getValueCaseInsensitive(row, ["Marks", "Weightage"]);
+                const negMarks = getValueCaseInsensitive(row, ["NegativeMarks", "NegMarks", "Negative Marks"]);
+                const explanation = getValueCaseInsensitive(row, ["Explanation", "Solution", "Reasoning"]);
+                const correctAnswer = getValueCaseInsensitive(row, ["CorrectAnswer", "Correct Answer", "Answer", "Key"]);
+                
+                if (!questionText) {
+                    throw new Error(`Row ${rowNum}: Question content is missing.`);
                 }
+
+                // Clean and validate Exam Code
+                let finalExamCode = undefined;
+                if (examCodeRaw) {
+                    const cleanedCode = examCodeRaw.toString().toUpperCase().trim().replace(/[^A-Z0-9-]/g, '');
+                    // Try to match with or without hyphen
+                    finalExamCode = validExamCodes.find(v => 
+                        v === cleanedCode || 
+                        v.replace('-', '') === cleanedCode || 
+                        v === cleanedCode.replace(/(\D)(\d)/, '$1-$2')
+                    );
+                }
+
+                const questType = mapType(typeRaw?.toString());
 
                 return {
                     courseId: selectedCourseId,
-                    examCode: examCode,
-                    subject: row.Subject || "General",
-                    topic: row.Topic || "Uncategorized",
-                    type: type,
-                    difficulty: (row.Difficulty || "MEDIUM").toUpperCase(),
-                    content: { en: row.Question || row.Content },
-                    marks: row.Marks || 4,
-                    negativeMarks: row.NegativeMarks || 1,
-                    explanation: { en: row.Explanation || "" },
+                    examCode: finalExamCode,
+                    subject: subject || "General",
+                    topic: topic || "Uncategorized",
+                    type: questType,
+                    difficulty: (difficulty?.toString() || "MEDIUM").toUpperCase(),
+                    content: { en: questionText.toString() },
+                    marks: Number(marks) || 4,
+                    negativeMarks: Number(negMarks) || 1,
+                    explanation: { en: explanation?.toString() || "" },
                     options: [
-                        { text: { en: row.OptionA || row["Option A"] }, isCorrect: checkCorrect(row, "A") },
-                        { text: { en: row.OptionB || row["Option B"] }, isCorrect: checkCorrect(row, "B") },
-                        { text: { en: row.OptionC || row["Option C"] }, isCorrect: checkCorrect(row, "C") },
-                        { text: { en: row.OptionD || row["Option D"] }, isCorrect: checkCorrect(row, "D") },
+                        { text: { en: getValueCaseInsensitive(row, ["OptionA", "Option A", "A"])?.toString() }, isCorrect: checkCorrect(row, "A", correctAnswer) },
+                        { text: { en: getValueCaseInsensitive(row, ["OptionB", "Option B", "B"])?.toString() }, isCorrect: checkCorrect(row, "B", correctAnswer) },
+                        { text: { en: getValueCaseInsensitive(row, ["OptionC", "Option C", "C"])?.toString() }, isCorrect: checkCorrect(row, "C", correctAnswer) },
+                        { text: { en: getValueCaseInsensitive(row, ["OptionD", "Option D", "D"])?.toString() }, isCorrect: checkCorrect(row, "D", correctAnswer) },
+                        { text: { en: getValueCaseInsensitive(row, ["OptionE", "Option E", "E"])?.toString() }, isCorrect: checkCorrect(row, "E", correctAnswer) },
                     ].filter(o => o.text.en),
-                    numericAnswer: row.NumericAnswer || row.Answer,
+                    numericAnswer: getValueCaseInsensitive(row, ["NumericAnswer", "Numeric Answer", "Value", "Numeric"]) ? Number(getValueCaseInsensitive(row, ["NumericAnswer", "Numeric Answer", "Value", "Numeric"])) : undefined,
                 };
             });
 
@@ -148,31 +203,38 @@ export default function ImportQuestionsPage() {
                 toast.success(`${res.count} questions imported successfully!`);
                 router.push("/admin/mock-tests/questions");
             } else {
-                toast.error(res.error);
+                toast.error(res.error || "Failed to import questions. Check for duplicate or invalid data.");
             }
         } catch (err: any) {
-            toast.error("Failed to parse Excel file: " + err.message);
+            toast.error(err.message);
         } finally {
             setImporting(false);
         }
     };
 
-    const mapType = (typeStr: string) => {
+    const mapType = (typeStr: string | undefined) => {
         if (!typeStr) return "MCQ_SINGLE";
         const t = typeStr.toUpperCase().replace(/\s+/g, "_");
-        if (t.includes("SINGLE")) return "MCQ_SINGLE";
+        if (t.includes("SINGLE") || t.includes("MCQ")) return "MCQ_SINGLE";
         if (t.includes("MULTIPLE")) return "MCQ_MULTIPLE";
-        if (t.includes("TRUE")) return "TRUE_FALSE";
-        if (t.includes("NUMERIC")) return "NUMERIC";
+        if (t.includes("TRUE") || t.includes("BOOL")) return "TRUE_FALSE";
+        if (t.includes("NUMERIC") || t.includes("NUMBER")) return "NUMERIC";
         if (t.includes("MATCH")) return "MATCH_THE_FOLLOWING";
         if (t.includes("ASSERTION")) return "ASSERTION_REASON";
         return "MCQ_SINGLE";
     };
 
-    const checkCorrect = (row: any, label: string) => {
-        const correct = String(row.CorrectAnswer || row["Correct Answer"]).toUpperCase();
-        return correct.includes(label);
+    const checkCorrect = (row: any, label: string, providedAnswer?: any) => {
+        const answer = providedAnswer || getValueCaseInsensitive(row, ["CorrectAnswer", "Correct Answer", "Answer", "Key"]);
+        if (!answer) return false;
+        
+        const correctStr = String(answer).toUpperCase();
+        // Handle cases where the answer is just "A" or "Option A" or "A, B"
+        return correctStr.includes(label) || 
+               (correctStr === label) || 
+               (correctStr.startsWith(label) && (correctStr.length === 1 || !/^[A-Z]$/.test(correctStr[1])));
     };
+
 
     const downloadSample = async () => {
         const workbook = new ExcelJS.Workbook();
