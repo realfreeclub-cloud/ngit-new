@@ -14,6 +14,16 @@ const nextConfig: NextConfig = {
                 hostname: "images.unsplash.com",
                 pathname: "/**",
             },
+            {
+                protocol: "https",
+                hostname: "ngit.org.in",
+                pathname: "/**",
+            },
+            {
+                protocol: "https",
+                hostname: "img.freepik.com",
+                pathname: "/**",
+            },
         ],
     },
 };

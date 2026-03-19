@@ -20,7 +20,8 @@ export default function HeroSection({ data, blocks }: { data?: any, blocks?: any
         button_link: "/register"
     };
 
-    const slides = (blocks && blocks.length > 0) ? blocks : [fallback];
+    const slides = (blocks && blocks.length > 0) ? blocks : 
+                   ((data as any)?.slides?.length > 0 ? (data as any).slides : [fallback]);
 
     const nextSlide = useCallback(() => {
         setCurrent((prev) => (prev + 1) % slides.length);
@@ -93,7 +94,7 @@ export default function HeroSection({ data, blocks }: { data?: any, blocks?: any
                             )}
 
                             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white tracking-tighter leading-[0.9] drop-shadow-2xl">
-                                {content.title?.split(' ').map((word: string, i: number) => (
+                                {(content.title || "").split(' ').map((word: string, i: number) => (
                                     <span key={i} className={i % 2 !== 0 ? "text-primary italic font-serif" : ""}>
                                         {word}{" "}
                                     </span>
@@ -146,7 +147,7 @@ export default function HeroSection({ data, blocks }: { data?: any, blocks?: any
 
                     {/* Indicators */}
                     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex gap-3">
-                        {slides.map((_, i) => (
+                        {slides.map((_: any, i: number) => (
                             <button
                                 key={i}
                                 onClick={() => setCurrent(i)}

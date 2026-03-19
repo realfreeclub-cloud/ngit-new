@@ -11,6 +11,8 @@ export async function createFaculty(data: any) {
         const faculty = await Faculty.create(data);
 
         revalidatePath("/admin/faculty");
+        revalidatePath("/faculty");
+        revalidatePath("/", "layout");
         return { success: true, faculty: JSON.parse(JSON.stringify(faculty)) };
     } catch (error: any) {
         console.error("Create Faculty Error:", error);
@@ -23,6 +25,8 @@ export async function deleteFaculty(id: string) {
         await connectDB();
         await Faculty.findByIdAndDelete(id);
         revalidatePath("/admin/faculty");
+        revalidatePath("/faculty");
+        revalidatePath("/", "layout");
         return { success: true };
     } catch (error) {
         return { success: false, error: "Failed to delete faculty" };
@@ -57,6 +61,8 @@ export async function updateFaculty(id: string, data: any) {
         await connectDB();
         const faculty = await Faculty.findByIdAndUpdate(id, data, { new: true });
         revalidatePath("/admin/faculty");
+        revalidatePath("/faculty");
+        revalidatePath("/", "layout");
         return { success: true, faculty: JSON.parse(JSON.stringify(faculty)) };
     } catch (error: any) {
         console.error("Update Faculty Error:", error);
