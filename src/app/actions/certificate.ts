@@ -7,72 +7,15 @@ import CertificateTemplate from "@/models/CertificateTemplate";
 import { generateCertificateNumber } from "@/lib/certificate";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { renderToStream } from "@react-pdf/renderer";
+import { renderToBuffer } from "@react-pdf/renderer";
 import { CertificateTemplate as StaticTemplate } from "@/components/certificates/CertificateTemplate";
 import { DynamicCertificateTemplate } from "@/components/certificates/DynamicCertificateTemplate";
 import QRCode from "qrcode";
 import React from "react";
 import User, { UserRole } from "@/models/User";
 import Course from "@/models/Course";
-import Enrollment from "@/models/Enrollment";
 import { revalidatePath } from "next/cache";
 
-// --- ADMIN: GENERATE CERTIFICATE ---
-export async function generateCertificate(data: {
-    studentId: string;
-    courseId: string;
-    grade: string;
-    percentage: number;
-    duration: string;
-    templateId?: string; // Optional: specify template
-    wpm?: number;
-    remarks?: string;
-}) {
-    try {
-        await connectDB();
-        const session = await getServerSession(authOptions);
-
-        // Check if certificate already exists
-        const existing = await Certificate.findOne({
-            studentId: data.studentId,
-            courseId: data.courseId,
-            status: CertificateStatus.ISSUED,
-        });
-
-        if (existing) {
-            // return { success: false, error: "Certificate already issued for this course." }; 
-            // For testing, user might want to re-issue or override. Let's strict for now.
-        }
-
-        // Generate Certificate Number
-        const certNumber = await generateCertificateNumber(data.courseId);
-
-        // Create Metadata in DB
-        const newCert = await Certificate.create({
-            studentId: data.studentId,
-            courseId: data.courseId,
-            certificateNumber: certNumber,
-            grade: data.grade,
-            percentage: data.percentage,
-            wpm: data.wpm,
-            courseDuration: data.duration,
-            issuedDate: new Date(),
-            status: CertificateStatus.ISSUED,
-            metadata: {
-                adminId: session?.user?.id,
-                remarks: data.remarks,
-                templateId: data.templateId // Store which template was used
-            }
-        });
-
-        revalidatePath("/admin/certificates");
-        return { success: true, certificateId: newCert._id.toString() };
-
-    } catch (error: any) {
-        console.error("Generate Certificate Error:", error);
-        return { success: false, error: error.message };
-    }
-}
 
 // --- STUDENT: GET MY CERTIFICATES ---
 export async function getStudentCertificates() {
@@ -105,7 +48,7 @@ export async function verifyCertificate(certId: string) {
 
         const cert = await Certificate.findOne(query)
             .populate("studentId", "name email image")
-            .populate("courseId", "title description");
+            .populate("courseId", "title description thumbnail");
 
         if (!cert) return { success: false, error: "Certificate not found" };
 
@@ -142,13 +85,21 @@ export async function getCertificatePDF(certId: string) {
         const { renderToBuffer } = await import("@react-pdf/renderer");
         let pdfBuffer: Buffer | null = null;
 
-        // 1. Check for specific template
+        // 1. Determine which template to use
         let templateIdToUse = cert.metadata?.templateId;
         
+        // If not specific to cert, look for default
         if (!templateIdToUse) {
             const defaultTemplate = await CertificateTemplate.findOne({ isDefault: true }).select("_id");
             if (defaultTemplate) {
                 templateIdToUse = defaultTemplate._id.toString();
+            } else {
+                // If NO default template is set, but templates EXIST, use the latest one
+                // This prevents falling back to static design when the user has designed something
+                const anyTemplate = await CertificateTemplate.findOne().sort({ updatedAt: -1 }).select("_id");
+                if (anyTemplate) {
+                    templateIdToUse = anyTemplate._id.toString();
+                }
             }
         }
 
@@ -177,11 +128,10 @@ export async function getCertificatePDF(certId: string) {
                 }
             } catch (err) {
                 console.error("Dynamic Template Render Error:", err);
-                // Fall back to static
             }
         }
 
-        // Default Fallback
+        // Default Fallback to Legacy Design
         if (!pdfBuffer) {
             pdfBuffer = await renderToBuffer(
                 React.createElement(StaticTemplate as any, {
@@ -212,16 +162,108 @@ export async function getCertificatePDF(certId: string) {
 }
 
 // --- ADMIN: LIST ALL CERTIFICATES ---
-export async function getAllCertificates() {
+export async function getAdminCertificates() {
     try {
         await connectDB();
+        const session = await getServerSession(authOptions);
+        if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
+
         const certs = await Certificate.find()
             .populate("studentId", "name email")
-            .populate("courseId", "title")
+            .populate("courseId", "title thumbnail")
             .sort({ createdAt: -1 });
+
         return { success: true, certificates: JSON.parse(JSON.stringify(certs)) };
-    } catch (error) {
-        return { success: false, error: "Failed to fetch certificates" };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+// ALIAS for backward compatibility
+export const getAllCertificates = getAdminCertificates;
+
+// --- ADMIN: ISSUE CERTIFICATE ---
+export async function issueCertificate(data: {
+    studentId: string;
+    courseId: string;
+    grade: string;
+    percentage: number;
+    courseDuration: string;
+    templateId?: string;
+    remarks?: string;
+}) {
+    try {
+        await connectDB();
+        const session = await getServerSession(authOptions);
+        if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
+
+        // Duplicate Check
+        const existing = await Certificate.findOne({
+            studentId: data.studentId,
+            courseId: data.courseId,
+            status: CertificateStatus.ISSUED
+        });
+
+        if (existing) {
+            return { success: false, error: "This student already has an active certificate for this course." };
+        }
+
+        // Generate Certificate Number
+        const certNumber = await generateCertificateNumber(data.courseId);
+
+        const cert = await Certificate.create({
+            ...data,
+            certificateNumber: certNumber,
+            issuedDate: new Date(),
+            status: CertificateStatus.ISSUED,
+            metadata: {
+                adminId: session.user.id,
+                remarks: data.remarks,
+                templateId: data.templateId
+            }
+        });
+
+        revalidatePath("/admin/certificates");
+        return { success: true, certificate: JSON.parse(JSON.stringify(cert)) };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+// ALIAS
+export const generateCertificate = issueCertificate;
+
+// --- ADMIN: REVOKE CERTIFICATE ---
+export async function revokeCertificate(certId: string) {
+    try {
+        await connectDB();
+        const session = await getServerSession(authOptions);
+        if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
+
+        const cert = await Certificate.findById(certId);
+        if (!cert) return { success: false, error: "Not found" };
+
+        cert.status = CertificateStatus.REVOKED;
+        await cert.save();
+
+        revalidatePath("/admin/certificates");
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+// --- ADMIN: GET STUDENT LIST ---
+export async function getStudentList() {
+    try {
+        await connectDB();
+        const session = await getServerSession(authOptions);
+        if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
+
+        const students = await User.find({ role: UserRole.STUDENT }).select("name email").sort({ name: 1 }).lean();
+        return { success: true, students: JSON.parse(JSON.stringify(students)) };
+    } catch (error: any) {
+        return { success: false, error: error.message };
     }
 }
 
