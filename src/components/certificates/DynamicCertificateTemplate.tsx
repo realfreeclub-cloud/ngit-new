@@ -62,10 +62,16 @@ export const DynamicCertificateTemplate = ({ elements, placeholders, backgroundI
     // Replace placeholders in text
     const processContent = (content: string) => {
         let text = content;
+        // Replace known placeholders
         Object.keys(placeholders).forEach((key) => {
             const regex = new RegExp(`{{${key}}}`, 'g');
             text = text.replace(regex, placeholders[key] || '');
         });
+        
+        // Remove any remaining unresolved placeholders (e.g. {{student_photo}} if not provided)
+        // This prevents the PDF/Browser from trying to fetch "{{key}}" as a URL
+        text = text.replace(/{{[^{}]*}}/g, '');
+        
         return text;
     };
 

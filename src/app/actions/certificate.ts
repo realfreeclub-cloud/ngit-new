@@ -119,7 +119,6 @@ export async function getCertificatePDF(certId: string) {
                                 certificate_number: cert.certificateNumber,
                                 issue_date: dateStr,
                                 qr_code: qrCodeDataUrl,
-                                student_photo: student.image || "/placeholder-avatar.png",
                                 institute_name: "NGIT Institute"
                             }
                         }) as any

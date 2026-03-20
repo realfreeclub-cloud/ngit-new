@@ -132,7 +132,7 @@ export default function EditorCanvas({
                                 )}
                                 {el.type === 'image' && (
                                     <img
-                                        src={el.content}
+                                        src={el.content?.startsWith('{{') ? 'https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.pngwing.com%2Fen%2Ffree-png-zppre&psig=AOvVaw0_9_f0_9_f0_9_f0_9&ust=1711036800000000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCJjJ_vj_9YQDFQAAAAAdAAAAABAE' : el.content}
                                         alt="element"
                                         className="w-full h-full pointer-events-none"
                                         style={{ objectFit: el.style?.objectFit || 'contain' }}
