@@ -11,7 +11,7 @@ export default async function FacultyDetailPage({ params }: { params: Promise<{ 
     
     // Check if it's a default faculty (numerical ID from my mock)
     // In a real app, we'd only fetch from DB, but for the demo/fallback:
-    const res = (id.length > 5) ? await getFacultyById(id) : { success: false };
+    const res = (id.length > 5) ? await getFacultyById(id) : { success: false, faculty: undefined };
 
     if (!res.success || !res.faculty) {
         // Fallback or 404
