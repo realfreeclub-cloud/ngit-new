@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { getAdminCertificates, issueCertificate, revokeCertificate, getStudentList } from "@/app/actions/certificates";
+import { getCertificatePDF } from "@/app/actions/certificate";
 import { getAllCourses } from "@/app/actions/courses";
-import { Search, Award, ShieldCheck, XCircle, FileDiff, QrCode, Plus, Loader2 } from "lucide-react";
+import { Search, Award, ShieldCheck, XCircle, FileDiff, QrCode, Plus, Loader2, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -19,6 +20,7 @@ export default function AdminCertificatesPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [issuing, setIssuing] = useState(false);
     const [openAdd, setOpenAdd] = useState(false);
+    const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
     const [form, setForm] = useState({
         studentId: "",
@@ -44,6 +46,38 @@ export default function AdminCertificatesPage() {
         setCourses(crsData.courses || []);
         if (stuData.success) setStudents(stuData.students || []);
         setLoading(false);
+    };
+
+    const handleDownload = async (certId: string) => {
+        setDownloadingId(certId);
+        try {
+            const res = await getCertificatePDF(certId);
+            if (res.success && res.pdfBase64) {
+                const byteCharacters = atob(res.pdfBase64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: "application/pdf" });
+
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = res.filename || "certificate.pdf";
+                document.body.appendChild(a);
+                a.click();
+                URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                toast.success("Certificate downloaded successfully!");
+            } else {
+                toast.error(res.error || "Failed to download");
+            }
+        } catch (error) {
+            toast.error("Error generating PDF");
+        } finally {
+            setDownloadingId(null);
+        }
     };
 
     const handleIssue = async (e: React.FormEvent) => {
@@ -264,6 +298,14 @@ export default function AdminCertificatesPage() {
                                                 <span className="flex items-center gap-1 text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 w-fit px-2.5 py-1 rounded-full border border-emerald-100">
                                                     <ShieldCheck className="w-3 h-3" /> Valid
                                                 </span>
+                                                <button
+                                                    onClick={() => handleDownload(cert._id)}
+                                                    disabled={!!downloadingId}
+                                                    className="flex items-center gap-1 text-[10px] font-bold text-primary hover:text-primary-dark uppercase underline disabled:opacity-50"
+                                                >
+                                                    {downloadingId === cert._id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
+                                                    Download
+                                                </button>
                                                 <button
                                                     onClick={() => handleRevoke(cert._id, cert.certificateNumber)}
                                                     className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold text-red-400 hover:text-red-600 uppercase underline"

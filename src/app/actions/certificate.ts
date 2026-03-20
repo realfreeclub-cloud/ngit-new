@@ -157,10 +157,10 @@ export async function getCertificatePDF(certId: string) {
                 const template = await CertificateTemplate.findById(templateIdToUse);
                 if (template) {
                     pdfBuffer = await renderToBuffer(
-                        React.createElement(DynamicCertificateTemplate, {
-                            elements: template.elements,
+                        React.createElement(DynamicCertificateTemplate as any, {
+                            elements: template.elements as any,
                             backgroundImage: template.backgroundImage,
-                            config: template.config,
+                            config: template.config as any,
                             placeholders: {
                                 student_name: student.name || "Student Name",
                                 course_name: course.title || "Course Name",
@@ -184,7 +184,7 @@ export async function getCertificatePDF(certId: string) {
         // Default Fallback
         if (!pdfBuffer) {
             pdfBuffer = await renderToBuffer(
-                React.createElement(StaticTemplate, {
+                React.createElement(StaticTemplate as any, {
                     studentName: student.name || "Student Name",
                     courseName: course.title || "Course Name",
                     certificateId: cert.certificateNumber,
