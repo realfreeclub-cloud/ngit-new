@@ -111,7 +111,7 @@ export default function TemplatesPage() {
 
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button className="h-12 px-6 rounded-2xl font-bold bg-slate-900 border-none shadow-xl shadow-slate-900/10">
+                        <Button className="h-12 px-6 rounded-2xl font-bold bg-slate-900 text-white border-none shadow-xl shadow-slate-900/10">
                             <Plus className="w-4 h-4 mr-2" /> Create Template
                         </Button>
                     </DialogTrigger>

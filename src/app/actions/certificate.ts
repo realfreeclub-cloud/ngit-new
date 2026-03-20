@@ -7,8 +7,6 @@ import CertificateTemplate from "@/models/CertificateTemplate";
 import { generateCertificateNumber } from "@/lib/certificate";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { renderToBuffer } from "@react-pdf/renderer";
-import { CertificateTemplate as StaticTemplate } from "@/components/certificates/CertificateTemplate";
 import { DynamicCertificateTemplate } from "@/components/certificates/DynamicCertificateTemplate";
 import QRCode from "qrcode";
 import React from "react";
@@ -131,21 +129,12 @@ export async function getCertificatePDF(certId: string) {
             }
         }
 
-        // Default Fallback to Legacy Design
+        // NO Default Fallback anymore. If it fails, it fails gracefully or warns.
         if (!pdfBuffer) {
-            pdfBuffer = await renderToBuffer(
-                React.createElement(StaticTemplate as any, {
-                    studentName: student.name || "Student Name",
-                    courseName: course.title || "Course Name",
-                    certificateId: cert.certificateNumber,
-                    issueDate: dateStr,
-                    grade: cert.grade || "N/A",
-                    percentage: (cert.percentage || 0).toString(),
-                    qrCodeUrl: qrCodeDataUrl,
-                    duration: cert.courseDuration || "Duration",
-                    wpm: cert.wpm?.toString()
-                }) as any
-            );
+            return { 
+                success: false, 
+                error: "No certificate design template found. Please create and mark a template as 'Default' in the Admin Panel." 
+            };
         }
 
         const base64 = pdfBuffer.toString('base64');
