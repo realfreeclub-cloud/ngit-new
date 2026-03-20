@@ -29,6 +29,7 @@ export default function LayoutManagementPage() {
         { label: "Home", href: "/" },
         { label: "About Us", href: "/#about" },
         { label: "Courses", href: "/courses" },
+        { label: "Mock Tests", href: "/exams" },
         { label: "Events", href: "/events" },
         { label: "Gallery", href: "/gallery" },
         { label: "Faculty", href: "/faculty" },
