@@ -58,7 +58,7 @@ export default function PublicExamsGrid({ exams, data }: PublicExamsGridProps) {
                     {exams.slice(0, 6).map((exam, idx) => {
                         const startUrl = session?.user?.role === "STUDENT" 
                             ? `/student/quizzes/${exam._id}` 
-                            : "/student/login";
+                            : `/student/login?callbackUrl=${encodeURIComponent(`/student/quizzes/${exam._id}`)}`;
 
                         return (
                             <motion.div

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
     CheckCircle2,
@@ -16,11 +17,26 @@ import Script from "next/script";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 
 export default function CourseDetailClient({ course, lessons }: { course: any, lessons: any[] }) {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const { data: session } = useSession();
     const [activeTab, setActiveTab] = useState("Curriculum");
     const [isProcessing, setIsProcessing] = useState(false);
+
+    // Auto-enroll after login
+    useEffect(() => {
+        if (searchParams.get("enroll") === "true" && session && !isProcessing) {
+            // Remove the flag from URL without refresh to avoid repeat triggers
+            const url = new URL(window.location.href);
+            url.searchParams.delete("enroll");
+            window.history.replaceState({}, '', url);
+            
+            handleEnroll();
+        }
+    }, [searchParams, session]);
 
     const handleEnroll = async () => {
         if (!course) return;
@@ -28,7 +44,13 @@ export default function CourseDetailClient({ course, lessons }: { course: any, l
         const res = await initiatePayment(course.slug || course._id);
 
         if (!res.success) {
-            toast.error(res.error || "Please login as a student to enroll.");
+            if (res.error === "Unauthorized") {
+                toast.error("Please login to enroll.");
+                const callbackUrl = encodeURIComponent(`${window.location.pathname}?enroll=true`);
+                router.push(`/student/login?callbackUrl=${callbackUrl}`);
+            } else {
+                toast.error(res.error || "Enrollment failed.");
+            }
             setIsProcessing(false);
             return;
         }

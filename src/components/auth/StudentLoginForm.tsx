@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -23,6 +24,8 @@ export default function StudentLoginForm() {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const callbackUrl = searchParams.get("callbackUrl");
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -35,8 +38,14 @@ export default function StudentLoginForm() {
                 toast.success("Welcome back!");
                 const response = await fetch("/api/auth/session");
                 const session = await response.json();
-                if (session?.user?.role === "ADMIN") router.push("/admin");
-                else router.push("/student");
+                
+                if (callbackUrl) {
+                    router.push(callbackUrl);
+                } else if (session?.user?.role === "ADMIN") {
+                    router.push("/admin");
+                } else {
+                    router.push("/student");
+                }
             }
         } catch {
             toast.error("Something went wrong. Please try again.");

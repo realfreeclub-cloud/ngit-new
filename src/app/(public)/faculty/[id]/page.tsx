@@ -34,41 +34,34 @@ export default async function FacultyDetailPage({ params }: { params: Promise<{ 
     const { faculty } = res;
 
     return (
-        <main className="min-h-screen bg-white">
-            {/* Ambient Heritage Header */}
-            <div className="h-[40vh] md:h-[50vh] bg-slate-900 relative overflow-hidden flex items-end">
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/60 to-slate-900" />
-                <div className="absolute top-0 right-0 w-[1000px] h-[1000px] bg-primary/5 rounded-full blur-[200px] -mr-1/2 -mt-1/2" />
+        <main className="min-h-screen bg-slate-50">
+            {/* Ambient High-Fidelity Header */}
+            <div className="h-[25vh] md:h-[30vh] bg-slate-900 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/40 to-slate-900" />
+                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-50" />
                 
-                <div className="container px-6 mx-auto relative z-10 pb-16">
-                    <Link href="/faculty" className="inline-flex items-center gap-2 text-white/40 hover:text-white font-black uppercase tracking-[0.2em] text-[10px] mb-8 transition-colors">
-                        <ArrowLeft className="w-4 h-4" /> Faculty Directory
+                <div className="container px-6 mx-auto h-full flex items-center relative z-10">
+                    <Link href="/faculty" className="inline-flex items-center gap-3 text-white/40 hover:text-white font-black uppercase tracking-[0.3em] text-[10px] transition-all group">
+                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to Team HUB
                     </Link>
-                    <div className="space-y-4">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary">
-                            <ShieldCheck className="w-4 h-4" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Institutional Credential verified</span>
-                        </div>
-                        <h1 className="text-5xl md:text-8xl font-black text-white tracking-tighter leading-none italic">
-                            {faculty.name}
-                        </h1>
-                    </div>
                 </div>
             </div>
 
             {/* Content Architecture */}
-            <div className="container px-6 mx-auto">
-                <div className="grid lg:grid-cols-12 gap-16 -mt-24 pb-24 h-full">
-                    {/* Visual & Contact Column */}
-                    <div className="lg:col-span-4 space-y-8 relative z-20 h-full">
-                        <div className="bg-white p-2 rounded-[3.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] border border-slate-100 overflow-hidden group">
-                            <div className="relative aspect-[4/5] rounded-[3rem] overflow-hidden bg-slate-50 border-8 border-slate-50">
+            <div className="container px-6 mx-auto -mt-16 md:-mt-24 pb-32">
+                <div className="grid lg:grid-cols-12 gap-12 lg:gap-20 items-stretch">
+                    
+                    {/* Visual & Core ID Profile */}
+                    <div className="lg:col-span-4 space-y-10">
+                        <div className="bg-white p-3 rounded-[4rem] shadow-2xl shadow-slate-200 border border-white relative overflow-hidden group">
+                            <div className="relative aspect-[4/5] rounded-[3.5rem] overflow-hidden bg-slate-50 shadow-inner">
                                 {faculty.image ? (
                                     <Image 
                                         src={faculty.image} 
                                         alt={faculty.name} 
                                         fill
-                                        className="object-cover group-hover:scale-110 transition-transform duration-1000"
+                                        priority
+                                        className="object-cover group-hover:scale-105 transition-transform duration-[2s]"
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-slate-200">
@@ -76,33 +69,38 @@ export default async function FacultyDetailPage({ params }: { params: Promise<{ 
                                     </div>
                                 )}
                             </div>
+                            
+                            {/* Verified Seal */}
+                            <div className="absolute bottom-10 right-10 w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-2xl border border-slate-50">
+                                <ShieldCheck className="w-8 h-8 text-primary" />
+                            </div>
                         </div>
 
-                        {/* Direct Communication Channels */}
-                        <div className="bg-slate-50 p-10 rounded-[3rem] border border-slate-200/50 space-y-10">
-                            <h3 className="text-lg font-black text-slate-950 tracking-tight flex items-center gap-2">
-                                <Zap className="w-5 h-5 text-primary" /> Routing Details
+                        {/* Direct Connectivity Protocol */}
+                        <div className="bg-white p-10 md:p-12 rounded-[3.5rem] border border-slate-100 shadow-sm space-y-10">
+                            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3">
+                                Communication Grid
                             </h3>
                             
                             <div className="space-y-8">
-                                <div className="flex items-start gap-5">
-                                    <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-slate-400 shadow-sm shrink-0">
+                                <div className="flex items-start gap-5 group">
+                                    <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-inner shrink-0">
                                         <Mail className="w-5 h-5" />
                                     </div>
                                     <div className="overflow-hidden">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Official Protocol</p>
-                                        <a href={`mailto:${faculty.email}`} className="text-slate-900 font-bold hover:text-primary transition-colors truncate block">{faculty.email}</a>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 opacity-60">Digital Relay</p>
+                                        <a href={`mailto:${faculty.email}`} className="text-slate-900 font-black hover:text-primary transition-colors truncate block text-sm">{faculty.email}</a>
                                     </div>
                                 </div>
 
                                 {faculty.phone && (
-                                    <div className="flex items-start gap-5">
-                                        <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-slate-400 shadow-sm shrink-0">
+                                    <div className="flex items-start gap-5 group">
+                                        <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-inner shrink-0">
                                             <Phone className="w-5 h-5" />
                                         </div>
                                         <div>
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Tele-Command</p>
-                                            <a href={`tel:${faculty.phone}`} className="text-slate-900 font-bold hover:text-primary transition-colors underline decoration-primary/30 decoration-2 underline-offset-4">{faculty.phone}</a>
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 opacity-60">Voice Uplink</p>
+                                            <a href={`tel:${faculty.phone}`} className="text-slate-900 font-black hover:text-primary transition-colors text-sm">{faculty.phone}</a>
                                         </div>
                                     </div>
                                 )}
@@ -110,36 +108,50 @@ export default async function FacultyDetailPage({ params }: { params: Promise<{ 
                         </div>
                     </div>
 
-                    {/* Narrative & Authority Column */}
-                    <div className="lg:col-span-8 flex flex-col justify-between h-full lg:pt-32">
-                        <div className="space-y-16">
-                            {/* Role Identification */}
-                            <div className="space-y-6">
-                                <p className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight max-w-2xl">
-                                    {faculty.position} <span className="text-slate-300 mx-2">/</span> <span className="text-primary italic font-serif opacity-80">{faculty.qualification}</span>
-                                </p>
-                                <div className="h-1.5 w-24 bg-primary rounded-full" />
+                    {/* Authority Narrative Column */}
+                    <div className="lg:col-span-8 space-y-16 lg:pt-32">
+                        {/* Primary Identity Segment */}
+                        <div className="space-y-8">
+                            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/5 text-primary border border-primary/10">
+                                <Zap className="w-4 h-4 animate-pulse" />
+                                <span className="text-[11px] font-black uppercase tracking-[0.2em]">{faculty.qualification}</span>
                             </div>
+                            
+                            <div className="space-y-4">
+                                <h1 className="text-6xl md:text-8xl font-black text-slate-900 tracking-tighter leading-[0.9] italic group-hover:text-primary transition-colors">
+                                    {faculty.name}
+                                </h1>
+                                <p className="text-2xl md:text-4xl font-black text-slate-400 tracking-tight leading-tight">
+                                    {faculty.position}
+                                </p>
+                            </div>
+                            
+                            <div className="h-2 w-32 bg-primary rounded-full shadow-lg shadow-primary/20" />
+                        </div>
 
-                            {/* Biography Synthesis */}
-                            <div className="space-y-8">
-                                <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] flex items-center gap-3">
-                                    Professional Narrative
-                                </h3>
-                                <div className="bg-slate-50/50 p-10 md:p-14 rounded-[3.5rem] border border-slate-100/50 relative">
-                                    <div className="absolute top-0 left-10 w-px h-20 bg-gradient-to-b from-primary to-transparent" />
-                                    <p className="text-xl text-slate-700 font-medium leading-[1.8] italic font-serif">
-                                        {faculty.bio || "Dedicated academic leader specializing in technological advancement and student mentorship within the NGIT ecosystem."}
-                                    </p>
-                                </div>
+                        {/* Biographical Synthesis */}
+                        <div className="space-y-10">
+                            <h3 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] flex items-center gap-4">
+                                Professional Dossier <div className="h-px flex-1 bg-slate-200" />
+                            </h3>
+                            <div className="bg-white p-10 md:p-14 rounded-[4rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/5 transition-colors duration-1000" />
+                                <p className="text-xl md:text-2xl text-slate-800 font-medium leading-[1.8] italic font-serif relative z-10">
+                                    {faculty.bio || "Academic expert dedicated to pioneering curriculum excellence and fostering technological expertise within our next-generation student body."}
+                                </p>
                             </div>
                         </div>
 
-                        {/* Footer Branding */}
-                        <div className="mt-20 pt-10 border-t border-slate-50 flex items-center justify-between opacity-40">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">NGIT Professional Registry · Ref #F_{id.substring(0,6)}</p>
-                            <div className="flex gap-2">
-                                <div className="w-2 h-2 rounded-full bg-slate-300" />
+                        {/* Institutional Registry Footer */}
+                        <div className="pt-20 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-8 opacity-50">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-px bg-slate-300" />
+                                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">
+                                    NGIT REGISTRY: {id.substring(0, 8).toUpperCase()}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="w-2 h-2 rounded-full bg-primary" />
                                 <div className="w-2 h-2 rounded-full bg-slate-300" />
                                 <div className="w-2 h-2 rounded-full bg-slate-300" />
                             </div>
