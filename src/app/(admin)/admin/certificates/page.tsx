@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getAdminCertificates, issueCertificate, revokeCertificate, getStudentList } from "@/app/actions/certificates";
-import { getCertificatePDF } from "@/app/actions/certificate";
+import { getAdminCertificates, issueCertificate, revokeCertificate, getStudentList, getFormData, getCertificatePDF } from "@/app/actions/certificate";
 import { getAllCourses } from "@/app/actions/courses";
 import { Search, Award, ShieldCheck, XCircle, FileDiff, QrCode, Plus, Loader2, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -16,6 +15,7 @@ export default function AdminCertificatesPage() {
     const [certs, setCerts] = useState<any[]>([]);
     const [courses, setCourses] = useState<any[]>([]);
     const [students, setStudents] = useState<any[]>([]);
+    const [templates, setTemplates] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [issuing, setIssuing] = useState(false);
@@ -25,6 +25,7 @@ export default function AdminCertificatesPage() {
     const [form, setForm] = useState({
         studentId: "",
         courseId: "",
+        templateId: "",
         grade: "A+",
         percentage: 95,
         courseDuration: "12 Weeks",
@@ -37,14 +38,17 @@ export default function AdminCertificatesPage() {
 
     const load = async () => {
         setLoading(true);
-        const [cRes, crsData, stuData] = await Promise.all([
+        const [cRes, crsData, fData] = await Promise.all([
             getAdminCertificates(),
             getAllCourses(),
-            getStudentList()
+            getFormData()
         ]);
         if (cRes.success) setCerts(cRes.certificates);
         setCourses(crsData.courses || []);
-        if (stuData.success) setStudents(stuData.students || []);
+        if (fData.success) {
+            setStudents(fData.students || []);
+            setTemplates(fData.templates || []);
+        }
         setLoading(false);
     };
 
@@ -88,7 +92,7 @@ export default function AdminCertificatesPage() {
             toast.success("Certificate Issued and Published successfully!");
             setOpenAdd(false);
             load();
-            setForm({ studentId: "", courseId: "", grade: "A+", percentage: 95, courseDuration: "12 Weeks", remarks: "" });
+            setForm({ studentId: "", courseId: "", templateId: "", grade: "A+", percentage: 95, courseDuration: "12 Weeks", remarks: "" });
         } else {
             toast.error(res.error || "Failed to issue certificate");
         }
@@ -175,6 +179,17 @@ export default function AdminCertificatesPage() {
                                     >
                                         <option value="">-- Click to Select Course --</option>
                                         {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase text-slate-500 tracking-wider">Design Template (Optional)</label>
+                                    <select
+                                        className="w-full h-12 bg-slate-50 border rounded-xl px-4 font-bold text-slate-700 outline-none"
+                                        value={form.templateId}
+                                        onChange={e => setForm({ ...form, templateId: e.target.value })}
+                                    >
+                                        <option value="">-- Use System Default Design --</option>
+                                        {templates.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
                                     </select>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
