@@ -137,7 +137,7 @@ export async function getCertificatePDF(certId: string) {
         if (!pdfBuffer) {
             return { 
                 success: false, 
-                error: "No certificate design template found. Please create and mark a template as 'Default' in the Admin Panel." 
+                error: `Render Error: The system found a template but failed to generate the PDF. This often happens if an image URL in the template is broken. Please check Admin > Manage Templates.` 
             };
         }
 
