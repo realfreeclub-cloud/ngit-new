@@ -83,34 +83,32 @@ export async function getCertificatePDF(certId: string) {
         const { renderToBuffer } = await import("@react-pdf/renderer");
         let pdfBuffer: Buffer | null = null;
 
-        // 1. Determine which template to use
-        let templateIdToUse = cert.metadata?.templateId;
+        // 1. Determine which template to use (Try specific, then default, then any)
+        let template: any = null;
         
-        if (!templateIdToUse) {
-            const count = await CertificateTemplate.countDocuments();
-            console.log("DEBUG: Total templates in DB:", count);
-            const defaultTemplate = await CertificateTemplate.findOne({ isDefault: true }).select("_id name");
-            console.log("DEBUG: defaultTemplate found:", defaultTemplate ? defaultTemplate.name : "null");
-            if (defaultTemplate) {
-                templateIdToUse = defaultTemplate._id.toString();
-            } else {
-                // If NO default template is set, but templates EXIST, use the latest one
-                // This prevents falling back to static design when the user has designed something
-                const anyTemplate = await CertificateTemplate.findOne().sort({ updatedAt: -1 }).select("_id name");
-                console.log("DEBUG: Using anyTemplate fallback:", anyTemplate ? anyTemplate.name : "null");
-                if (anyTemplate) {
-                    templateIdToUse = anyTemplate._id.toString();
-                }
-            }
+        // A. Try specific template from metadata
+        if (cert.metadata?.templateId) {
+            template = await CertificateTemplate.findById(cert.metadata.templateId);
+            console.log("DEBUG: Specific template lookup:", template ? template.name : "FAILED/MISSING");
         }
-console.log("DEBUG: templateIdToUse after lookup:", templateIdToUse);
+        
+        // B. If no specific found, try Default
+        if (!template) {
+            template = await CertificateTemplate.findOne({ isDefault: true });
+            console.log("DEBUG: Default template lookup:", template ? template.name : "NOT SET");
+        }
+        
+        // C. Last Resort: Pick any existing template
+        if (!template) {
+            template = await CertificateTemplate.findOne().sort({ updatedAt: -1 });
+            console.log("DEBUG: Last resort template lookup:", template ? template.name : "NONE EXISTS");
+        }
 
-        if (templateIdToUse) {
+        if (template) {
+            const templateIdToUse = template._id.toString();
+            console.log("DEBUG: Proceeding with template:", template.name, `(${templateIdToUse})`);
             try {
-                const template = await CertificateTemplate.findById(templateIdToUse);
-                console.log("DEBUG: Found template object:", template ? template.name : "null");
-                if (template) {
-                    pdfBuffer = await renderToBuffer(
+                pdfBuffer = await renderToBuffer(
                         React.createElement(DynamicCertificateTemplate as any, {
                             elements: template.elements as any,
                             backgroundImage: template.backgroundImage,
@@ -128,7 +126,6 @@ console.log("DEBUG: templateIdToUse after lookup:", templateIdToUse);
                             }
                         }) as any
                     );
-                }
             } catch (err) {
                 console.error("Dynamic Template Render Error:", err);
             }
