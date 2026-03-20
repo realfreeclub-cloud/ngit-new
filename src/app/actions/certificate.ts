@@ -86,24 +86,29 @@ export async function getCertificatePDF(certId: string) {
         // 1. Determine which template to use
         let templateIdToUse = cert.metadata?.templateId;
         
-        // If not specific to cert, look for default
         if (!templateIdToUse) {
-            const defaultTemplate = await CertificateTemplate.findOne({ isDefault: true }).select("_id");
+            const count = await CertificateTemplate.countDocuments();
+            console.log("DEBUG: Total templates in DB:", count);
+            const defaultTemplate = await CertificateTemplate.findOne({ isDefault: true }).select("_id name");
+            console.log("DEBUG: defaultTemplate found:", defaultTemplate ? defaultTemplate.name : "null");
             if (defaultTemplate) {
                 templateIdToUse = defaultTemplate._id.toString();
             } else {
                 // If NO default template is set, but templates EXIST, use the latest one
                 // This prevents falling back to static design when the user has designed something
-                const anyTemplate = await CertificateTemplate.findOne().sort({ updatedAt: -1 }).select("_id");
+                const anyTemplate = await CertificateTemplate.findOne().sort({ updatedAt: -1 }).select("_id name");
+                console.log("DEBUG: Using anyTemplate fallback:", anyTemplate ? anyTemplate.name : "null");
                 if (anyTemplate) {
                     templateIdToUse = anyTemplate._id.toString();
                 }
             }
         }
+console.log("DEBUG: templateIdToUse after lookup:", templateIdToUse);
 
         if (templateIdToUse) {
             try {
                 const template = await CertificateTemplate.findById(templateIdToUse);
+                console.log("DEBUG: Found template object:", template ? template.name : "null");
                 if (template) {
                     pdfBuffer = await renderToBuffer(
                         React.createElement(DynamicCertificateTemplate as any, {
@@ -128,6 +133,8 @@ export async function getCertificatePDF(certId: string) {
                 console.error("Dynamic Template Render Error:", err);
             }
         }
+
+        console.log("DEBUG: pdfBuffer generated:", pdfBuffer ? pdfBuffer.length : "null");
 
         // NO Default Fallback anymore. If it fails, it fails gracefully or warns.
         if (!pdfBuffer) {

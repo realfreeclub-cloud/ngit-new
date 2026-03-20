@@ -69,7 +69,9 @@ export async function deleteTemplate(id: string) {
     } catch (error: any) {
         return { success: false, error: error.message };
     }
-}export async function setDefaultTemplate(id: string) {
+}
+
+export async function setDefaultTemplate(id: string) {
     try {
         await connectDB();
         // Reset all others
