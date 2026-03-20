@@ -126,7 +126,6 @@ export async function getCertificatePDF(certId: string) {
                             }
                         }) as any
                     );
-                }
             } catch (err) {
                 console.error("Dynamic Template Render Error:", err);
             }
