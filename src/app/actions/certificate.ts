@@ -120,13 +120,18 @@ export async function getCertificatePDF(certId: string) {
     try {
         await connectDB();
         const cert = await Certificate.findById(certId)
-            .populate("studentId", "name")
+            .populate("studentId", "name email")
             .populate("courseId", "title");
 
-        if (!cert) throw new Error("Certificate not found");
+        if (!cert) return { success: false, error: "Certificate record not found" };
+        if (!cert.studentId) return { success: false, error: "Student for this certificate no longer exists" };
+        if (!cert.courseId) return { success: false, error: "Course for this certificate no longer exists" };
+
+        const student = cert.studentId as any;
+        const course = cert.courseId as any;
 
         // Generate QR Code Data URL
-        const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/verify/${cert.certificateNumber}`;
+        const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://ngit-new.vercel.app"}/verify/${cert.certificateNumber}`;
         const qrCodeDataUrl = await QRCode.toDataURL(verifyUrl);
 
         // Prepare Date string
@@ -134,9 +139,10 @@ export async function getCertificatePDF(certId: string) {
             day: 'numeric', month: 'long', year: 'numeric'
         });
 
-        let pdfStream;
+        const { renderToBuffer } = await import("@react-pdf/renderer");
+        let pdfBuffer: Buffer | null = null;
 
-        // 1. Check if a specific template or a default template should be used
+        // 1. Check for specific template
         let templateIdToUse = cert.metadata?.templateId;
         
         if (!templateIdToUse) {
@@ -147,61 +153,61 @@ export async function getCertificatePDF(certId: string) {
         }
 
         if (templateIdToUse) {
-            const template = await CertificateTemplate.findById(templateIdToUse);
-
-            if (template) {
-                // Render Dynamic PDF
-                pdfStream = await renderToStream(
-                    React.createElement(DynamicCertificateTemplate, {
-                        elements: template.elements,
-                        backgroundImage: template.backgroundImage,
-                        config: template.config,
-                        placeholders: {
-                            student_name: (cert.studentId as any).name,
-                            course_name: (cert.courseId as any).title,
-                            grade: cert.grade,
-                            percentage: cert.percentage.toString(),
-                            enrollment_number: (cert.studentId as any).email || (cert.studentId as any)._id.toString(),
-                            certificate_number: cert.certificateNumber,
-                            issue_date: dateStr,
-                            qr_code: qrCodeDataUrl,
-                            institute_name: "NGIT Institute"
-                        }
-                    }) as any
-                );
+            try {
+                const template = await CertificateTemplate.findById(templateIdToUse);
+                if (template) {
+                    pdfBuffer = await renderToBuffer(
+                        React.createElement(DynamicCertificateTemplate, {
+                            elements: template.elements,
+                            backgroundImage: template.backgroundImage,
+                            config: template.config,
+                            placeholders: {
+                                student_name: student.name || "Student Name",
+                                course_name: course.title || "Course Name",
+                                grade: cert.grade || "N/A",
+                                percentage: (cert.percentage || 0).toString(),
+                                enrollment_number: student.email || student._id.toString(),
+                                certificate_number: cert.certificateNumber,
+                                issue_date: dateStr,
+                                qr_code: qrCodeDataUrl,
+                                institute_name: "NGIT Institute"
+                            }
+                        }) as any
+                    );
+                }
+            } catch (err) {
+                console.error("Dynamic Template Render Error:", err);
+                // Fall back to static
             }
         }
 
         // Default Fallback
-        if (!pdfStream) {
-            pdfStream = await renderToStream(
+        if (!pdfBuffer) {
+            pdfBuffer = await renderToBuffer(
                 React.createElement(StaticTemplate, {
-                    studentName: (cert.studentId as any).name,
-                    courseName: (cert.courseId as any).title,
+                    studentName: student.name || "Student Name",
+                    courseName: course.title || "Course Name",
                     certificateId: cert.certificateNumber,
                     issueDate: dateStr,
-                    grade: cert.grade,
-                    percentage: cert.percentage.toString(),
+                    grade: cert.grade || "N/A",
+                    percentage: (cert.percentage || 0).toString(),
                     qrCodeUrl: qrCodeDataUrl,
-                    duration: cert.courseDuration,
+                    duration: cert.courseDuration || "Duration",
                     wpm: cert.wpm?.toString()
                 }) as any
             );
         }
 
-        // Convert stream to buffer to base64
-        const chunks: Buffer[] = [];
-        for await (const chunk of pdfStream) {
-            chunks.push(Buffer.from(chunk));
-        }
-        const pdfBuffer = Buffer.concat(chunks);
         const base64 = pdfBuffer.toString('base64');
-
-        return { success: true, pdfBase64: base64, filename: `Certificate-${cert.certificateNumber}.pdf` };
+        return { 
+            success: true, 
+            pdfBase64: base64, 
+            filename: `Certificate-${cert.certificateNumber.replace(/\//g, '-')}.pdf` 
+        };
 
     } catch (error: any) {
         console.error("PDF Gen Error:", error);
-        return { success: false, error: "Failed to generate PDF" };
+        return { success: false, error: "Failed to generate PDF. Please try again later." };
     }
 }
 
