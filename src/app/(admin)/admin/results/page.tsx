@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getMockTestResultsAdmin, deleteMockTestResult, publishMockTestResults, unpublishMockTestResults } from "@/app/actions/mockTestResults";
+import { getAdminQuizzes } from "@/app/actions/admin-quizzes";
 import { 
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
@@ -28,6 +29,7 @@ import { Label } from "@/components/ui/label";
 
 export default function MockTestResultsAdminPage() {
     const [results, setResults] = useState<any[]>([]);
+    const [mockTests, setMockTests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterExamCode, setFilterExamCode] = useState("ALL");
@@ -45,12 +47,21 @@ export default function MockTestResultsAdminPage() {
 
     const loadResults = async () => {
         setLoading(true);
-        const res = await getMockTestResultsAdmin();
+        const [res, mockRes] = await Promise.all([
+            getMockTestResultsAdmin(),
+            getAdminQuizzes()
+        ]);
+        
         if (res.success) {
             setResults(res.results);
         } else {
             toast.error(res.error || "Failed to load results");
         }
+
+        if (mockRes.success) {
+            setMockTests(mockRes.quizzes);
+        }
+        
         setLoading(false);
     };
 
@@ -153,11 +164,9 @@ export default function MockTestResultsAdminPage() {
                                         onChange={(e) => setSelectedQuizId(e.target.value)}
                                     >
                                         <option value="">Choose an Assessment</option>
-                                        {/* In a real app, you'd fetch active quizzes. Here we extract from results or fetch elsewhere */}
-                                        {Array.from(new Set(results.map(r => r.mockTestId?._id))).map((id: any) => {
-                                            const quiz = results.find(r => r.mockTestId?._id === id)?.mockTestId;
-                                            return <option key={id} value={id}>{quiz?.title}</option>
-                                        })}
+                                        {mockTests.map((test: any) => (
+                                            <option key={test._id} value={test._id}>{test.title}</option>
+                                        ))}
                                     </select>
                                 </div>
 

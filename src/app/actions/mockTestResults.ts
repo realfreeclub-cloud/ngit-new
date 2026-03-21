@@ -174,19 +174,24 @@ export async function getStudentResults() {
         const session = await getServerSession(authOptions);
         if (!session?.user) throw new Error("Unauthorized");
 
-        const [results, attempts] = await Promise.all([
-            MockTestResult.find({
-                studentId: session.user.id,
-                publishStatus: "PUBLISHED"
-            })
-            .populate("mockTestId", "title")
-            .sort({ createdAt: -1 })
-            .lean(),
-            Attempt.find({ studentId: session.user.id, status: "SUBMITTED" })
-            .populate("quizId", "title")
-            .sort({ createdAt: -1 })
-            .lean()
-        ]);
+        const results = await MockTestResult.find({
+            studentId: session.user.id,
+            publishStatus: "PUBLISHED"
+        })
+        .populate("mockTestId", "title")
+        .sort({ createdAt: -1 })
+        .lean();
+
+        const publishedAttemptIds = results.map(r => r.attemptId);
+
+        const attempts = await Attempt.find({ 
+            studentId: session.user.id, 
+            status: { $in: ["SUBMITTED", "EVALUATED"] },
+            _id: { $nin: publishedAttemptIds }
+        })
+        .populate("quizId", "title")
+        .sort({ createdAt: -1 })
+        .lean();
 
         return { 
             success: true, 

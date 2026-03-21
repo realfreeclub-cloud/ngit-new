@@ -126,18 +126,21 @@ export async function getCertificatePDF(certId: string) {
                             }
                         }) as any
                     );
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Dynamic Template Render Error:", err);
+                return { 
+                    success: false, 
+                    error: `Render Error: ${err.message || 'Unknown error'}. Please check template elements.` 
+                };
             }
         }
 
         console.log("DEBUG: pdfBuffer generated:", pdfBuffer ? pdfBuffer.length : "null");
 
-        // NO Default Fallback anymore. If it fails, it fails gracefully or warns.
         if (!pdfBuffer) {
             return { 
                 success: false, 
-                error: `Render Error: The system found a template but failed to generate the PDF. This often happens if an image URL in the template is broken. Please check Admin > Manage Templates.` 
+                error: `Render Error: The system found a template but failed to generate the PDF.` 
             };
         }
 
