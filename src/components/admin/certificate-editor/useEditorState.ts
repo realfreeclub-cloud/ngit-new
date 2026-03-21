@@ -86,14 +86,14 @@ export function useEditorState(initialTemplate: ICertificateTemplate) {
 
     // --- Actions ---
 
-    const addElement = (type: 'text' | 'image' | 'qrcode') => {
+    const addElement = (type: 'text' | 'image' | 'qrcode', initialContent?: string) => {
         addToHistory();
         const newEl: EditorElement = {
             id: uuidv4(),
             type,
-            content: type === 'text' ? 'New Text' : (type === 'qrcode' ? 'QR Code' : 'https://via.placeholder.com/150'),
-            x: 50,
-            y: 50,
+            content: initialContent || (type === 'text' ? 'New Text' : (type === 'qrcode' ? 'QR Code' : 'https://via.placeholder.com/150')),
+            x: 100,
+            y: 100,
             width: type === 'text' ? 200 : 100,
             height: type === 'text' ? 40 : 100,
             rotation: 0,
@@ -102,9 +102,9 @@ export function useEditorState(initialTemplate: ICertificateTemplate) {
             hidden: false,
             style: {
                 fontFamily: 'Inter',
-                fontSize: 14,
+                fontSize: 16,
                 fontWeight: 'normal',
-                textAlign: 'left',
+                textAlign: 'center',
                 color: '#000000',
                 letterSpacing: 0,
                 lineHeight: 1.2

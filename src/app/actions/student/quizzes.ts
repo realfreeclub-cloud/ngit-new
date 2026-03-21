@@ -86,23 +86,30 @@ export async function getQuiz(quizId: string) {
             };
         }
 
-        const questionsList = (quiz.questions as any[]).map((q: any) => ({
-            _id: q._id,
-            content: q.content,
-            options: q.options?.map((opt: any) => ({ _id: opt._id, text: opt.text, pair: opt.pair })), // Hide isCorrect
-            marks: q.marks,
-            type: q.type,
-            assertion: q.assertion,
-            reason: q.reason
-        }));
+        const questionsList = (quiz.questions as any[]).map((q: any) => {
+            if (!q) return null;
+            return {
+                _id: q._id ? q._id.toString() : null,
+                content: q.content,
+                options: q.options?.map((opt: any) => ({ 
+                    _id: opt._id ? opt._id.toString() : null, 
+                    text: opt.text, 
+                    pair: opt.pair 
+                })), // Hide isCorrect
+                marks: q.marks,
+                type: q.type,
+                assertion: q.assertion,
+                reason: q.reason
+            };
+        }).filter(Boolean);
 
         return {
             success: true,
             quiz: { ...JSON.parse(JSON.stringify(quiz)), questions: questionsList }
         };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Get Quiz Error:", error);
-        return { success: false, error: "Failed to load quiz" };
+        return { success: false, error: "Failed to load quiz", message: String(error.message || error) };
     }
 }
 
@@ -133,7 +140,8 @@ export async function submitQuiz(quizId: string, answers: Record<string, any>, t
         });
 
         for (const question of (quiz.questions as any[])) {
-            const userAnswer = answers[question._id.toString()];
+            if (!question) continue; // Skip missing/unpopulated questions
+            const userAnswer = answers[question._id?.toString()];
             let isCorrect = false;
             let marksAwarded = 0;
 

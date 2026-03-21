@@ -7,13 +7,21 @@ import { CreditCard, CheckCircle2, Clock, IndianRupee, FileText } from "lucide-r
 import { getMyFees, initiatePayment, verifyPayment } from "@/app/actions/payment";
 import { getStudentInvoices } from "@/app/actions/admin-invoice";
 import Script from "next/script";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
 
 export default function StudentFeesPage() {
-    const [data, setData] = useState<{ enrollments: any[], payments: any[], invoices: any[] }>({
-        enrollments: [], payments: [], invoices: []
+    const [data, setData] = useState<{ user: any, enrollments: any[], payments: any[], invoices: any[] }>({
+        user: null, enrollments: [], payments: [], invoices: []
     });
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState<string | null>(null);
+    const [selectedReceipt, setSelectedReceipt] = useState<any | null>(null);
 
     const loadData = async () => {
         setLoading(true);
@@ -24,7 +32,7 @@ export default function StudentFeesPage() {
             ]);
 
             if (feeRes.success) {
-                setData(prev => ({ ...prev, enrollments: feeRes.enrollments || [], payments: feeRes.payments || [] }));
+                setData(prev => ({ ...prev, user: feeRes.user, enrollments: feeRes.enrollments || [], payments: feeRes.payments || [] }));
             } else {
                 toast.error(feeRes.error || "Failed to load fee data");
             }
@@ -111,7 +119,8 @@ export default function StudentFeesPage() {
             totalPaid: totalPaid,
             balance: balance,
             enrolledAt: en.enrolledAt,
-            status: isPaid ? "PAID" : "PARTIAL"
+            status: isPaid ? "PAID" : "PARTIAL",
+            payments: coursePayments
         });
     });
 
@@ -202,7 +211,7 @@ export default function StudentFeesPage() {
                                                 </Button>
                                             )}
                                             {record.status === "PAID" && (
-                                                <Button size="sm" variant="ghost" className="text-slate-400 font-bold gap-2 text-xs rounded-xl h-10 px-4">
+                                                <Button size="sm" variant="ghost" className="text-slate-400 font-bold gap-2 text-xs rounded-xl h-10 px-4" onClick={() => setSelectedReceipt(record)}>
                                                     <FileText className="w-4 h-4" /> View Receipt
                                                 </Button>
                                             )}
@@ -273,6 +282,60 @@ export default function StudentFeesPage() {
                     </div>
                 </div>
             )}
+
+            {/* Receipt Modal */}
+            <Dialog open={!!selectedReceipt} onOpenChange={(open) => !open && setSelectedReceipt(null)}>
+                <DialogContent className="max-w-md p-0 overflow-hidden rounded-[2rem]">
+                    {selectedReceipt && (
+                        <div className="bg-white">
+                            <div className="p-8 text-center bg-slate-50 border-b">
+                                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <CheckCircle2 className="w-8 h-8" />
+                                </div>
+                                <DialogTitle className="text-2xl font-black text-slate-900">Payment Receipt</DialogTitle>
+                                <DialogDescription className="text-slate-500 font-medium mt-1">
+                                    {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                </DialogDescription>
+                            </div>
+                            <div className="p-8 space-y-6">
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Student Details</p>
+                                    <p className="font-bold text-slate-900">{data.user?.name || "Student"}</p>
+                                    <p className="text-sm text-slate-500 font-medium">{data.user?.email}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Course / Program</p>
+                                    <p className="font-bold text-slate-900">{selectedReceipt.courseName}</p>
+                                </div>
+                                <div className="pt-4 border-t space-y-3">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Transaction History</p>
+                                    {selectedReceipt.payments?.map((payment: any, index: number) => (
+                                        <div key={index} className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                            <div>
+                                                <p className="text-xs font-bold text-slate-700">{payment.razorpayPaymentId || `TXN-${payment._id.slice(-6).toUpperCase()}`}</p>
+                                                <p className="text-[10px] text-slate-400 uppercase">{new Date(payment.createdAt).toLocaleDateString()}</p>
+                                            </div>
+                                            <p className="font-black text-slate-900">₹{payment.amount}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="flex justify-between items-center pt-6 border-t mt-6">
+                                    <span className="font-bold text-slate-500">Total Paid</span>
+                                    <span className="text-2xl font-black text-emerald-600">₹{selectedReceipt.totalPaid}</span>
+                                </div>
+                            </div>
+                            <div className="p-6 bg-slate-50 border-t flex gap-4">
+                                <Button className="flex-1 rounded-xl h-12 font-bold" variant="outline" onClick={() => setSelectedReceipt(null)}>
+                                    Close
+                                </Button>
+                                <Button className="flex-1 rounded-xl h-12 font-bold bg-primary text-white" onClick={() => window.print()}>
+                                    Print Receipt
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

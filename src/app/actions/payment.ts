@@ -176,6 +176,7 @@ export async function getMyFees() {
 
         return {
             success: true,
+            user: { name: session.user.name, email: session.user.email },
             enrollments: JSON.parse(JSON.stringify(enrollments)),
             payments: JSON.parse(JSON.stringify(payments))
         };

@@ -18,8 +18,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export default function VerificationPage({ params }: { params: Promise<{ certNumber: string }> }) {
-    const { certNumber } = use(params);
+export default function VerificationPage({ params }: { params: Promise<{ certNumber: string | string[] }> }) {
+    const { certNumber: certNumberParam } = use(params);
+    let certNumber = Array.isArray(certNumberParam) ? certNumberParam.join('/') : certNumberParam;
+    
+    // We should also ensure any URL-encoded parts (like %2F) are decoded just in case
+    certNumber = decodeURIComponent(certNumber);
+
     const [cert, setCert] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
