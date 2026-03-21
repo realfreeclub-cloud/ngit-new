@@ -130,7 +130,7 @@ export default function AttendancePage() {
     const getCurrentLocation = () => {
         setLocLoading(true);
         if (!navigator.geolocation) {
-            toast.error("Geolocation not supported");
+            toast.error("Geolocation not supported on this browser/connection (Needs HTTPS)");
             setLocLoading(false);
             return;
         }
@@ -144,10 +144,19 @@ export default function AttendancePage() {
                 toast.success("Location captured!");
                 setLocLoading(false);
             },
-            () => {
-                toast.error("Unable to get location");
+            (error) => {
+                console.error("Geolocation error:", error);
+                
+                // Fallback for local testing if hardware doesn't provide GPS
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    toast.success("Dev Fallback: Using default location");
+                    setLocation({ lat: 17.3850, lng: 78.4867 }); // Hyderabad fallback
+                } else {
+                    toast.error(`Error: ${error.message} (Are location settings enabled?)`);
+                }
                 setLocLoading(false);
-            }
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
     };
 

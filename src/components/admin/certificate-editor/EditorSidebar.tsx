@@ -9,7 +9,7 @@ import { EditorElement, PageConfig } from "./useEditorState";
 
 interface EditorSidebarProps {
     elements: EditorElement[];
-    onAddElement: (type: 'text' | 'image' | 'qrcode') => void;
+    onAddElement: (type: 'text' | 'image' | 'qrcode', initialContent?: string) => void;
     onSelect: (id: string) => void;
     selectedIds: string[];
     onUpdatePage: (updates: Partial<PageConfig>) => void;
@@ -101,7 +101,7 @@ export default function EditorSidebar({
                                     <div
                                         key={field.val}
                                         className="p-3 bg-slate-50 border rounded-lg text-sm font-medium cursor-pointer hover:bg-slate-100 flex items-center justify-between group"
-                                        onClick={() => onAddElement(field.type === 'qrcode' ? 'qrcode' : 'text')}
+                                        onClick={() => onAddElement(field.type === 'qrcode' ? 'qrcode' : 'text', field.val)}
                                     >
                                         {field.label}
                                         <span className="text-xs text-slate-400 opacity-0 group-hover:opacity-100">+ Add</span>

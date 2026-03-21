@@ -72,7 +72,7 @@ export default function EditorCanvas({
                     </div>
                 )}
 
-                {elements.map((el) => {
+                {elements.map((el, index) => {
                     if (el.hidden) return null;
                     const isSelected = selectedIds.includes(el.id);
 
@@ -102,8 +102,11 @@ export default function EditorCanvas({
                             bounds="parent"
                             className={`
                                 group
-                                ${isSelected ? 'outline outline-2 outline-primary z-20' : 'hover:outline hover:outline-1 hover:outline-slate-300'}
+                                ${isSelected ? 'outline outline-2 outline-primary z-50' : 'hover:outline hover:outline-1 hover:outline-slate-300'}
                             `}
+                            style={{ 
+                                zIndex: isSelected ? 50 : index + 1
+                            }}
                             onClick={(e: React.MouseEvent) => {
                                 e.stopPropagation();
                                 onSelect(el.id, e.shiftKey);
