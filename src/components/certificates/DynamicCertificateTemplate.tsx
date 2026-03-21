@@ -134,7 +134,7 @@ export const DynamicCertificateTemplate = ({ elements, placeholders, backgroundI
                         return (
                             <Image
                                 key={el.id}
-                                src={src}
+                                src={typeof src === 'string' && src.startsWith('data:') ? { uri: src } : src}
                                 style={{
                                     ...commonStyles,
                                     objectFit: style.objectFit || 'contain',

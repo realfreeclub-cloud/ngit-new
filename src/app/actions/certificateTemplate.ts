@@ -95,7 +95,10 @@ export async function getTemplatePreviewPDF(templateId: string) {
         const { renderToBuffer } = await import("@react-pdf/renderer");
         const React = await import("react");
         const { DynamicCertificateTemplate } = await import("@/components/certificates/DynamicCertificateTemplate");
+        const QRCode = await import("qrcode");
         
+        const previewQrCodeUrl = await QRCode.toDataURL("https://ngit-new.vercel.app/verify/SAMPLE");
+
         // Mock data for preview
         const pdfBuffer = await renderToBuffer(
             React.createElement(DynamicCertificateTemplate as any, {
@@ -112,7 +115,7 @@ export async function getTemplatePreviewPDF(templateId: string) {
                     issue_date: new Date().toLocaleDateString("en-GB", {
                         day: 'numeric', month: 'long', year: 'numeric'
                     }),
-                    qr_code: "https://ngit-new.vercel.app/verify/SAMPLE",
+                    qr_code: previewQrCodeUrl,
                     institute_name: "NGIT Institute"
                 }
             }) as any
@@ -124,6 +127,6 @@ export async function getTemplatePreviewPDF(templateId: string) {
             filename: `Preview-${template.name.replace(/\s+/g, '-')}.pdf`
         };
     } catch (error: any) {
-        return { success: false, error: "Failed to generate preview" };
+        return { success: false, error: "Failed to generate preview. Details: " + (error.message || "") };
     }
 }
