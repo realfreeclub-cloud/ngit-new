@@ -16,13 +16,15 @@ import {
     ClipboardList,
     Layout,
     ChevronDown,
-    BrainCircuit
+    BrainCircuit,
+    Bell
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "Content Mgmt", href: "/admin/content", icon: FileText },
+    { label: "Latest Updates", href: "/admin/notices", icon: Bell },
     {
         label: "Mock Test Manager",
         href: "/admin/mock-tests",
