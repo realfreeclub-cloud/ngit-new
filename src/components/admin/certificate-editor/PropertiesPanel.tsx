@@ -80,13 +80,35 @@ export default function PropertiesPanel({ element, onUpdate, deleteElement, back
                         <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
                                 <Label className="text-xs">Font Family</Label>
-                                <Select value={style.fontFamily} onValueChange={(v) => onUpdate(element.id, { style: { ...style, fontFamily: v } })}>
+                                <Select value={style.fontFamily || 'Helvetica'} onValueChange={(v) => onUpdate(element.id, { style: { ...style, fontFamily: v } })}>
                                     <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Inter">Inter</SelectItem>
+                                    <SelectContent className="max-h-64">
+                                        {/* Standard Fallbacks */}
+                                        <SelectItem value="Helvetica">Helvetica (Standard)</SelectItem>
                                         <SelectItem value="Times-Roman">Times New Roman</SelectItem>
-                                        <SelectItem value="Helvetica">Helvetica</SelectItem>
-                                        <SelectItem value="Courier">Courier</SelectItem>
+                                        <SelectItem value="Courier">Courier Space</SelectItem>
+                                        {/* Popular Sans-Serif */}
+                                        <SelectItem value="Inter">Inter</SelectItem>
+                                        <SelectItem value="Roboto">Roboto</SelectItem>
+                                        <SelectItem value="Open Sans">Open Sans</SelectItem>
+                                        <SelectItem value="Lato">Lato</SelectItem>
+                                        <SelectItem value="Montserrat">Montserrat</SelectItem>
+                                        <SelectItem value="Poppins">Poppins</SelectItem>
+                                        <SelectItem value="Nunito">Nunito</SelectItem>
+                                        <SelectItem value="Raleway">Raleway</SelectItem>
+                                        <SelectItem value="Oswald">Oswald</SelectItem>
+                                        {/* Elegant Serif & Display */}
+                                        <SelectItem value="Playfair Display">Playfair Display</SelectItem>
+                                        <SelectItem value="Merriweather">Merriweather</SelectItem>
+                                        <SelectItem value="Lora">Lora</SelectItem>
+                                        <SelectItem value="PT Serif">PT Serif</SelectItem>
+                                        <SelectItem value="Libre Baskerville">Libre Baskerville</SelectItem>
+                                        {/* Handwritten & Special */}
+                                        <SelectItem value="Dancing Script">Dancing Script</SelectItem>
+                                        <SelectItem value="Pacifico">Pacifico</SelectItem>
+                                        <SelectItem value="Caveat">Caveat</SelectItem>
+                                        <SelectItem value="Satisfy">Satisfy</SelectItem>
+                                        <SelectItem value="Cinzel">Cinzel</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

@@ -1,5 +1,5 @@
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Rnd } from "react-rnd";
 import { EditorElement, PageConfig } from "./useEditorState";
 
@@ -14,6 +14,7 @@ interface EditorCanvasProps {
     backgroundImage: string;
     showGrid: boolean;
     showMargins: boolean;
+    onSelectMultiple?: (ids: string[]) => void; // Added for lasso
 }
 
 export default function EditorCanvas({
@@ -26,21 +27,81 @@ export default function EditorCanvas({
     onCommit,
     backgroundImage,
     showGrid,
-    showMargins
+    showMargins,
+    onSelectMultiple
 }: EditorCanvasProps) {
     const canvasRef = useRef<HTMLDivElement>(null);
+    
+    // UI states
+    const [isDraggingObj, setIsDraggingObj] = useState(false);
+    
+    // Marquee states
+    const [selectionStart, setSelectionStart] = useState<{ x: number, y: number } | null>(null);
+    const [currentMouse, setCurrentMouse] = useState<{ x: number, y: number } | null>(null);
 
     // Click outside to deselect
-    const handleCanvasClick = (e: React.MouseEvent) => {
-        if (e.target === canvasRef.current) {
-            onSelect("", false);
+    const handleCanvasMouseDown = (e: React.MouseEvent) => {
+        if (e.target === canvasRef.current || (e.target as HTMLElement).id === "canvas-wrapper") {
+            if (e.button === 0) {
+                // Left click empty canvas = deselect all
+                onSelect("", false);
+            } else if (e.button === 2) {
+                // Right click empty canvas = start lasso
+                e.preventDefault();
+                const rect = canvasRef.current?.getBoundingClientRect();
+                if (!rect) return;
+                const x = (e.clientX - rect.left) / zoom;
+                const y = (e.clientY - rect.top) / zoom;
+                setSelectionStart({ x, y });
+                setCurrentMouse({ x, y });
+            }
         }
+    };
+
+    const handleCanvasMouseMove = (e: React.MouseEvent) => {
+        if (selectionStart) {
+            const rect = canvasRef.current?.getBoundingClientRect();
+            if (!rect) return;
+            const x = (e.clientX - rect.left) / zoom;
+            const y = (e.clientY - rect.top) / zoom;
+            setCurrentMouse({ x, y });
+        }
+    };
+
+    const handleCanvasMouseUp = (e: React.MouseEvent) => {
+        if (selectionStart && currentMouse) {
+            // End Lasso
+            const minX = Math.min(selectionStart.x, currentMouse.x);
+            const maxX = Math.max(selectionStart.x, currentMouse.x);
+            const minY = Math.min(selectionStart.y, currentMouse.y);
+            const maxY = Math.max(selectionStart.y, currentMouse.y);
+
+            // Find all elements within marquee box
+            const selected = elements.filter(el => {
+                const elW = el.width || 100;
+                const elH = el.height || 40;
+                const elCenterX = el.x + (elW / 2);
+                const elCenterY = el.y + (elH / 2);
+                return (elCenterX >= minX && elCenterX <= maxX && elCenterY >= minY && elCenterY <= maxY);
+            }).map(el => el.id);
+
+            if (onSelectMultiple && selected.length > 0) {
+                onSelectMultiple(selected);
+            }
+        }
+        setSelectionStart(null);
+        setCurrentMouse(null);
     };
 
     return (
         <div
-            className="flex-1 bg-slate-200 overflow-auto flex items-center justify-center p-10 relative"
-            onClick={handleCanvasClick}
+            id="canvas-wrapper"
+            className="flex-1 bg-slate-200 overflow-auto flex items-center justify-center p-10 relative select-none"
+            onContextMenu={(e) => e.preventDefault()}
+            onMouseDown={handleCanvasMouseDown}
+            onMouseMove={handleCanvasMouseMove}
+            onMouseUp={handleCanvasMouseUp}
+            onMouseLeave={() => { setSelectionStart(null); setCurrentMouse(null); }}
         >
             <div
                 ref={canvasRef}
@@ -72,6 +133,27 @@ export default function EditorCanvas({
                     </div>
                 )}
 
+                {/* Center Alignment Lines (Visible when dragging or selecting) */}
+                {(isDraggingObj || selectedIds.length > 0) && (
+                    <div className="absolute inset-0 pointer-events-none z-40 opacity-40 mix-blend-multiply">
+                        <div className="absolute left-[50%] top-0 bottom-0 w-px border-l-2 border-dashed border-red-400 opacity-70 shadow-sm shadow-red-500/50" />
+                        <div className="absolute top-[50%] left-0 right-0 h-px border-t-2 border-dashed border-red-400 opacity-70 shadow-sm shadow-red-500/50" />
+                    </div>
+                )}
+
+                {/* Marquee Selection Box */}
+                {selectionStart && currentMouse && (
+                    <div 
+                        className="absolute border-2 border-primary/60 bg-primary/20 z-50 pointer-events-none"
+                        style={{
+                            left: Math.min(selectionStart.x, currentMouse.x),
+                            top: Math.min(selectionStart.y, currentMouse.y),
+                            width: Math.abs(currentMouse.x - selectionStart.x),
+                            height: Math.abs(currentMouse.y - selectionStart.y)
+                        }}
+                    />
+                )}
+
                 {elements.map((el, index) => {
                     if (el.hidden) return null;
                     const isSelected = selectedIds.includes(el.id);
@@ -81,11 +163,13 @@ export default function EditorCanvas({
                             key={el.id}
                             size={{ width: el.width || 'auto', height: el.height || 'auto' }}
                             position={{ x: el.x, y: el.y }}
+                            onDragStart={() => setIsDraggingObj(true)}
                             onDrag={(e, d) => {
                                 // Real-time update for smoothness
                                 onUpdate(el.id, { x: d.x, y: d.y });
                             }}
                             onDragStop={(e, d) => {
+                                setIsDraggingObj(false);
                                 onUpdate(el.id, { x: d.x, y: d.y });
                                 onCommit();
                             }}
