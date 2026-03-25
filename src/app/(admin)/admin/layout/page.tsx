@@ -215,7 +215,38 @@ export default function LayoutManagementPage() {
 
                             <div className="space-y-3">
                                 {headerNav.map((link, index) => (
-                                    <div key={index} className="flex gap-3 items-center bg-slate-50 p-3 rounded-xl">
+                                    <div key={index} className="flex gap-3 items-center bg-slate-50 p-3 rounded-xl group transition-all">
+                                        
+                                        {/* Drag / Reorder Controls */}
+                                        <div className="flex flex-col gap-1 items-center justify-center shrink-0">
+                                            <button 
+                                                onClick={() => {
+                                                    if (index === 0) return;
+                                                    const updated = [...headerNav];
+                                                    const temp = updated[index];
+                                                    updated[index] = updated[index - 1];
+                                                    updated[index - 1] = temp;
+                                                    setHeaderNav(updated);
+                                                }}
+                                                className={`p-1 rounded bg-white border border-slate-200 hover:bg-slate-100 hover:text-primary ${index === 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                                            >
+                                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                                            </button>
+                                            <button 
+                                                onClick={() => {
+                                                    if (index === headerNav.length - 1) return;
+                                                    const updated = [...headerNav];
+                                                    const temp = updated[index];
+                                                    updated[index] = updated[index + 1];
+                                                    updated[index + 1] = temp;
+                                                    setHeaderNav(updated);
+                                                }}
+                                                className={`p-1 rounded bg-white border border-slate-200 hover:bg-slate-100 hover:text-primary ${index === headerNav.length - 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                                            >
+                                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                            </button>
+                                        </div>
+
                                         <input
                                             type="text"
                                             value={link.label}
@@ -224,7 +255,7 @@ export default function LayoutManagementPage() {
                                                 updated[index].label = e.target.value;
                                                 setHeaderNav(updated);
                                             }}
-                                            className="flex-1 px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm font-medium"
+                                            className="w-1/3 px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm font-medium"
                                             placeholder="Label"
                                         />
                                         <input
@@ -240,9 +271,9 @@ export default function LayoutManagementPage() {
                                         />
                                         <Button
                                             onClick={() => setHeaderNav(headerNav.filter((_, i) => i !== index))}
-                                            size="sm"
-                                            variant="outline"
-                                            className="h-9 w-9 p-0 text-red-500 hover:bg-red-50"
+                                            size="icon"
+                                            variant="ghost"
+                                            className="h-9 w-9 p-0 text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg shrink-0"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </Button>
