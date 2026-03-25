@@ -15,6 +15,7 @@ import ContactSection from "@/components/public/ContactSection";
 import NotificationScroller from "@/components/public/NotificationScroller";
 import DirectorMessageSection from "@/components/public/DirectorMessageSection";
 import DynamicRenderer from "@/components/public/DynamicRenderer";
+import CertificateVerificationSection from "@/components/public/CertificateVerificationSection";
 
 import { getCMSContent } from "@/services/CMSService";
 import { getDynamicPageData } from "@/app/actions/cms";
@@ -91,6 +92,9 @@ export default async function PublicHomePage() {
 
                         {/* Infrastructure Section */}
                         <InfrastructureSection />
+
+                        {/* Certificate Verification Section */}
+                        <CertificateVerificationSection />
 
                         {/* Director's Message Section Component */}
                         <DirectorMessageSection 

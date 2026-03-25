@@ -88,6 +88,7 @@ export async function updateHeaderData(data: any) {
         );
 
         revalidatePath("/", "layout");
+        revalidatePath("/");
         return { success: true, message: "Header updated successfully" };
     } catch (error) {
         console.error("Error updating header:", error);
@@ -114,6 +115,7 @@ export async function updateFooterData(data: any) {
         );
 
         revalidatePath("/", "layout");
+        revalidatePath("/");
         return { success: true, message: "Footer updated successfully" };
     } catch (error) {
         console.error("Error updating footer:", error);

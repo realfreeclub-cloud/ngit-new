@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import { getHeaderFooterData } from "@/app/actions/layoutContent";
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, Zap, ArrowUpRight } from "lucide-react";
@@ -34,6 +33,8 @@ export default async function Footer() {
     if (!footerData) return null;
 
     const currentYear = new Date().getFullYear();
+    const contactSection = footerData.sections?.find(s => s.title.toLowerCase().includes('contact'));
+    const regularSections = footerData.sections?.filter(s => !s.title.toLowerCase().includes('contact')) || [];
 
     return (
         <footer className="bg-slate-950 text-slate-400 border-t border-slate-900 pt-24">
@@ -79,7 +80,7 @@ export default async function Footer() {
 
                     {/* Navigation Clusters */}
                     <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-12">
-                        {footerData.sections?.map((section, idx) => (
+                        {regularSections.map((section, idx) => (
                             <div key={idx} className="space-y-8">
                                 <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600">
                                     {section.title}
@@ -103,21 +104,54 @@ export default async function Footer() {
                         {/* Direct Contact Column */}
                         <div className="space-y-8">
                             <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600">
-                                Connect
+                                {contactSection?.title || "Connect"}
                             </h4>
                             <div className="space-y-4">
-                                <a href="tel:+919876543210" className="flex items-center gap-3 text-sm font-semibold hover:text-white transition-colors group">
-                                    <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
-                                        <Phone className="w-4 h-4" />
-                                    </div>
-                                    +91 98765 43210
-                                </a>
-                                <a href="mailto:info@ngit.edu" className="flex items-center gap-3 text-sm font-semibold hover:text-white transition-colors group">
-                                    <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center group-hover:bg-secondary group-hover:text-white transition-all">
-                                        <Mail className="w-4 h-4" />
-                                    </div>
-                                    info@ngit.edu
-                                </a>
+                                {contactSection?.links?.map((link, idx) => {
+                                    const isPhone = link.href.startsWith("tel:");
+                                    const isMail = link.href.startsWith("mailto:");
+
+                                    if (isPhone) {
+                                        return (
+                                            <a key={idx} href={link.href} className="flex items-center gap-3 text-sm font-semibold hover:text-white transition-colors group">
+                                                <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                                                    <Phone className="w-4 h-4" />
+                                                </div>
+                                                {link.label.replace("Phone: ", "")}
+                                            </a>
+                                        );
+                                    } else if (isMail) {
+                                        return (
+                                            <a key={idx} href={link.href} className="flex items-center gap-3 text-sm font-semibold hover:text-white transition-colors group">
+                                                <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center group-hover:bg-secondary group-hover:text-white transition-all">
+                                                    <Mail className="w-4 h-4" />
+                                                </div>
+                                                {link.label.replace("Email: ", "")}
+                                            </a>
+                                        );
+                                    }
+
+                                    return (
+                                        <a key={idx} href={link.href} className="flex items-center gap-3 text-sm font-semibold hover:text-white transition-colors group">
+                                            {link.label}
+                                        </a>
+                                    );
+                                }) || (
+                                    <>
+                                        <a href="tel:+919876543210" className="flex items-center gap-3 text-sm font-semibold hover:text-white transition-colors group">
+                                            <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                                                <Phone className="w-4 h-4" />
+                                            </div>
+                                            +91 98765 43210
+                                        </a>
+                                        <a href="mailto:info@ngit.edu" className="flex items-center gap-3 text-sm font-semibold hover:text-white transition-colors group">
+                                            <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center group-hover:bg-secondary group-hover:text-white transition-all">
+                                                <Mail className="w-4 h-4" />
+                                            </div>
+                                            info@ngit.edu
+                                        </a>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>
