@@ -39,7 +39,6 @@ const menuItems = [
             { label: "Analytics", href: "/admin/mock-tests/analytics" }
         ]
     },
-    { label: "Header & Footer", href: "/admin/layout", icon: Layout },
     { label: "LMS - Courses", href: "/admin/courses", icon: Shapes },
     { label: "Study Materials", href: "/admin/materials", icon: Library },
     { label: "Gallery", href: "/admin/gallery", icon: ImageIcon },
