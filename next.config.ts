@@ -24,6 +24,11 @@ const nextConfig: NextConfig = {
                 hostname: "img.freepik.com",
                 pathname: "/**",
             },
+            {
+                protocol: "https",
+                hostname: "i.pravatar.cc",
+                pathname: "/**",
+            },
         ],
     },
     async headers() {
