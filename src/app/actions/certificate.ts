@@ -13,6 +13,9 @@ import React from "react";
 import User, { UserRole } from "@/models/User";
 import Course from "@/models/Course";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { Font } from "@react-pdf/renderer";
+import { getGoogleFontDataUrl } from "@/lib/fonts";
 
 
 // --- STUDENT: GET MY CERTIFICATES ---
@@ -107,12 +110,42 @@ export async function getCertificatePDF(certId: string) {
         if (template) {
             const templateIdToUse = template._id.toString();
             console.log("DEBUG: Proceeding with template:", template.name, `(${templateIdToUse})`);
+            
+            // LOG ELEMENTS to find corrupt sources
+            console.log("DEBUG: TEMPLATE ELEMENTS RAW:", JSON.stringify(template.elements, null, 2));
+
+            // --- SERVER-SIDE FONT REGISTRATION DISABLED PER USER REQUEST ---
+            /*
+            const standardFonts = ['Courier', 'Helvetica', 'Times-Roman'];
+            const elements = template.elements as any[];
+            const uniqueFonts = [...new Set(elements.map(el => el.style?.fontFamily || el.fontFamily || 'Helvetica'))];
+
+            for (const font of uniqueFonts) {
+                const rawFont = font as string;
+                if (!standardFonts.includes(rawFont) && !rawFont.toLowerCase().includes('times') && !rawFont.toLowerCase().includes('courier')) {
+                    try {
+                        const fontDataUrl = await getGoogleFontDataUrl(rawFont);
+                        Font.register({ family: rawFont, src: fontDataUrl });
+                        console.log(`DEBUG: Successfully registered server-side font: ${rawFont} (as DataURL)`);
+                    } catch (fontErr) {
+                        console.error(`DEBUG: Failed to register font ${rawFont}:`, fontErr);
+                    }
+                }
+            }
+            */
+
+            const heads = await headers();
+            const host = heads.get("host");
+            const proto = heads.get("x-forwarded-proto") || "http";
+            const origin = `${proto}://${host}`;
+
             try {
                 pdfBuffer = await renderToBuffer(
                         React.createElement(DynamicCertificateTemplate as any, {
                             elements: template.elements as any,
                             backgroundImage: template.backgroundImage,
                             config: template.config as any,
+                            origin: origin,
                             placeholders: {
                                 student_name: student.name || "Student Name",
                                 course_name: course.title || "Course Name",

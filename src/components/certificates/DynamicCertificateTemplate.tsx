@@ -41,6 +41,7 @@ interface DynamicCertificateProps {
         orientation: "portrait" | "landscape";
         dpi: number;
     };
+    origin?: string;
 }
 
 const styles = StyleSheet.create({
@@ -57,9 +58,10 @@ const styles = StyleSheet.create({
     },
 });
 
-export const DynamicCertificateTemplate = ({ elements, placeholders, backgroundImage, config }: DynamicCertificateProps) => {
+export const DynamicCertificateTemplate = ({ elements, placeholders, backgroundImage, config, origin }: DynamicCertificateProps) => {
     
-    // Dynamically Register Fonts
+    // DISABLED GOOGLE FONTS PER USER REQUEST TO ENSURE STABILITY
+    /*
     if (typeof window !== "undefined") {
         const standardFonts = ['Courier', 'Helvetica', 'Times-Roman'];
         const uniqueFonts = [...new Set(elements.map(el => el.style?.fontFamily || el.fontFamily || 'Helvetica'))];
@@ -67,18 +69,21 @@ export const DynamicCertificateTemplate = ({ elements, placeholders, backgroundI
         uniqueFonts.forEach(font => {
             const rawFont = font as string;
             if (!standardFonts.includes(rawFont) && !rawFont.toLowerCase().includes('times') && !rawFont.toLowerCase().includes('courier')) {
-                // Ignore errors if font is already registered
+                // Determine backend vs frontend origin safely
+                const originBase = origin || window.location.origin;
+                    
                 try {
                     Font.register({
                         family: rawFont,
-                        src: `${window.location.origin}/api/fonts?family=${encodeURIComponent(rawFont)}`
+                        src: `${originBase}/api/fonts?family=${encodeURIComponent(rawFont)}`
                     });
                 } catch (e) {
-                    console.log('Font already registered or error:', e);
+                    // Silently fail if already registered
                 }
             }
         });
     }
+    */
 
     // Replace placeholders in text
     const processContent = (content: string) => {
@@ -103,7 +108,7 @@ export const DynamicCertificateTemplate = ({ elements, placeholders, backgroundI
     return (
         <Document>
             <Page size={pageSize} orientation={pageOrientation} style={styles.page}>
-                {backgroundImage && (
+                {typeof backgroundImage === 'string' && backgroundImage.trim() !== '' && backgroundImage !== 'undefined' && backgroundImage !== 'null' && (
                     <Image src={backgroundImage} style={styles.background} />
                 )}
 
@@ -111,67 +116,81 @@ export const DynamicCertificateTemplate = ({ elements, placeholders, backgroundI
                     const style = el.style || {};
                     const rotation = el.rotation ? `rotate(${el.rotation}deg)` : undefined;
 
-                    // Merge flat props for backward compatibility
-                    const fontSize = style.fontSize || el.fontSize || 12;
-                    const color = style.color || el.color || '#000000';
-                    const fontWeight = (style.fontWeight || el.fontWeight || 'normal') as any;
-                    const rawFont = style.fontFamily || el.fontFamily || 'Helvetica';
-                    // React-PDF only supports these standard fonts natively without asynchronous Font.register()
-                    const standardFonts = ['Courier', 'Helvetica', 'Times-Roman'];
-                    let fontFamily = 'Helvetica';
-                    
-                    if (standardFonts.includes(rawFont)) {
-                        fontFamily = rawFont;
-                    } else if (rawFont.toLowerCase().includes('times')) {
-                        fontFamily = 'Times-Roman';
-                    } else if (rawFont.toLowerCase().includes('courier')) {
-                        fontFamily = 'Courier';
-                    }
-                    const textAlign = (style.textAlign || el.textAlign || 'left') as any;
-
-                    const commonStyles: any = {
-                        position: 'absolute',
-                        left: el.x,
-                        top: el.y,
-                        width: el.width,
-                        height: el.height,
-                        opacity: el.opacity !== undefined ? el.opacity : 1,
-                        transform: rotation
+                    // Robust parsing string 'undefined' or actual undefined
+                    const safeNum = (val: any, fallback?: number) => {
+                        if (val === 'undefined' || val === null || val === undefined || val === '') return fallback;
+                        const num = Number(val);
+                        return isNaN(num) ? fallback : num;
                     };
 
+                    const fontSize = safeNum(style.fontSize || el.fontSize, 12);
+                    
+                    // FORCE STANDARD FONT FALLBACK
+                    const rawFont = style.fontFamily || el.fontFamily || 'Helvetica';
+                    const standardFonts = ['Courier', 'Helvetica', 'Times-Roman'];
+                    const fontFamily = standardFonts.some(f => rawFont.toLowerCase().includes(f.toLowerCase())) ? rawFont : 'Helvetica';
+                    const textAlign = (style.textAlign || el.textAlign || 'left') as any;
+                    const fontWeight = (style.fontWeight || el.fontWeight || 'normal') as any;
+                    const color = (style.color && style.color !== 'undefined') ? style.color : '#000000';
+
+                    // Strictly construct the base object natively
+                    const commonStyles: any = {
+                        position: 'absolute',
+                        left: safeNum(el.x, 0),
+                        top: safeNum(el.y, 0),
+                    };
+
+                    const w = safeNum(el.width);
+                    if (w !== undefined) commonStyles.width = w;
+
+                    const h = safeNum(el.height);
+                    if (h !== undefined) commonStyles.height = h;
+
+                    const o = safeNum(el.opacity);
+                    if (o !== undefined) commonStyles.opacity = o;
+
+                    if (rotation) commonStyles.transform = rotation;
+
                     if (el.type === 'text') {
-                        const textStyle: any = {
-                            ...commonStyles,
-                            fontSize,
-                            color,
-                            fontWeight,
-                            fontFamily,
-                            textAlign,
-                        };
-                        if (style.letterSpacing !== undefined) textStyle.letterSpacing = style.letterSpacing;
-                        if (style.lineHeight !== undefined) textStyle.lineHeight = style.lineHeight;
+                        const textStyle: any = { ...commonStyles, fontSize, color, fontWeight, fontFamily, textAlign };
+                        
+                        const ls = safeNum(style.letterSpacing);
+                        if (ls !== undefined) textStyle.letterSpacing = ls;
+
+                        const lh = safeNum(style.lineHeight);
+                        if (lh !== undefined) textStyle.lineHeight = lh;
 
                         return (
                             <Text key={el.id} style={textStyle}>
-                                {processContent(el.content)}
+                                {processContent(el.content || '')}
                             </Text>
                         );
                     } else if (el.type === 'image' || el.type === 'qrcode') {
-                        // For QR code, content should be the data URL generated externally and passed as placeholder or base64
-                        const src = el.type === 'qrcode' ? placeholders['qr_code'] : (el.content.startsWith('{{') ? processContent(el.content) : el.content);
+                        const contentSrc = (el.content || '').trim();
+                        let src = el.type === 'qrcode' ? placeholders['qr_code'] : (contentSrc.startsWith('{{') ? processContent(contentSrc) : contentSrc);
 
-                        if (!src) return null;
+                        // If anything was passed that isn't a string or valid DataURL, we have to skip it
+                        // to prevent "DataURL.split is not a function" crashes in React-PDF.
+                        if (!src || typeof src !== 'string' || src === 'undefined' || src === 'null' || src.trim() === '') {
+                            if (src && typeof src !== 'string') {
+                                console.warn(`SKIP: Non-string image source for element ${el.id}:`, typeof src);
+                            }
+                            return null;
+                        }
 
-                        const imageStyle: any = {
-                            ...commonStyles,
-                            objectFit: style.objectFit || 'contain'
-                        };
-                        if (style.borderRadius !== undefined) imageStyle.borderRadius = style.borderRadius;
+                        const imageStyle: any = { ...commonStyles };
+                        if (style.objectFit && style.objectFit !== 'undefined') imageStyle.objectFit = style.objectFit;
+                        
+                        // CRITICAL FIX: React-PDF has a severe bug in `@react-pdf/stylesheet` where `borderRadius: 0`
+                        // explicitly breaks the parser because `0 ? ... : undefined` evaluates to undefined.
+                        // We must completely omit the property if it is 0.
+                        let br = safeNum(style.borderRadius);
+                        if (br !== undefined && br > 0) imageStyle.borderRadius = br;
 
                         return (
                             <Image
                                 key={el.id}
-                                src={typeof src === 'string' && src.startsWith('data:') ? { uri: src } : src}
+                                src={src}
                                 style={imageStyle}
                             />
                         );
