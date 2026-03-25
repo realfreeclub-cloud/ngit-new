@@ -47,6 +47,9 @@ interface DynamicCertificateProps {
 const styles = StyleSheet.create({
     page: {
         position: 'relative',
+        backgroundColor: '#FFFFFF',
+        padding: 0,
+        margin: 0,
     },
     background: {
         position: 'absolute',
@@ -54,7 +57,7 @@ const styles = StyleSheet.create({
         left: 0,
         width: '100%',
         height: '100%',
-        zIndex: -1,
+        objectFit: 'fill',
     },
 });
 
@@ -108,9 +111,23 @@ export const DynamicCertificateTemplate = ({ elements, placeholders, backgroundI
     return (
         <Document>
             <Page size={pageSize} orientation={pageOrientation} style={styles.page}>
-                {typeof backgroundImage === 'string' && backgroundImage.trim() !== '' && backgroundImage !== 'undefined' && backgroundImage !== 'null' && (
-                    <Image src={backgroundImage} style={styles.background} />
-                )}
+                {(() => {
+                    if (typeof backgroundImage !== 'string' || backgroundImage.trim() === '' || backgroundImage === 'undefined' || backgroundImage === 'null') return null;
+                    
+                    // Resolve absolute URL for background if it is relative
+                    let bgSrc = backgroundImage;
+                    if (bgSrc.startsWith('/') && origin) {
+                        bgSrc = `${origin}${bgSrc}`;
+                    }
+
+                    return (
+                        <Image 
+                            src={bgSrc} 
+                            style={styles.background} 
+                            fixed={true}
+                        />
+                    );
+                })()}
 
                 {elements.map((el) => {
                     const style = el.style || {};
