@@ -50,6 +50,43 @@ export default function CertificateEditor({ templateId }: { templateId: string }
         load();
     }, [templateId]); // Empty mapping to avoid loop, strictly load once.
 
+    // Keyboard Shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const activeTag = document.activeElement?.tagName.toLowerCase();
+            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                if (editor.selectedIds.length > 0) editor.deleteSelected();
+            } else if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+                editor.handleCopy();
+            } else if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+                editor.handlePaste();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                editor.nudgeSelected(0, e.shiftKey ? -10 : -1);
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                editor.nudgeSelected(0, e.shiftKey ? 10 : 1);
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                editor.nudgeSelected(e.shiftKey ? -10 : -1, 0);
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                editor.nudgeSelected(e.shiftKey ? 10 : 1, 0);
+            } else if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                editor.history.undo();
+            } else if ((e.ctrlKey || e.metaKey) && e.key === 'y' || ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z')) {
+                e.preventDefault();
+                editor.history.redo();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [editor]);
+
     const handleSave = async () => {
         setIsSaving(true);
         const res = await updateTemplate(templateId, {
@@ -77,6 +114,7 @@ export default function CertificateEditor({ templateId }: { templateId: string }
 
     return (
         <div className="flex flex-col h-screen bg-slate-100 overflow-hidden">
+            <style dangerouslySetInnerHTML={{__html: `@import url('https://fonts.googleapis.com/css2?family=Caveat&family=Cinzel&family=Dancing+Script&family=Inter:wght@400;700&family=Lato:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Lora:ital,wght@0,400;0,700&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;700&family=Nunito:wght@400;700&family=Open+Sans:wght@400;700&family=Oswald:wght@400;700&family=PT+Serif:ital,wght@0,400;0,700&family=Pacifico&family=Playfair+Display:ital,wght@0,400;0,700&family=Poppins:wght@400;700&family=Raleway:wght@400;700&family=Roboto:ital,wght@0,400;0,700;1,400&family=Satisfy&display=swap');`}} />
             <EditorToolbar
                 zoom={editor.zoom} setZoom={editor.setZoom}
                 showGrid={editor.showGrid} setShowGrid={editor.setShowGrid}
@@ -107,6 +145,7 @@ export default function CertificateEditor({ templateId }: { templateId: string }
                     zoom={editor.zoom}
                     selectedIds={editor.selectedIds}
                     onSelect={(id, multi) => editor.setSelectedIds(multi ? [...editor.selectedIds, id] : (id ? [id] : []))}
+                    onSelectMultiple={(ids) => editor.setSelectedIds(ids)}
                     onUpdate={editor.updateElement}
                     onCommit={editor.commitChange}
                     backgroundImage={editor.backgroundImage}

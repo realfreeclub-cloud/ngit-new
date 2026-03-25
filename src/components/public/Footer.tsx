@@ -51,20 +51,22 @@ export default async function Footer() {
                     <div className="lg:col-span-4 xl:col-span-5 space-y-8">
                         <div className="flex items-center gap-4">
                             {footerData.logoImage ? (
-                                <img src={footerData.logoImage} alt={footerData.logoText} className="h-10 w-auto brightness-0 invert drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+                                <img src={footerData.logoImage} alt={footerData.logoText || "Logo"} className="h-12 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
                             ) : (
-                                <div className="w-12 h-12 bg-gradient-to-br from-primary to-blue-600 rounded-2xl flex items-center justify-center font-black text-white text-2xl shadow-[0_0_20px_rgba(59,130,246,0.4)]">
-                                    N
-                                </div>
+                                <>
+                                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-blue-600 rounded-2xl flex items-center justify-center font-black text-white text-2xl shadow-[0_0_20px_rgba(59,130,246,0.4)]">
+                                        N
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-black tracking-tighter text-white leading-none">
+                                            {footerData.logoText || "NGIT"}
+                                        </h3>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400 mt-1">
+                                            Advanced Institute
+                                        </p>
+                                    </div>
+                                </>
                             )}
-                            <div>
-                                <h3 className="text-2xl font-black tracking-tighter text-white leading-none">
-                                    {footerData.logoText || "NGIT"}
-                                </h3>
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400 mt-1">
-                                    Advanced Institute
-                                </p>
-                            </div>
                         </div>
 
                         <p className="text-base lg:text-lg text-slate-400/90 font-medium leading-relaxed max-w-sm">

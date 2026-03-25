@@ -133,10 +133,49 @@ export function useEditorState(initialTemplate: ICertificateTemplate) {
     };
 
     const deleteSelected = () => {
+        if (selectedIds.length === 0) return;
         addToHistory();
         setElements(prev => prev.filter(el => !selectedIds.includes(el.id)));
         setSelectedIds([]);
     };
+
+    // Advanced Editing Features
+    const copySelected = useRef<EditorElement[]>([]);
+    
+    const handleCopy = useCallback(() => {
+        copySelected.current = elements.filter(el => selectedIds.includes(el.id));
+    }, [elements, selectedIds]);
+
+    const handlePaste = useCallback(() => {
+        if (copySelected.current.length === 0) return;
+        addToHistory();
+        
+        const pastedIds: string[] = [];
+        const pastedElements = copySelected.current.map(el => {
+            const newId = uuidv4();
+            pastedIds.push(newId);
+            return {
+                ...el,
+                id: newId,
+                x: el.x + 20, // Offset so user can see it
+                y: el.y + 20
+            };
+        });
+        
+        setElements(prev => [...prev, ...pastedElements]);
+        setSelectedIds(pastedIds);
+    }, [addToHistory]);
+
+    const nudgeSelected = useCallback((dx: number, dy: number) => {
+        if (selectedIds.length === 0) return;
+        // Not adding to history on EVERY nudge to avoid history spam, handled by commitChange or batching
+        setElements(prev => prev.map(el => {
+            if (selectedIds.includes(el.id) && !el.locked) {
+                return { ...el, x: el.x + dx, y: el.y + dy };
+            }
+            return el;
+        }));
+    }, [selectedIds]);
 
     const updatePageConfig = (updates: Partial<PageConfig>) => {
         addToHistory();
@@ -194,6 +233,10 @@ export function useEditorState(initialTemplate: ICertificateTemplate) {
             redo,
             canUndo: historyIndex > 0,
             canRedo: historyIndex < history.length - 1
-        }
+        },
+        
+        handleCopy,
+        handlePaste,
+        nudgeSelected
     };
 }

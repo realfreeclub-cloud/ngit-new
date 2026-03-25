@@ -1,7 +1,7 @@
 
 /* eslint-disable jsx-a11y/alt-text */
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Image } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, Image, Font } from '@react-pdf/renderer';
 
 interface Element {
     id: string;
@@ -58,6 +58,27 @@ const styles = StyleSheet.create({
 });
 
 export const DynamicCertificateTemplate = ({ elements, placeholders, backgroundImage, config }: DynamicCertificateProps) => {
+    
+    // Dynamically Register Fonts
+    if (typeof window !== "undefined") {
+        const standardFonts = ['Courier', 'Helvetica', 'Times-Roman'];
+        const uniqueFonts = [...new Set(elements.map(el => el.style?.fontFamily || el.fontFamily || 'Helvetica'))];
+        
+        uniqueFonts.forEach(font => {
+            const rawFont = font as string;
+            if (!standardFonts.includes(rawFont) && !rawFont.toLowerCase().includes('times') && !rawFont.toLowerCase().includes('courier')) {
+                // Ignore errors if font is already registered
+                try {
+                    Font.register({
+                        family: rawFont,
+                        src: `${window.location.origin}/api/fonts?family=${encodeURIComponent(rawFont)}`
+                    });
+                } catch (e) {
+                    console.log('Font already registered or error:', e);
+                }
+            }
+        });
+    }
 
     // Replace placeholders in text
     const processContent = (content: string) => {
@@ -94,7 +115,18 @@ export const DynamicCertificateTemplate = ({ elements, placeholders, backgroundI
                     const fontSize = style.fontSize || el.fontSize || 12;
                     const color = style.color || el.color || '#000000';
                     const fontWeight = (style.fontWeight || el.fontWeight || 'normal') as any;
-                    const fontFamily = style.fontFamily || el.fontFamily || 'Helvetica';
+                    const rawFont = style.fontFamily || el.fontFamily || 'Helvetica';
+                    // React-PDF only supports these standard fonts natively without asynchronous Font.register()
+                    const standardFonts = ['Courier', 'Helvetica', 'Times-Roman'];
+                    let fontFamily = 'Helvetica';
+                    
+                    if (standardFonts.includes(rawFont)) {
+                        fontFamily = rawFont;
+                    } else if (rawFont.toLowerCase().includes('times')) {
+                        fontFamily = 'Times-Roman';
+                    } else if (rawFont.toLowerCase().includes('courier')) {
+                        fontFamily = 'Courier';
+                    }
                     const textAlign = (style.textAlign || el.textAlign || 'left') as any;
 
                     const commonStyles: any = {
@@ -108,20 +140,19 @@ export const DynamicCertificateTemplate = ({ elements, placeholders, backgroundI
                     };
 
                     if (el.type === 'text') {
+                        const textStyle: any = {
+                            ...commonStyles,
+                            fontSize,
+                            color,
+                            fontWeight,
+                            fontFamily,
+                            textAlign,
+                        };
+                        if (style.letterSpacing !== undefined) textStyle.letterSpacing = style.letterSpacing;
+                        if (style.lineHeight !== undefined) textStyle.lineHeight = style.lineHeight;
+
                         return (
-                            <Text
-                                key={el.id}
-                                style={{
-                                    ...commonStyles,
-                                    fontSize,
-                                    color,
-                                    fontWeight,
-                                    fontFamily,
-                                    textAlign,
-                                    letterSpacing: style.letterSpacing,
-                                    lineHeight: style.lineHeight,
-                                }}
-                            >
+                            <Text key={el.id} style={textStyle}>
                                 {processContent(el.content)}
                             </Text>
                         );
@@ -131,15 +162,17 @@ export const DynamicCertificateTemplate = ({ elements, placeholders, backgroundI
 
                         if (!src) return null;
 
+                        const imageStyle: any = {
+                            ...commonStyles,
+                            objectFit: style.objectFit || 'contain'
+                        };
+                        if (style.borderRadius !== undefined) imageStyle.borderRadius = style.borderRadius;
+
                         return (
                             <Image
                                 key={el.id}
                                 src={typeof src === 'string' && src.startsWith('data:') ? { uri: src } : src}
-                                style={{
-                                    ...commonStyles,
-                                    objectFit: style.objectFit || 'contain',
-                                    borderRadius: style.borderRadius
-                                }}
+                                style={imageStyle}
                             />
                         );
                     }
