@@ -71,7 +71,8 @@ export default async function PublicHomePage() {
                     events: publicEvents,
                     gallery: galleryImages,
                     publicResults: firstSectionResults as any[],
-                    publicExams: publicExams
+                    publicExams: publicExams,
+                    notices: noticesRes.success ? noticesRes.notices : []
                 }}
                 staticFallback={
                     <>

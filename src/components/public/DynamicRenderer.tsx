@@ -79,11 +79,23 @@ export default function DynamicRenderer({ sections, staticFallback, extraData }:
                     case "PublicExamsGrid":
                         return <PublicExamsGrid key={props.key} data={section} exams={extraData?.publicExams || []} />;
                     case "NotificationScroller": {
-                        const notifications = props.blocks?.map((b: any) => ({
-                            id: b._id || b.id,
-                            text: b.title || b.description || "Notification",
-                            link: b.button_link || b.image || ""
-                        })) || [];
+                        let notifications = [];
+                        if (extraData?.notices && extraData.notices.length > 0) {
+                            notifications = extraData.notices
+                                .filter((n: any) => n.showInScroller)
+                                .map((n: any) => ({
+                                    id: n._id,
+                                    text: n.title + (n.description ? ` - ${n.description.substring(0, 100)}...` : ''),
+                                    link: n.link || `/notices`
+                                }));
+                        } else {
+                            notifications = props.blocks?.map((b: any) => ({
+                                id: b._id || b.id,
+                                text: b.title || b.description || "Notification",
+                                link: b.button_link || b.image || ""
+                            })) || [];
+                        }
+                        if (notifications.length === 0) return null;
                         return <NotificationScroller key={props.key} notifications={notifications} />;
                     }
                     case "TrustIndicators": {
