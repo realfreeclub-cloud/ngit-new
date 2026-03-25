@@ -39,24 +39,43 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
         <section className="relative min-h-[90vh] lg:h-screen flex items-center pt-20 pb-16 overflow-hidden bg-slate-950">
             {/* Advanced Background Layers with Cross-Fade */}
             <div className="absolute inset-0 z-0">
-                {sliderBlocks.map((block: any, idx: number) => (
-                    <div 
-                        key={idx}
-                        className={cn(
-                            "absolute inset-0 transition-opacity duration-1000",
-                            idx === currentIndex ? "opacity-100" : "opacity-0 pointer-events-none"
-                        )}
-                    >
-                        <Image
-                            src={block.image || defaultBlock.image}
-                            alt={block.title || "Education Background"}
-                            fill
-                            className="object-cover opacity-20 scale-105"
-                            priority={idx === 0}
-                        />
-                    </div>
-                ))}
-                <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-950/90 to-primary/10" />
+                {sliderBlocks.map((block: any, idx: number) => {
+                    const extra = typeof block.extra_data === 'object' ? block.extra_data : {};
+                    const hasValidImage = !!block.image;
+                    const safeImage = block.image || defaultBlock.image;
+                    
+                    const defaultImageOp = hasValidImage ? 0.6 : 0.2;
+                    const defaultGradOp = hasValidImage ? 0.5 : 1;
+
+                    const imageOp = extra?.image_opacity !== undefined && extra?.image_opacity !== "" ? Number(extra.image_opacity) / 100 : defaultImageOp;
+                    const gradOp = extra?.gradient_opacity !== undefined && extra?.gradient_opacity !== "" ? Number(extra.gradient_opacity) / 100 : defaultGradOp;
+                    const colorOverlay = extra?.overlay_color || "";
+
+                    return (
+                        <div 
+                            key={idx}
+                            className={cn(
+                                "absolute inset-0 transition-opacity duration-1000",
+                                idx === currentIndex ? "opacity-100" : "opacity-0 pointer-events-none"
+                            )}
+                            style={colorOverlay.startsWith('#') || colorOverlay.startsWith('rgb') ? { backgroundColor: colorOverlay } : {}}
+                        >
+                            {colorOverlay.startsWith('bg-') && <div className={`absolute inset-0 ${colorOverlay}`} />}
+                            <Image
+                                src={safeImage}
+                                alt={block.title || "Education Background"}
+                                fill
+                                className="object-cover scale-105 transition-opacity"
+                                style={{ opacity: imageOp }}
+                                priority={idx === 0}
+                            />
+                            <div 
+                                className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-950/90 to-primary/10 transition-opacity" 
+                                style={{ opacity: gradOp }}
+                            />
+                        </div>
+                    );
+                })}
                 
                 {/* Tech Grid Effect */}
                 <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />

@@ -410,6 +410,29 @@ export default function AdvancedCmsPage() {
                                                                 <Input className="mt-1 bg-slate-50 font-mono text-xs" value={block.button_link || ""} onChange={(e) => handleUpdateBlockFields(block._id, "button_link", e.target.value)} />
                                                             </div>
                                                         </div>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <div>
+                                                                <label className="text-xs font-bold text-slate-500 uppercase">Image Opacity (0-100)</label>
+                                                                <Input className="mt-1 bg-slate-50 font-mono text-xs" type="number" min="0" max="100" placeholder="e.g., 50" value={typeof block.extra_data === 'object' ? block.extra_data?.image_opacity || "" : ""} onChange={(e) => {
+                                                                    const ext = typeof block.extra_data === 'object' ? { ...block.extra_data, image_opacity: e.target.value } : { image_opacity: e.target.value };
+                                                                    handleUpdateBlockFields(block._id, "extra_data", ext as any);
+                                                                }} />
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-xs font-bold text-slate-500 uppercase">Gradient Opacity (0-100)</label>
+                                                                <Input className="mt-1 bg-slate-50 font-mono text-xs" type="number" min="0" max="100" placeholder="e.g., 90" value={typeof block.extra_data === 'object' ? block.extra_data?.gradient_opacity || "" : ""} onChange={(e) => {
+                                                                    const ext = typeof block.extra_data === 'object' ? { ...block.extra_data, gradient_opacity: e.target.value } : { gradient_opacity: e.target.value };
+                                                                    handleUpdateBlockFields(block._id, "extra_data", ext as any);
+                                                                }} />
+                                                            </div>
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="text-xs font-bold text-slate-500 uppercase">Color Overlay (Hex/Tailwind)</label>
+                                                            <Input className="mt-1 bg-slate-50 font-mono text-xs" placeholder='e.g., #020617 or bg-slate-900' value={typeof block.extra_data === 'object' ? block.extra_data?.overlay_color || "" : ""} onChange={(e) => {
+                                                                const ext = typeof block.extra_data === 'object' ? { ...block.extra_data, overlay_color: e.target.value } : { overlay_color: e.target.value };
+                                                                handleUpdateBlockFields(block._id, "extra_data", ext as any);
+                                                            }} />
+                                                        </div>
                                                         <div className="md:col-span-2">
                                                             <label className="text-xs font-bold text-slate-500 uppercase">Extra Details (JSON)</label>
                                                             <Input className="mt-1 bg-slate-50 font-mono text-xs" placeholder='e.g., {"color": "bg-blue-500", "icon": "GraduationCap"}' value={typeof block.extra_data === 'object' ? JSON.stringify(block.extra_data) : block.extra_data || ""} onChange={(e) => handleUpdateBlockFields(block._id, "extra_data", e.target.value)} onBlur={(e) => {

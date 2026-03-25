@@ -25,9 +25,10 @@ import { getEvents } from "@/app/actions/events";
 import { getGalleryImages } from "@/app/actions/upload";
 import { getPublicResults as getOldResults, getPublicExams } from "@/app/actions/results";
 import { getPublicMockTestResults } from "@/app/actions/mockTestResults";
+import { getNotices } from "@/app/actions/notice";
 
 export default async function PublicHomePage() {
-    const [slides, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, notifications, dynamicData, resultsRes, examsRes] = await Promise.all([
+    const [slides, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, noticesRes, dynamicData, resultsRes, examsRes] = await Promise.all([
         getCMSContent("HOME_SLIDER"),
         getCMSContent("HOME_STATS"),
         getCMSContent("HOME_ABOUT"),
@@ -35,7 +36,7 @@ export default async function PublicHomePage() {
         getPublicCourses(),
         getEvents(),
         getGalleryImages(),
-        getCMSContent("HOME_NOTIFICATIONS"),
+        getNotices(false), // Fetch active notices from DB
         getDynamicPageData("home"),
         getPublicMockTestResults(),
         getPublicExams()
@@ -51,11 +52,14 @@ export default async function PublicHomePage() {
 
     const cmsSections = dynamicData.success && dynamicData.sections ? dynamicData.sections : [];
 
-    const mappedNotifications = (notifications || []).map((n: any) => ({
-        id: n._id || n.id,
-        text: n.title || n.description || n.text || "Notification",
-        link: n.button_link || n.image || n.link || ""
-    }));
+    // Filter to only those designated for the scroller
+    const scrollingNotices = (noticesRes.success ? noticesRes.notices : [])
+        .filter((n: any) => n.showInScroller)
+        .map((n: any) => ({
+            id: n._id,
+            text: n.title + (n.description ? ` - ${n.description.substring(0, 100)}...` : ''),
+            link: n.link || `/notices`
+        }));
 
     return (
         <div className="min-h-screen">
@@ -75,11 +79,9 @@ export default async function PublicHomePage() {
                         <HeroSection blocks={slides || []} />
 
                         {/* Notification Scroller */}
-                        <NotificationScroller notifications={(notifications || []).map((n: any) => ({
-                            id: n._id || n.id,
-                            text: n.title || n.description || n.text || "Notification",
-                            link: n.button_link || n.image || n.link || ""
-                        }))} />
+                        {scrollingNotices.length > 0 && (
+                            <NotificationScroller notifications={scrollingNotices} />
+                        )}
 
                         {/* Trust Indicators */}
                         <TrustIndicators stats={stats || []} />
