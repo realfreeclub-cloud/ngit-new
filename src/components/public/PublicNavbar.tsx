@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Phone, LogIn, User, LayoutDashboard, LogOut } from "lucide-react";
+import { Menu, X, Phone, LogIn, User, LayoutDashboard, LogOut, Bell } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { getHeaderFooterData } from "@/app/actions/layoutContent";
@@ -99,10 +99,11 @@ export default function PublicNavbar() {
                         </div>
 
                         <div className="flex items-center gap-3 ml-4 pl-4 border-l border-gray-200">
-                            <Link href="tel:+919876543210">
-                                <Button variant="ghost" className="gap-2 text-gray-700 hover:text-primary hover:bg-primary/5 font-semibold px-2">
-                                    <Phone className="w-4 h-4" />
-                                    <span className="hidden xl:inline">Support</span>
+                            <Link href="/notices">
+                                <Button variant="ghost" size="icon" className="relative w-10 h-10 text-gray-700 hover:text-primary hover:bg-primary/5 rounded-full transition-all" title="Official Notices">
+                                    <Bell className="w-5 h-5" />
+                                    <span className="absolute top-2 right-2.5 w-2 h-2 bg-rose-500 rounded-full animate-pulse blur-[1px]" />
+                                    <span className="absolute top-2 right-2.5 w-2 h-2 bg-rose-500 rounded-full" />
                                 </Button>
                             </Link>
                             
@@ -171,14 +172,23 @@ export default function PublicNavbar() {
                         </div>
                     </div>
 
-                    {/* Mobile Menu Button */}
-                    <button
-                        className="lg:hidden p-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                        onClick={() => setIsOpen(!isOpen)}
-                        aria-label="Toggle menu"
-                    >
-                        {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                    </button>
+                    {/* Mobile Menu Controls */}
+                    <div className="flex lg:hidden items-center gap-1">
+                        <Link href="/notices">
+                            <Button variant="ghost" size="icon" className="relative w-10 h-10 text-gray-700 hover:text-primary hover:bg-primary/5 rounded-full transition-all" title="Official Notices">
+                                <Bell className="w-5 h-5" />
+                                <span className="absolute top-2 right-2.5 w-2 h-2 bg-rose-500 rounded-full animate-pulse blur-[1px]" />
+                                <span className="absolute top-2 right-2.5 w-2 h-2 bg-rose-500 rounded-full" />
+                            </Button>
+                        </Link>
+                        <button
+                            className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                            onClick={() => setIsOpen(!isOpen)}
+                            aria-label="Toggle menu"
+                        >
+                            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Mobile Menu */}
