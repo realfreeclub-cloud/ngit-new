@@ -45,13 +45,13 @@ export default async function PublicHomePage() {
         getPublicExams()
     ]);
 
-    const facultyMembers = facultyRes.success ? facultyRes.faculty : [];
-    const publicCourses = coursesRes.success ? coursesRes.courses : [];
-    const publicEvents = eventsRes.success ? eventsRes.events : [];
-    const galleryImages = galleryRes.success ? galleryRes.images : [];
+    const facultyMembers = (facultyRes.success ? facultyRes.faculty : []).slice(0, 6);
+    const publicCourses = (coursesRes.success ? coursesRes.courses : []).slice(0, 6);
+    const publicEvents = (eventsRes.success ? eventsRes.events : []).slice(0, 6);
+    const galleryImages = (galleryRes.success ? galleryRes.images : []).slice(0, 6);
     const publicResultsGrouped = resultsRes.success ? (resultsRes as any).sections : {};
-    const firstSectionResults = Object.values(publicResultsGrouped)[0] || [];
-    const publicExams = (examsRes as any)?.success ? (examsRes as any).exams : [];
+    const firstSectionResults = (Object.values(publicResultsGrouped)[0] as any[] || []).slice(0, 6);
+    const publicExams = ((examsRes as any)?.success ? (examsRes as any).exams : []).slice(0, 6);
 
     const cmsSections = dynamicData.success && dynamicData.sections ? dynamicData.sections : [];
 

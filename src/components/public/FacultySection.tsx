@@ -181,21 +181,13 @@ export default function FacultySection({ members, data }: { members?: any[], dat
                 </div>
             </div>
 
-            {/* Pagination Sequence */}
-            {totalPages > 1 && (
-                <div className="flex justify-center gap-2 mt-16">
-                    {Array.from({ length: totalPages }).map((_, i) => (
-                        <button
-                            key={i}
-                            onClick={() => setPage(i)}
-                            className={cn(
-                                "transition-all duration-700 rounded-full h-1.5",
-                                page === i ? "w-12 bg-primary" : "w-3 bg-slate-200 hover:bg-slate-300"
-                            )}
-                        />
-                    ))}
-                </div>
-            )}
+            {/* View All Sequence */}
+            <div className="mt-20 text-center">
+                <Link href="/faculty" className="inline-flex items-center gap-3 text-slate-400 hover:text-primary font-black uppercase tracking-widest text-[11px] transition-colors group">
+                    Meet All Industry masters & Faculty
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+            </div>
         </section>
     );
 }

@@ -122,7 +122,7 @@ export default function PublicExamsGrid({ exams, data, session: propSession }: P
                 
                 <div className="mt-20 text-center">
                     <Link href="/exams" className="inline-flex items-center gap-3 text-slate-400 hover:text-primary font-black uppercase tracking-widest text-[11px] transition-colors group">
-                        Access Complete Examination HUB
+                        Browse All Available Exams & Practice Sets
                         <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
                 </div>

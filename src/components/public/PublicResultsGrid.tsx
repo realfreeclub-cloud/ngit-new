@@ -57,13 +57,13 @@ export default function PublicResultsGrid({ results, data }: PublicResultsGridPr
                     </div>
                     
                     <Link href="/results" className="inline-flex items-center gap-2 px-8 h-14 bg-slate-950 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl group">
-                        Full Performance Board
+                        View All Toppers & Exam Results
                         <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </Link>
                 </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                    {results.slice(0, 8).map((item, idx) => (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {results.slice(0, 6).map((item, idx) => (
                         <motion.div
                             key={item._id}
                             initial={{ opacity: 0, y: 30 }}
@@ -145,6 +145,14 @@ export default function PublicResultsGrid({ results, data }: PublicResultsGridPr
                             </div>
                         </motion.div>
                     ))}
+                </div>
+ 
+                 {/* View All Bottom CTA */}
+                 <div className="mt-20 text-center">
+                    <Link href="/results" className="inline-flex items-center gap-3 text-slate-400 hover:text-primary font-black uppercase tracking-widest text-[11px] transition-colors group">
+                        Enter Full results Portal & Hall of Fame
+                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
                 </div>
             </div>
         </section>

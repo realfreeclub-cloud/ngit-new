@@ -29,15 +29,6 @@ export default function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
                 >
                     <Menu className="w-6 h-6" />
                 </button>
-
-                <div className="relative w-full max-w-md hidden md:block group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-primary transition-colors" />
-                    <input
-                        type="text"
-                        placeholder="Search dashboard..."
-                        className="w-full bg-slate-100/50 border-2 border-transparent rounded-[14px] pl-12 pr-4 py-3 text-sm focus:bg-white focus:border-primary/20 focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-400 font-medium"
-                    />
-                </div>
             </div>
 
             <div className="flex items-center gap-6">

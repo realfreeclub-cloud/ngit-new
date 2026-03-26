@@ -105,13 +105,20 @@ export default function CoursesSection({ courses = [], data }: { courses?: Cours
                 </div>
 
                 {/* Bottom CTA */}
-                <div className="mt-20 pt-12 border-t border-slate-50 text-center">
-                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Need expert guidance?</p>
-                    <Link href="/contact">
-                        <Button className="h-16 px-12 rounded-[2rem] text-sm font-black uppercase tracking-widest bg-white border-2 border-slate-950 text-slate-950 hover:bg-slate-950 hover:text-white shadow-2xl transition-all hover:-translate-y-1">
-                            Talk to Career Counselor
-                        </Button>
+                <div className="mt-20 pt-12 border-t border-slate-50 text-center flex flex-col items-center gap-8">
+                    <Link href="/courses" className="inline-flex items-center gap-3 text-slate-400 hover:text-primary font-black uppercase tracking-widest text-[11px] transition-colors group">
+                        Explore Full curriculum & Courses
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
+                    
+                    <div className="space-y-4">
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Need expert guidance?</p>
+                        <Link href="/contact">
+                            <Button className="h-16 px-12 rounded-[2rem] text-sm font-black uppercase tracking-widest bg-white border-2 border-slate-950 text-slate-950 hover:bg-slate-950 hover:text-white shadow-2xl transition-all hover:-translate-y-1">
+                                Talk to Career Counselor
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
             </div>
             

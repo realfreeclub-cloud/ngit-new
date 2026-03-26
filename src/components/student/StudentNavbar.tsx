@@ -16,6 +16,8 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface StudentNavbarProps {
     onMenuToggle: () => void;
@@ -29,6 +31,15 @@ const quickLinks = [
 export default function StudentNavbar({ onMenuToggle }: StudentNavbarProps) {
     const { data: session } = useSession();
     const pathname = usePathname();
+    const router = useRouter();
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            router.push(`/student/courses?s=${encodeURIComponent(searchQuery.trim())}`);
+        }
+    };
 
     return (
         <header className="bg-white/80 backdrop-blur-md border-b border-slate-100 z-40 shrink-0 sticky top-0">
@@ -46,14 +57,16 @@ export default function StudentNavbar({ onMenuToggle }: StudentNavbarProps) {
                     </button>
 
                     {/* Search */}
-                    <div className="relative flex-1 max-w-md hidden md:block group">
+                    <form onSubmit={handleSearch} className="relative flex-1 max-w-md hidden md:block group">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                         <input
                             type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Find lessons, assessments, or materials..."
                             className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl pl-11 pr-4 h-11 text-sm focus:ring-4 focus:ring-primary/5 focus:border-primary/20 focus:bg-white transition-all font-bold outline-none placeholder:text-slate-400 placeholder:font-medium"
                         />
-                    </div>
+                    </form>
                 </div>
 
                 {/* Right — Quick Links + Bell + Profile */}
@@ -143,14 +156,6 @@ export default function StudentNavbar({ onMenuToggle }: StudentNavbarProps) {
                                     </Link>
                                 </DropdownMenuItem>
 
-                                <DropdownMenuItem className="rounded-2xl p-4 font-black text-sm text-slate-600 focus:text-primary focus:bg-primary/5 cursor-pointer flex items-center gap-4 transition-all" asChild>
-                                    <Link href="/student/settings">
-                                        <div className="w-10 h-10 rounded-xl bg-orange-50/50 flex items-center justify-center text-orange-600 border border-orange-100/50">
-                                            <Settings className="h-5 w-5" />
-                                        </div>
-                                        System Preferences
-                                    </Link>
-                                </DropdownMenuItem>
                             </div>
 
                             <DropdownMenuSeparator className="my-4 bg-slate-100 h-0.5 rounded-full" />
