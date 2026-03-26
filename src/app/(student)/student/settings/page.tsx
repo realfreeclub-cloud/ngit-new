@@ -1,19 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { User, Lock, Bell, Moon, LogOut, Loader2, Save } from "lucide-react";
+import { User, Lock, Bell, LogOut, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { signOut, useSession } from "next-auth/react";
-import { updateUserDetails } from "@/app/actions/user";
+import { updateUserDetails, updateUserPassword } from "@/app/actions/user";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function StudentSettingsPage() {
     const { data: session, update } = useSession();
     const [loading, setLoading] = useState(false);
     const [name, setName] = useState(session?.user?.name || "");
     const [notifications, setNotifications] = useState(true);
-    const [darkMode, setDarkMode] = useState(false);
+    const [isPassOpen, setIsPassOpen] = useState(false);
+    const [passData, setPassData] = useState({ current: "", new: "", confirm: "" });
+    const [passLoading, setPassLoading] = useState(false);
 
     useEffect(() => {
         if (session?.user?.name) setName(session.user.name);
@@ -30,6 +42,23 @@ export default function StudentSettingsPage() {
             toast.error(res.error || "Failed to update settings");
         }
         setLoading(false);
+    };
+
+    const handlePasswordUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (passData.new !== passData.confirm) return toast.error("New passwords do not match");
+        if (passData.new.length < 6) return toast.error("Password must be at least 6 characters");
+        
+        setPassLoading(true);
+        const res = await updateUserPassword({ current: passData.current, new: passData.new });
+        if (res.success) {
+            toast.success("Password updated successfully!");
+            setIsPassOpen(false);
+            setPassData({ current: "", new: "", confirm: "" });
+        } else {
+            toast.error(res.error || "Failed to update password");
+        }
+        setPassLoading(false);
     };
 
     return (
@@ -100,19 +129,6 @@ export default function StudentSettingsPage() {
                             </div>
                             <Switch checked={notifications} onCheckedChange={setNotifications} />
                         </div>
-
-                        <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors">
-                            <div className="flex items-center gap-4">
-                                <div className="p-2 bg-white rounded-lg shadow-sm">
-                                    <Moon className="w-5 h-5 text-slate-400" />
-                                </div>
-                                <div>
-                                    <p className="font-bold text-slate-900">Dark Mode</p>
-                                    <p className="text-xs text-slate-500 font-bold">Switch between light and dark themes</p>
-                                </div>
-                            </div>
-                            <Switch checked={darkMode} onCheckedChange={setDarkMode} />
-                        </div>
                     </div>
                 </div>
 
@@ -129,10 +145,56 @@ export default function StudentSettingsPage() {
                     </div>
 
                     <div className="space-y-4">
-                        <Button variant="outline" className="w-full h-14 justify-start px-6 rounded-2xl font-bold text-slate-600 border-2 border-slate-100 hover:bg-slate-50 hover:text-slate-900 transition-all">
-                            <Lock className="w-5 h-5 mr-3 opacity-50" />
-                            Change Security Password
-                        </Button>
+                        <Dialog open={isPassOpen} onOpenChange={setIsPassOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" className="w-full h-14 justify-start px-6 rounded-2xl font-bold text-slate-600 border-2 border-slate-100 hover:bg-slate-50 hover:text-slate-900 transition-all">
+                                    <Lock className="w-5 h-5 mr-3 opacity-50" />
+                                    Change Security Password
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[425px] rounded-[2rem]">
+                                <DialogHeader>
+                                    <DialogTitle className="text-2xl font-black">Change Password</DialogTitle>
+                                </DialogHeader>
+                                <form onSubmit={handlePasswordUpdate} className="space-y-4 py-4">
+                                    <div className="space-y-2">
+                                        <Label className="font-bold">Current Password</Label>
+                                        <Input
+                                            type="password"
+                                            required
+                                            className="rounded-xl h-12"
+                                            value={passData.current}
+                                            onChange={(e) => setPassData({ ...passData, current: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="font-bold">New Password</Label>
+                                        <Input
+                                            type="password"
+                                            required
+                                            className="rounded-xl h-12"
+                                            value={passData.new}
+                                            onChange={(e) => setPassData({ ...passData, new: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="font-bold">Confirm New Password</Label>
+                                        <Input
+                                            type="password"
+                                            required
+                                            className="rounded-xl h-12"
+                                            value={passData.confirm}
+                                            onChange={(e) => setPassData({ ...passData, confirm: e.target.value })}
+                                        />
+                                    </div>
+                                    <DialogFooter className="pt-4">
+                                        <Button type="submit" disabled={passLoading} className="w-full h-12 rounded-xl font-black">
+                                            {passLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Update Password"}
+                                        </Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
                         <Button
                             variant="destructive"
                             className="w-full h-14 justify-start px-6 rounded-2xl font-bold bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 border-transparent transition-all"

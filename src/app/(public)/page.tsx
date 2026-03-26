@@ -26,8 +26,11 @@ import { getGalleryImages } from "@/app/actions/upload";
 import { getPublicResults as getOldResults, getPublicExams } from "@/app/actions/results";
 import { getPublicMockTestResults } from "@/app/actions/mockTestResults";
 import { getNotices } from "@/app/actions/notice";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export default async function PublicHomePage() {
+    const session = await getServerSession(authOptions);
     const [slides, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, noticesRes, dynamicData, resultsRes, examsRes] = await Promise.all([
         getCMSContent("HOME_SLIDER"),
         getCMSContent("HOME_STATS"),
@@ -42,13 +45,13 @@ export default async function PublicHomePage() {
         getPublicExams()
     ]);
 
-    const facultyMembers = facultyRes.success ? facultyRes.faculty : [];
-    const publicCourses = coursesRes.success ? coursesRes.courses : [];
-    const publicEvents = eventsRes.success ? eventsRes.events : [];
-    const galleryImages = galleryRes.success ? galleryRes.images : [];
+    const facultyMembers = (facultyRes.success ? facultyRes.faculty : []).slice(0, 6);
+    const publicCourses = (coursesRes.success ? coursesRes.courses : []).slice(0, 6);
+    const publicEvents = (eventsRes.success ? eventsRes.events : []).slice(0, 6);
+    const galleryImages = (galleryRes.success ? galleryRes.images : []).slice(0, 6);
     const publicResultsGrouped = resultsRes.success ? (resultsRes as any).sections : {};
-    const firstSectionResults = Object.values(publicResultsGrouped)[0] || [];
-    const publicExams = (examsRes as any)?.success ? (examsRes as any).exams : [];
+    const firstSectionResults = (Object.values(publicResultsGrouped)[0] as any[] || []).slice(0, 6);
+    const publicExams = ((examsRes as any)?.success ? (examsRes as any).exams : []).slice(0, 6);
 
     const cmsSections = dynamicData.success && dynamicData.sections ? dynamicData.sections : [];
 
@@ -72,8 +75,10 @@ export default async function PublicHomePage() {
                     gallery: galleryImages,
                     publicResults: firstSectionResults as any[],
                     publicExams: publicExams,
-                    notices: noticesRes.success ? noticesRes.notices : []
+                    notices: noticesRes.success ? noticesRes.notices : [],
+                    session: session
                 }}
+                session={session}
                 staticFallback={
                     <>
                         {/* Hero Section */}

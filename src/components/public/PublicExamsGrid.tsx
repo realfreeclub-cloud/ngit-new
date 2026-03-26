@@ -9,10 +9,12 @@ import { useSession } from "next-auth/react";
 interface PublicExamsGridProps {
     exams: any[];
     data?: any;
+    session?: any;
 }
 
-export default function PublicExamsGrid({ exams, data }: PublicExamsGridProps) {
-    const { data: session } = useSession();
+export default function PublicExamsGrid({ exams, data, session: propSession }: PublicExamsGridProps) {
+    const { data: clientSession } = useSession();
+    const session = propSession || clientSession;
     const title = data?.section_name || "Mock Test Performance Hub";
     const subtitle = data?.subtitle || "Assessment Engine";
     const description = data?.description || "Challenge your intellect with our curated practice modules designed to simulate high-stakes professional environments.";
@@ -120,7 +122,7 @@ export default function PublicExamsGrid({ exams, data }: PublicExamsGridProps) {
                 
                 <div className="mt-20 text-center">
                     <Link href="/exams" className="inline-flex items-center gap-3 text-slate-400 hover:text-primary font-black uppercase tracking-widest text-[11px] transition-colors group">
-                        Access Complete Examination HUB
+                        Browse All Available Exams & Practice Sets
                         <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
                 </div>

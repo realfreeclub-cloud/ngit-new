@@ -48,7 +48,7 @@ export default function GallerySection({ images = [], data }: { images?: Gallery
                 {/* Section Header */}
                 <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-100 mb-4">
-                        <Zap className="w-4 h-4 text-primary animate-pulse" />
+                        < Zap className="w-4 h-4 text-primary animate-pulse" />
                         <span className="text-slate-500 font-black uppercase tracking-[0.2em] text-[10px]">
                             {subtitle}
                         </span>
@@ -65,7 +65,7 @@ export default function GallerySection({ images = [], data }: { images?: Gallery
 
                 {/* Gallery Grid - Responsive Masonry-like Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                    {images.slice(0, 8).map((image, idx) => (
+                    {images.slice(0, 6).map((image, idx) => (
                         <motion.div
                             key={image._id}
                             initial={{ opacity: 0, y: 20 }}

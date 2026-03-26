@@ -98,21 +98,6 @@ export default function StudentSidebar({ isOpen, onClose }: StudentSidebarProps)
                     })}
                 </nav>
 
-                {/* Footer — student info */}
-                <div className="p-4 border-t border-white/5 bg-slate-900/40">
-                    <div className="bg-white/5 border border-white/5 rounded-3xl p-4 flex items-center gap-3 hover:bg-white/10 transition-colors">
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-black text-sm shrink-0 border border-white/10 shadow-lg">
-                            {session?.user?.name?.[0] || "S"}
-                        </div>
-                        <div className="min-w-0">
-                            <p className="text-sm font-black text-white truncate leading-none mb-1.5">{session?.user?.name || "Student"}</p>
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest leading-none">Status: Active</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </aside>
         </>
     );
