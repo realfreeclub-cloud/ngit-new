@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use, useRef } from "react";
+import { useState, useEffect, use, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
     Clock,
@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { getQuiz, submitQuiz } from "@/app/actions/student/quizzes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export default function StudentQuizLivePage({ params }: { params: Promise<{ quizId: string }> }) {
     const { quizId } = use(params);
@@ -31,6 +32,7 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
     const [timeLeft, setTimeLeft] = useState(0);
     const [answers, setAnswers] = useState<Record<string, any>>({});
     const [markedForReview, setMarkedForReview] = useState<Record<number, boolean>>({});
+    const [isPaletteOpen, setIsPaletteOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [language, setLanguage] = useState<"en" | "hi">("en");
@@ -53,24 +55,35 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
         fetchQuiz();
     }, [quizId]);
 
+    const handleSubmit = useCallback(async () => {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
+        const timeLimitSecs = (quiz?.settings?.timeLimit || 30) * 60;
+        const timeTaken = timeLimitSecs - timeLeft;
+
+        try {
+            const res = await submitQuiz(quizId, answers, timeTaken);
+            if (res.success) {
+                toast.success("Test submitted successfully!");
+                document.exitFullscreen?.().catch(() => { });
+                router.push(`/student/results`);
+            } else {
+                toast.error(res.error || "Failed to submit test");
+                setIsSubmitting(false);
+            }
+        } catch (error) {
+            toast.error("Something went wrong");
+            setIsSubmitting(false);
+        }
+    }, [isSubmitting, quiz?.settings?.timeLimit, timeLeft, quizId, answers, router]);
+
     // Anti-Cheat: Fullscreen & Tab Switch
     useEffect(() => {
         if (!quiz) return;
 
         const handleVisibilityChange = () => {
             if (document.hidden && !isSubmitting) {
-                setWarnings(w => {
-                    const next = w + 1;
-                    if (quiz.security?.preventTabSwitch) {
-                        if (next >= 3) {
-                            toast.error("Max tab switches reached. Auto-submitting exam.");
-                            handleSubmit();
-                        } else {
-                            toast.warning(`Warning ${next}/3: Do not switch tabs!`);
-                        }
-                    }
-                    return next;
-                });
+                setWarnings(w => w + 1);
             }
         };
 
@@ -91,6 +104,25 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
         };
     }, [quiz, isSubmitting]);
 
+    // Handle warnings and security
+    useEffect(() => {
+        if (!quiz || !quiz.security?.preventTabSwitch || isSubmitting) return;
+
+        if (warnings >= 3) {
+            toast.error("Max tab switches reached. Auto-submitting exam.");
+            handleSubmit();
+        } else if (warnings > 0) {
+            toast.warning(`Warning ${warnings}/3: Do not switch tabs!`);
+        }
+    }, [warnings, quiz, isSubmitting, handleSubmit]);
+
+    // Auto-submit on timeout
+    useEffect(() => {
+        if (timeLeft === 0 && quiz && !isSubmitting) {
+            handleSubmit();
+        }
+    }, [timeLeft, quiz, isSubmitting, handleSubmit]);
+
     const requestFullscreen = async () => {
         try {
             await containerRef.current?.requestFullscreen();
@@ -105,13 +137,6 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
         const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
         return () => clearInterval(timer);
     }, [timeLeft, isSubmitting, quiz]);
-
-    // Auto-submit on timeout
-    useEffect(() => {
-        if (timeLeft === 0 && quiz && !isSubmitting) {
-            handleSubmit();
-        }
-    }, [timeLeft, quiz, isSubmitting]);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -128,27 +153,6 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
             setAnswers({ ...answers, [qId]: updated });
         } else {
             setAnswers({ ...answers, [qId]: val });
-        }
-    };
-
-    const handleSubmit = async () => {
-        setIsSubmitting(true);
-        const timeLimitSecs = (quiz?.settings?.timeLimit || 30) * 60;
-        const timeTaken = timeLimitSecs - timeLeft;
-
-        try {
-            const res = await submitQuiz(quizId, answers, timeTaken);
-            if (res.success) {
-                toast.success("Test submitted successfully!");
-                document.exitFullscreen?.().catch(() => { });
-                router.push(`/student/results`); // Note: Assuming analysis redirects happen later or are independent
-            } else {
-                toast.error(res.error || "Failed to submit test");
-                setIsSubmitting(false);
-            }
-        } catch (error) {
-            toast.error("Something went wrong");
-            setIsSubmitting(false);
         }
     };
 
@@ -210,58 +214,85 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col select-none" ref={containerRef}>
             {/* Minimalist Top Bar */}
-            <header className="bg-slate-900 text-white px-6 h-16 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-4">
-                    <h1 className="text-lg font-bold truncate max-w-sm">{quiz.title}</h1>
-                    <div className="h-4 w-[1px] bg-slate-700" />
+            <header className="bg-slate-900 text-white px-4 md:px-6 h-14 md:h-16 flex items-center justify-between shrink-0 sticky top-0 z-50 shadow-lg">
+                <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
+                    <button 
+                        onClick={() => router.back()}
+                        className="p-1 hover:bg-slate-800 rounded md:hidden"
+                    >
+                        <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <h1 className="text-sm md:text-lg font-bold truncate max-w-[120px] md:max-w-sm">{quiz.title}</h1>
+                    <div className="hidden md:block h-4 w-[1px] bg-slate-700" />
                     <select
-                        className="bg-slate-800 text-white border-0 text-sm rounded outline-none px-2 py-1"
+                        className="bg-slate-800 text-white border-0 text-[10px] md:text-sm rounded outline-none px-1 md:px-2 py-1"
                         value={language}
                         onChange={(e) => setLanguage(e.target.value as "en" | "hi")}
                     >
-                        <option value="en">English</option>
-                        {quiz.settings?.availableLanguages?.includes("hi") && <option value="hi">हिंदी (Hindi)</option>}
+                        <option value="en">EN</option>
+                        {quiz.settings?.availableLanguages?.includes("hi") && <option value="hi">HI</option>}
                     </select>
                 </div>
 
-                <div className="flex items-center gap-6">
-                    <div className="px-4 py-1.5 rounded-md flex items-center gap-2 bg-slate-800 border border-slate-700">
-                        <Clock className={`w-4 h-4 ${timeLeft < 300 ? 'text-red-400 animate-pulse' : 'text-slate-300'}`} />
-                        <span className={`font-mono text-lg font-bold tracking-wider ${timeLeft < 300 ? 'text-red-400' : 'text-slate-100'}`}>
+                <div className="flex items-center gap-2 md:gap-6">
+                    <div className="px-2 md:px-4 py-1.5 rounded-md flex items-center gap-1.5 md:gap-2 bg-slate-800 border border-slate-700">
+                        <Clock className={`w-3.5 h-3.5 md:w-4 md:h-4 ${timeLeft < 300 ? 'text-red-400 animate-pulse' : 'text-slate-300'}`} />
+                        <span className={`font-mono text-base md:text-lg font-bold tracking-wider ${timeLeft < 300 ? 'text-red-400' : 'text-slate-100'}`}>
                             {formatTime(timeLeft)}
                         </span>
                     </div>
+                    
                     <Button
-                        onClick={() => document.exitFullscreen?.().catch(() => { })}
                         variant="ghost"
                         size="sm"
-                        className="text-slate-400 hover:text-white"
+                        className="hidden md:flex text-slate-400 hover:text-white"
+                        onClick={() => document.exitFullscreen?.().catch(() => { })}
                     >
                         Exit Exam
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="lg:hidden text-white hover:bg-slate-800"
+                        onClick={() => setIsPaletteOpen(true)}
+                    >
+                        <Info className="w-5 h-5" />
                     </Button>
                 </div>
             </header>
 
             <main className="flex-1 flex overflow-hidden">
                 {/* Main Content Area */}
-                <div className="flex-1 flex flex-col p-6 lg:p-10 overflow-y-auto">
+                <div className="flex-1 flex flex-col p-4 md:p-6 lg:p-10 overflow-y-auto bg-white md:bg-slate-50">
                     {/* Header of Question */}
-                    <div className="flex justify-between items-center mb-8 pb-4 border-b">
+                    <div className="flex justify-between items-start md:items-center mb-6 md:mb-8 pb-4 border-b">
                         <div>
-                            <p className="text-primary font-bold uppercase text-xs tracking-widest mb-1">
+                            <p className="text-primary font-bold uppercase text-[10px] md:text-xs tracking-widest mb-1">
                                 Question {currentQuestion + 1} of {questions.length}
                             </p>
-                            <span className="text-[10px] font-black uppercase text-slate-400 border px-2 py-0.5 rounded mr-2">{currentQ?.type?.replace('_', ' ')}</span>
-                            {currentQ?.marks && <span className="text-[10px] font-black uppercase text-green-600 bg-green-50 px-2 py-0.5 rounded">+{currentQ.marks} Marks</span>}
+                            <div className="flex flex-wrap gap-2 items-center">
+                                <span className="text-[9px] md:text-[10px] font-black uppercase text-slate-400 border px-2 py-0.5 rounded">{currentQ?.type?.replace('_', ' ')}</span>
+                                {currentQ?.marks && <span className="text-[9px] md:text-[10px] font-black uppercase text-green-600 bg-green-50 px-2 py-0.5 rounded">+{currentQ.marks} Marks</span>}
+                            </div>
                         </div>
-                        <Button variant="outline" size="sm" onClick={toggleReviewMark} className={markedForReview[currentQuestion] ? "bg-purple-50 border-purple-200 text-purple-700" : ""}>
-                            <Flag className="w-4 h-4 mr-2" />
-                            {markedForReview[currentQuestion] ? "Marked for Review" : "Mark for Review"}
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={toggleReviewMark} 
+                            className={cn(
+                                "h-9 md:h-10 text-[10px] md:text-xs font-bold",
+                                markedForReview[currentQuestion] ? "bg-purple-50 border-purple-200 text-purple-700" : ""
+                            )}
+                        >
+                            <Flag className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1 md:mr-2" />
+                            <span className="hidden sm:inline">{markedForReview[currentQuestion] ? "Marked for Review" : "Mark for Review"}</span>
+                            <span className="sm:hidden">Mark</span>
                         </Button>
                     </div>
 
-                    <div className="flex-1 max-w-4xl mx-auto w-full">
-                        <div className="text-xl lg:text-2xl font-medium text-slate-800 leading-relaxed mb-10 prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: currentQ?.content?.[language] || currentQ?.content?.en || "" }} />
+                    <div className="flex-1 max-w-4xl mx-auto w-full pb-32 md:pb-0">
+                        <div className="text-lg md:text-2xl font-medium text-slate-800 leading-relaxed mb-6 md:mb-10 prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: currentQ?.content?.[language] || currentQ?.content?.en || "" }} />
 
                         {/* MCQ Rendering (Single & Multiple) */}
                         {["MCQ_SINGLE", "MCQ_MULTIPLE"].includes(currentQ?.type) && (
@@ -366,8 +397,8 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
                         )}
                     </div>
 
-                    {/* Bottom Navigation */}
-                    <div className="flex justify-between items-center mt-auto pt-8 max-w-4xl mx-auto w-full">
+                    {/* Desktop Bottom Navigation */}
+                    <div className="hidden md:flex justify-between items-center mt-auto pt-8 max-w-4xl mx-auto w-full">
                         <div className="flex gap-4">
                             <Button
                                 variant="outline"
@@ -406,48 +437,116 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
                     </div>
                 </div>
 
-                {/* Question Palette Sidebar */}
-                <aside className="w-80 bg-white border-l flex flex-col shrink-0">
-                    <div className="p-4 border-b bg-slate-50">
-                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Question Palette</h3>
-                        <div className="grid grid-cols-5 gap-2">
-                            {questions.map((q: any, idx: number) => {
-                                const isAnswered = !!answers[q._id];
-                                const isMarked = markedForReview[idx];
-                                const isActive = currentQuestion === idx;
+                {/* Mobile Floating Controls */}
+                <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t flex gap-3 z-40 bg-white/80 backdrop-blur-md">
+                    <Button
+                        variant="outline"
+                        disabled={currentQuestion === 0}
+                        onClick={() => setCurrentQuestion(prev => prev - 1)}
+                        className="flex-1 h-12 font-bold"
+                    >
+                        <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        onClick={() => {
+                            const newAnswers = { ...answers };
+                            delete newAnswers[currentQ._id];
+                            setAnswers(newAnswers);
+                        }}
+                        className="flex-1 h-12 font-bold text-slate-400"
+                    >
+                        Clear
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            if (currentQuestion < questions.length - 1) {
+                                setCurrentQuestion(prev => prev + 1);
+                            } else {
+                                handleSubmit();
+                            }
+                        }}
+                        className="flex-[2] h-12 font-black bg-primary text-white shadow-lg shadow-primary/20"
+                    >
+                        {currentQuestion === questions.length - 1 ? "Submit" : "Next"}
+                        {currentQuestion < questions.length - 1 && <ChevronRight className="ml-2 w-4 h-4" />}
+                    </Button>
+                </div>
 
-                                let stateClass = "bg-slate-100 text-slate-500 border-slate-200 hover:border-slate-300"; // Not visited
-                                if (isActive) stateClass = "bg-primary text-white border-primary shadow-md shadow-primary/20";
-                                else if (isMarked && isAnswered) stateClass = "bg-purple-600 text-white border-purple-600";
-                                else if (isMarked) stateClass = "bg-purple-100 text-purple-700 border-purple-300";
-                                else if (isAnswered) stateClass = "bg-emerald-500 text-white border-emerald-500";
+                {/* Question Palette Sidebar (Responsive) */}
+                {/* Mobile Overlay */}
+                {isPaletteOpen && (
+                    <div 
+                        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] lg:hidden"
+                        onClick={() => setIsPaletteOpen(false)}
+                    />
+                )}
+                
+                <aside className={cn(
+                    "bg-white flex flex-col shrink-0 transition-transform duration-300 lg:transition-none",
+                    "fixed inset-y-0 right-0 w-80 z-[70] lg:static lg:w-80 lg:border-l lg:z-auto lg:translate-x-0",
+                    isPaletteOpen ? "translate-x-0" : "translate-x-full"
+                )}>
+                    <div className="p-4 border-b bg-slate-50 flex items-center justify-between">
+                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">Exam Overview</h3>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="lg:hidden text-slate-400"
+                            onClick={() => setIsPaletteOpen(false)}
+                        >
+                            <ChevronRight className="w-5 h-5" />
+                        </Button>
+                    </div>
+                    
+                    <div className="flex-1 overflow-y-auto">
+                        <div className="p-4 bg-slate-50/50">
+                            <h4 className="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest">Question Palette</h4>
+                            <div className="grid grid-cols-5 gap-2">
+                                {questions.map((q: any, idx: number) => {
+                                    const isAnswered = !!answers[q._id];
+                                    const isMarked = markedForReview[idx];
+                                    const isActive = currentQuestion === idx;
 
-                                return (
-                                    <button
-                                        key={q._id}
-                                        onClick={() => setCurrentQuestion(idx)}
-                                        className={`w-10 h-10 rounded font-bold text-xs flex items-center justify-center border transition-all ${stateClass}`}
-                                    >
-                                        {idx + 1}
-                                    </button>
-                                );
-                            })}
+                                    let stateClass = "bg-white text-slate-400 border-slate-100"; // Not visited
+                                    if (isActive) stateClass = "bg-primary text-white border-primary shadow-xl shadow-primary/30 scale-110 z-10";
+                                    else if (isMarked && isAnswered) stateClass = "bg-purple-600 text-white border-purple-600";
+                                    else if (isMarked) stateClass = "bg-purple-100 text-purple-700 border-purple-300";
+                                    else if (isAnswered) stateClass = "bg-emerald-500 text-white border-emerald-500";
+
+                                    return (
+                                        <button
+                                            key={q._id}
+                                            onClick={() => {
+                                                setCurrentQuestion(idx);
+                                                setIsPaletteOpen(false);
+                                            }}
+                                            className={cn(
+                                                "w-10 h-10 rounded-xl font-black text-xs flex items-center justify-center border transition-all hover:scale-105 active:scale-95",
+                                                stateClass
+                                            )}
+                                        >
+                                            {idx + 1}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="p-4 space-y-3 bg-white">
+                            <LegendItem color="bg-primary shadow-sm shadow-primary/20" label="Current" />
+                            <LegendItem color="bg-emerald-500 shadow-sm shadow-emerald-200" label="Answered" />
+                            <LegendItem color="bg-slate-100 border-slate-200" label="Not Answered" />
+                            <LegendItem color="bg-purple-100 border-purple-300" label="For Review" />
+                            <LegendItem color="bg-purple-600 shadow-sm shadow-purple-200" label="Answered & Marked" />
                         </div>
                     </div>
 
-                    <div className="p-4 flex-1 space-y-3 bg-slate-50">
-                        <LegendItem color="bg-primary border-primary" label="Current Question" />
-                        <LegendItem color="bg-emerald-500 border-emerald-500" label="Answered" />
-                        <LegendItem color="bg-slate-100 border-slate-200" label="Not Answered" />
-                        <LegendItem color="bg-purple-100 border-purple-300" label="Marked for Review" />
-                        <LegendItem color="bg-purple-600 border-purple-600" label="Answered & Marked" />
-                    </div>
-
-                    <div className="p-6 border-t bg-white">
+                    <div className="p-6 border-t bg-white sticky bottom-0">
                         <Button
                             onClick={handleSubmit}
                             disabled={isSubmitting}
-                            className="w-full h-14 text-white font-black text-lg bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-500/20"
+                            className="w-full h-14 text-white font-black text-lg bg-emerald-600 hover:bg-emerald-700 rounded-2xl shadow-2xl shadow-emerald-500/20 active:scale-95 transition-all"
                         >
                             {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : "Final Submit"}
                         </Button>

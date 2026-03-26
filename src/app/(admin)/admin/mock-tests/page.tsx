@@ -59,7 +59,7 @@ export default function MockTestDashboard() {
     ];
 
     return (
-        <div className="p-8 max-w-7xl mx-auto space-y-10 animate-in fade-in duration-500">
+        <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-10 animate-in fade-in duration-500">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
@@ -76,20 +76,20 @@ export default function MockTestDashboard() {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 {stats.map((stat, idx) => (
                     <motion.div 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.1 }}
                         key={stat.label} 
-                        className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm group hover:shadow-xl transition-all"
+                        className="bg-white p-5 md:p-8 rounded-3xl md:rounded-[2.5rem] border border-slate-100 shadow-sm group hover:shadow-xl transition-all"
                     >
-                        <div className={`w-14 h-14 ${stat.bg} ${stat.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                            <stat.icon className="w-7 h-7" />
+                        <div className={`w-10 h-10 md:w-14 md:h-14 ${stat.bg} ${stat.color} rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform`}>
+                            <stat.icon className="w-5 h-5 md:w-7 md:h-7" />
                         </div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{stat.label}</p>
-                        <p className="text-3xl font-black text-slate-900 mt-1">{loading ? "..." : stat.value}</p>
+                        <p className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] text-slate-400">{stat.label}</p>
+                        <p className="text-xl md:text-3xl font-black text-slate-900 mt-1">{loading ? "..." : stat.value}</p>
                     </motion.div>
                 ))}
             </div>
@@ -101,11 +101,11 @@ export default function MockTestDashboard() {
                         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-primary/10 transition-colors" />
                         
                         <div className="relative z-10">
-                            <h2 className="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
-                                <Sparkles className="w-7 h-7 text-amber-500" />
+                            <h2 className="text-xl md:text-2xl font-black text-slate-900 mb-6 flex items-center gap-2 md:gap-3">
+                                <Sparkles className="w-6 h-6 md:w-7 md:h-7 text-amber-500" />
                                 Assessment Ecosystem
                             </h2>
-                            <div className="grid sm:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                                 {[
                                     { label: "Question Bank", desc: "Manage 5,000+ MCQs & Theory", href: "/admin/mock-tests/questions", icon: BrainCircuit },
                                     { label: "Mock Quizzes", desc: "Live exam papers & sets", href: "/admin/mock-tests/list", icon: FileText },
@@ -136,19 +136,19 @@ export default function MockTestDashboard() {
                         </div>
                         <div className="space-y-4">
                             {upcomingTests.map((test) => (
-                                <div key={test.title} className="flex items-center justify-between p-6 rounded-3xl bg-slate-50 border border-transparent hover:border-slate-200 hover:bg-white transition-all">
+                                <div key={test.title} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 md:p-6 rounded-3xl bg-slate-50 border border-transparent hover:border-slate-200 hover:bg-white transition-all gap-4">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center font-black text-primary shadow-sm">
+                                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center font-black text-primary shadow-sm shrink-0">
                                             {test.duration}
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-slate-900">{test.title}</h4>
-                                            <p className="text-xs text-slate-500 font-medium">{test.course}</p>
+                                            <h4 className="font-bold text-slate-900 text-sm md:text-base">{test.title}</h4>
+                                            <p className="text-[10px] md:text-xs text-slate-500 font-medium">{test.course}</p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="font-black text-slate-900">{test.date}</p>
-                                        <p className="text-[10px] uppercase font-black tracking-widest text-emerald-500">Starts 9:00 AM</p>
+                                    <div className="text-left sm:text-right border-t sm:border-none pt-3 sm:pt-0">
+                                        <p className="font-black text-slate-900 text-sm md:text-base">{test.date}</p>
+                                        <p className="text-[9px] md:text-[10px] uppercase font-black tracking-widest text-emerald-500">Starts 9:00 AM</p>
                                     </div>
                                 </div>
                             ))}

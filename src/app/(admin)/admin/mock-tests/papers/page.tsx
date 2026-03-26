@@ -68,21 +68,21 @@ export default function PaperSetsPage() {
     );
 
     return (
-        <div className="space-y-8 p-8 max-w-[1600px] mx-auto animate-in fade-in duration-500">
+        <div className="space-y-6 md:space-y-8 p-4 md:p-8 max-w-[1600px] mx-auto animate-in fade-in duration-500">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-                        <Layers className="w-10 h-10 text-primary" />
-                        Paper Set Templates
+                    <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight flex items-center gap-2 md:gap-3">
+                        <Layers className="w-8 h-8 md:w-10 md:h-10 text-primary" />
+                        Paper Blueprints
                     </h1>
-                    <p className="text-slate-500 mt-2 font-medium">Create blueprint collections of questions for your mock assessments.</p>
+                    <p className="text-slate-500 mt-2 font-medium text-sm md:text-base">Create and manage your blueprint collections.</p>
                 </div>
                 
                 <Link href="/admin/mock-tests/papers/new">
-                    <Button className="rounded-2xl h-14 font-black gap-2 px-8 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">
+                    <Button className="w-full sm:w-auto rounded-2xl h-12 md:h-14 font-black gap-2 px-8 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">
                         <Plus className="w-5 h-5" />
-                        Build New Paper Set
+                        New Blueprint
                     </Button>
                 </Link>
             </div>
@@ -176,11 +176,11 @@ export default function PaperSetsPage() {
                                     </div>
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Template Ready</span>
                                 </div>
-                                <Link href={`/admin/mock-tests/papers/preview/${ps._id}`}>
-                                    <Button variant="ghost" className="rounded-xl h-10 gap-2 font-black text-xs">
+                                <Button variant="ghost" className="rounded-xl h-10 gap-2 font-black text-xs" asChild>
+                                    <Link href={`/admin/mock-tests/papers/preview/${ps._id}`}>
                                         Manage Questions <ChevronRight className="w-4 h-4" />
-                                    </Button>
-                                </Link>
+                                    </Link>
+                                </Button>
                             </div>
                         </div>
                     ))

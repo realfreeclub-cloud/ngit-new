@@ -97,7 +97,7 @@ export default function StudentNavbar({ onMenuToggle }: StudentNavbarProps) {
                                 <div className="text-left hidden lg:block">
                                     <p className="text-sm font-black text-slate-900 leading-none group-hover:text-primary transition-colors flex items-center gap-1.5">
                                         {session?.user?.name || "Student"}
-                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                     </p>
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1.5">
                                         Learner ID #4920

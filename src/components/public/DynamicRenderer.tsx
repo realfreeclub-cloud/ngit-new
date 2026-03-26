@@ -22,7 +22,7 @@ import PublicResultsGrid from "./PublicResultsGrid";
 import PublicExamsGrid from "./PublicExamsGrid";
 
 // Add some placeholder or custom mapping
-export default function DynamicRenderer({ sections, staticFallback, extraData }: { sections: any[], staticFallback?: React.ReactNode, extraData?: any }) {
+export default function DynamicRenderer({ sections, staticFallback, extraData, session }: { sections: any[], staticFallback?: React.ReactNode, extraData?: any, session?: any }) {
     if (!sections || sections.length === 0) {
         return <>{staticFallback}</>;
     }
@@ -77,7 +77,7 @@ export default function DynamicRenderer({ sections, staticFallback, extraData }:
                     case "PublicResultsGrid":
                         return <PublicResultsGrid key={props.key} data={section} results={extraData?.publicResults || []} />;
                     case "PublicExamsGrid":
-                        return <PublicExamsGrid key={props.key} data={section} exams={extraData?.publicExams || []} />;
+                        return <PublicExamsGrid key={props.key} data={section} exams={extraData?.publicExams || []} session={session} />;
                     case "NotificationScroller": {
                         let notifications = [];
                         if (extraData?.notices && extraData.notices.length > 0) {

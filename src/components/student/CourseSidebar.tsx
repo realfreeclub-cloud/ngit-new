@@ -184,8 +184,8 @@ export default function CourseSidebar({
                 })}
             </div>
 
-            {/* Completion Banner */}
-            {progress === 100 && (
+            {/* Completion Banner — Hidden on the overview page to avoid duplication with the main hero banner */}
+            {(progress === 100 && activeLessonId) && (
                 <div className="m-3 p-4 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl text-white text-center space-y-2 shadow-lg shadow-emerald-200">
                     <p className="text-2xl">🎉</p>
                     <p className="font-black text-sm">Course Complete!</p>

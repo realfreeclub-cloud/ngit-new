@@ -9,10 +9,12 @@ import { useSession } from "next-auth/react";
 interface PublicExamsGridProps {
     exams: any[];
     data?: any;
+    session?: any;
 }
 
-export default function PublicExamsGrid({ exams, data }: PublicExamsGridProps) {
-    const { data: session } = useSession();
+export default function PublicExamsGrid({ exams, data, session: propSession }: PublicExamsGridProps) {
+    const { data: clientSession } = useSession();
+    const session = propSession || clientSession;
     const title = data?.section_name || "Mock Test Performance Hub";
     const subtitle = data?.subtitle || "Assessment Engine";
     const description = data?.description || "Challenge your intellect with our curated practice modules designed to simulate high-stakes professional environments.";

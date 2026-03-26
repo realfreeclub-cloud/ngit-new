@@ -26,8 +26,11 @@ import { getGalleryImages } from "@/app/actions/upload";
 import { getPublicResults as getOldResults, getPublicExams } from "@/app/actions/results";
 import { getPublicMockTestResults } from "@/app/actions/mockTestResults";
 import { getNotices } from "@/app/actions/notice";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export default async function PublicHomePage() {
+    const session = await getServerSession(authOptions);
     const [slides, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, noticesRes, dynamicData, resultsRes, examsRes] = await Promise.all([
         getCMSContent("HOME_SLIDER"),
         getCMSContent("HOME_STATS"),
@@ -72,8 +75,10 @@ export default async function PublicHomePage() {
                     gallery: galleryImages,
                     publicResults: firstSectionResults as any[],
                     publicExams: publicExams,
-                    notices: noticesRes.success ? noticesRes.notices : []
+                    notices: noticesRes.success ? noticesRes.notices : [],
+                    session: session
                 }}
+                session={session}
                 staticFallback={
                     <>
                         {/* Hero Section */}

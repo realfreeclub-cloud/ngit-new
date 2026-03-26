@@ -281,4 +281,44 @@ export async function getAttendanceByDate(date: string, batchId?: string) {
     return getAllAttendance(date, batchId);
 }
 
+export async function markSingleStudentAttendance(studentId: string, status: AttendanceStatus, batchId: string) {
+    try {
+        await connectDB();
+        const session = await getServerSession(authOptions);
+        if (!session?.user || session.user.role !== "ADMIN") {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const todayEnd = new Date();
+        todayEnd.setHours(23, 59, 59, 999);
+
+        const attendanceDate = new Date();
+        attendanceDate.setHours(12, 0, 0, 0);
+
+        await Attendance.findOneAndUpdate(
+            { 
+                studentId, 
+                batchId, 
+                date: { $gte: todayStart, $lte: todayEnd } 
+            },
+            {
+                $set: {
+                    status,
+                    markedBy: session.user.id,
+                    date: attendanceDate
+                }
+            },
+            { upsert: true, new: true }
+        );
+
+        revalidatePath("/admin/attendance");
+        return { success: true };
+    } catch (error) {
+        console.error("Mark Single Attendance Error:", error);
+        return { success: false, error: "Failed to mark attendance" };
+    }
+}
+
 // Keep older compatibility calls if needed, but we are rewriting.
