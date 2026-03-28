@@ -65,6 +65,7 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                                 src={safeImage}
                                 alt={block.title || "Education Background"}
                                 fill
+                                sizes="100vw"
                                 className="object-cover scale-105 transition-opacity"
                                 style={{ opacity: imageOp }}
                                 priority={idx === 0}
@@ -158,56 +159,37 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                                 <div className="w-64 h-64 bg-primary/20 rounded-full blur-[100px] animate-pulse" />
                             </div>
 
-                            {/* Floating Stats Card 1 */}
-                            <motion.div
-                                animate={{ y: [0, -20, 0] }}
-                                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                                className="absolute top-10 right-10 p-6 rounded-[2.5rem] bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl group hover:bg-white/10 transition-colors cursor-default"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center text-primary shadow-inner">
-                                        <TrendingUp className="w-7 h-7" />
-                                    </div>
-                                    <div>
-                                        <p className="text-3xl font-black text-white">15+</p>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Years Experience</p>
-                                    </div>
-                                </div>
-                            </motion.div>
+                            {/* Floating Stats Cards */}
+                            {(() => {
+                                const extra = typeof heroData?.extra_data === 'string' ? JSON.parse(heroData.extra_data || "{}") : (heroData?.extra_data || {});
+                                const stats = extra.floating_stats || [
+                                    { label: "Years Experience", value: "15+", icon: 'TrendingUp', color: "text-primary", bg: "bg-primary/20", pos: "top-10 right-10", delay: 0 },
+                                    { label: "Students Trained", value: "5000+", icon: 'Users', color: "text-secondary", bg: "bg-secondary/20", pos: "bottom-20 left-0", delay: 1 },
+                                    { label: "Success Rate", value: "98%", icon: 'Award', color: "text-emerald-400", bg: "bg-emerald-500/20", pos: "bottom-40 right-4", delay: 2 }
+                                ];
 
-                            {/* Floating Stats Card 2 */}
-                            <motion.div
-                                animate={{ y: [0, 20, 0] }}
-                                transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                                className="absolute bottom-20 left-0 p-6 rounded-[2.5rem] bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl group hover:bg-white/10 transition-colors cursor-default"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-2xl bg-secondary/20 flex items-center justify-center text-secondary shadow-inner">
-                                        <Users className="w-7 h-7" />
-                                    </div>
-                                    <div>
-                                        <p className="text-3xl font-black text-white">5000+</p>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Students Trained</p>
-                                    </div>
-                                </div>
-                            </motion.div>
-
-                            {/* Floating Stats Card 3 */}
-                            <motion.div
-                                animate={{ scale: [1, 1.05, 1] }}
-                                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-                                className="absolute bottom-40 right-4 p-6 rounded-[2.5rem] bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl cursor-default"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-inner">
-                                        <Award className="w-7 h-7" />
-                                    </div>
-                                    <div>
-                                        <p className="text-3xl font-black text-white">98%</p>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Success Rate</p>
-                                    </div>
-                                </div>
-                            </motion.div>
+                                return stats.map((stat: any, idx: number) => {
+                                    const Icon = stat.icon === 'Users' ? Users : stat.icon === 'Award' ? Award : TrendingUp;
+                                    return (
+                                        <motion.div
+                                            key={idx}
+                                            animate={idx === 2 ? { scale: [1, 1.05, 1] } : { y: idx === 0 ? [0, -20, 0] : [0, 20, 0] }}
+                                            transition={{ duration: 5 + idx, repeat: Infinity, ease: "easeInOut", delay: stat.delay || 0 }}
+                                            className={cn("absolute p-6 rounded-[2.5rem] bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl group hover:bg-white/10 transition-colors cursor-default", stat.pos)}
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner", stat.bg || "bg-primary/20", stat.color || "text-primary")}>
+                                                    <Icon className="w-7 h-7" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-3xl font-black text-white">{stat.value}</p>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    );
+                                });
+                            })()}
                         </div>
                     </div>
                 </div>

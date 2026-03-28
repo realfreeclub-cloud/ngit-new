@@ -29,9 +29,12 @@ import { getNotices } from "@/app/actions/notice";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+import { listBlogPosts } from "@/app/actions/blog";
+import BlogSection from "@/components/public/BlogSection";
+
 export default async function PublicHomePage() {
     const session = await getServerSession(authOptions);
-    const [slides, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, noticesRes, dynamicData, resultsRes, examsRes] = await Promise.all([
+    const [slides, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, noticesRes, dynamicData, resultsRes, examsRes, blogRes] = await Promise.all([
         getCMSContent("HOME_SLIDER"),
         getCMSContent("HOME_STATS"),
         getCMSContent("HOME_ABOUT"),
@@ -42,7 +45,8 @@ export default async function PublicHomePage() {
         getNotices(false), // Fetch active notices from DB
         getDynamicPageData("home"),
         getPublicMockTestResults(),
-        getPublicExams()
+        getPublicExams(),
+        listBlogPosts({ status: "PUBLISHED", limit: 3 })
     ]);
 
     const facultyMembers = (facultyRes.success ? facultyRes.faculty : []).slice(0, 6);
@@ -52,6 +56,7 @@ export default async function PublicHomePage() {
     const publicResultsGrouped = resultsRes.success ? (resultsRes as any).sections : {};
     const firstSectionResults = (Object.values(publicResultsGrouped)[0] as any[] || []).slice(0, 6);
     const publicExams = ((examsRes as any)?.success ? (examsRes as any).exams : []).slice(0, 6);
+    const publicBlogs = (blogRes.success ? blogRes.data.posts : []).slice(0, 3);
 
     const cmsSections = dynamicData.success && dynamicData.sections ? dynamicData.sections : [];
 
@@ -75,6 +80,7 @@ export default async function PublicHomePage() {
                     gallery: galleryImages,
                     publicResults: firstSectionResults as any[],
                     publicExams: publicExams,
+                    blogs: publicBlogs,
                     notices: noticesRes.success ? noticesRes.notices : [],
                     session: session
                 }}
@@ -119,6 +125,9 @@ export default async function PublicHomePage() {
 
                         {/* Achievements Section */}
                         <AchievementsSection />
+
+                        {/* Blog Section */}
+                        <BlogSection blogs={publicBlogs} />
 
                         {/* Courses Section */}
                         <CoursesSection courses={publicCourses} />

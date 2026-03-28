@@ -205,7 +205,7 @@ export default function PublicExamsPage() {
                                 </Button>
                             </Link>
                             <Link href="/contact">
-                                <Button variant="outline" className="h-16 px-10 rounded-2xl border-white/30 text-white font-black text-lg hover:bg-white/10">
+                                <Button variant={null} className="h-16 px-10 rounded-2xl border-2 border-white/30 bg-transparent text-white font-black text-lg hover:bg-white/10 transition-colors">
                                     Contact Admissions
                                 </Button>
                             </Link>

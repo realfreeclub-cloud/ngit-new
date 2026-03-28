@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
+import { sanitizeHtml } from "@/lib/sanitizer";
 
 export default function CourseDetailClient({ course, lessons }: { course: any, lessons: any[] }) {
     const router = useRouter();
@@ -41,10 +42,10 @@ export default function CourseDetailClient({ course, lessons }: { course: any, l
     const handleEnroll = async () => {
         if (!course) return;
         setIsProcessing(true);
-        const res = await initiatePayment(course.slug || course._id);
+        const res = await initiatePayment({ courseId: course.slug || course._id });
 
         if (!res.success) {
-            if (res.error === "Unauthorized") {
+            if (res.code === "UNAUTHORIZED") {
                 toast.error("Please login to enroll.");
                 const callbackUrl = encodeURIComponent(`${window.location.pathname}?enroll=true`);
                 router.push(`/student/login?callbackUrl=${callbackUrl}`);
@@ -55,7 +56,9 @@ export default function CourseDetailClient({ course, lessons }: { course: any, l
             return;
         }
 
-        if (res.instant) {
+        const data = res.data;
+
+        if (data.instant) {
             toast.success("Enrolled successfully!");
             router.push(`/student`);
             router.refresh();
@@ -64,44 +67,44 @@ export default function CourseDetailClient({ course, lessons }: { course: any, l
         }
 
         const options = {
-            key: res.key || "rzp_test_dummy",
-            amount: res.amount,
-            currency: res.currency,
+            key: data.key || "rzp_test_dummy",
+            amount: data.amount,
+            currency: data.currency,
             name: "NGIT Institute",
             description: `Enrolling in ${course.title}`,
-            order_id: res.orderId,
+            order_id: data.orderId,
             handler: async (response: any) => {
                 // If dummy mode, we might not get real signature but we'll try verification
-                const verifyRes = await verifyPayment(
-                    response.razorpay_order_id || res.orderId,
-                    response.razorpay_payment_id || "pay_dummy_123",
-                    response.razorpay_signature || "mock_signature_success"
-                );
+                const verifyRes = await verifyPayment({
+                    razorpayOrderId: response.razorpay_order_id || data.orderId,
+                    razorpayPaymentId: response.razorpay_payment_id || "pay_dummy_123",
+                    razorpaySignature: response.razorpay_signature || "mock_signature_success"
+                });
 
                 if (verifyRes.success) {
                     toast.success("Enrollment successful!");
                     router.push(`/student`);
                     router.refresh();
                 } else {
-                    toast.error("Payment verification failed");
+                    toast.error(verifyRes.error || "Payment verification failed");
                 }
             },
             prefill: {
-                name: res.userName,
-                email: res.userEmail,
+                name: data.userName,
+                email: data.userEmail,
             },
             theme: { color: "#2563eb" },
         };
 
         // If orderId starts with order_mock, simulate the Razorpay opening and success
-        if (res.orderId?.startsWith("order_mock_")) {
+        if (data.orderId?.startsWith("order_mock_")) {
             setTimeout(async () => {
                 toast.info("Simulating dummy payment...");
-                const verifyRes = await verifyPayment(
-                    res.orderId,
-                    "pay_dummy_123",
-                    "mock_signature_success"
-                );
+                const verifyRes = await verifyPayment({
+                    razorpayOrderId: data.orderId,
+                    razorpayPaymentId: "pay_dummy_123",
+                    razorpaySignature: "mock_signature_success"
+                });
                 if (verifyRes.success) {
                     toast.success("Successfully Enrolled (Sandbox Mode)");
                     router.push(`/student`);
@@ -143,7 +146,7 @@ export default function CourseDetailClient({ course, lessons }: { course: any, l
                             <div className="flex flex-wrap items-center gap-8 py-6 border-y border-slate-200">
                                 <div className="flex items-center gap-3">
                                     <div className="relative w-12 h-12 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-md">
-                                        <Image src={course.instructorIds?.[0]?.image || "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1974"} alt="Instructor" fill className="object-cover" />
+                                        <Image src={course.instructorIds?.[0]?.image || "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1974"} alt="Instructor" fill sizes="48px" className="object-cover" />
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Instructor</p>
@@ -169,7 +172,7 @@ export default function CourseDetailClient({ course, lessons }: { course: any, l
                             <div className="bg-white rounded-[3rem] border-8 border-slate-50 shadow-2xl p-8 space-y-8 overflow-hidden relative group">
                                 <div className="aspect-video rounded-3xl bg-slate-900 flex items-center justify-center overflow-hidden relative">
                                     {course.thumbnail && (
-                                        <Image src={course.thumbnail} fill className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-700" alt="thumbnail" />
+                                        <Image src={course.thumbnail} fill sizes="(max-width: 768px) 100vw, 50vw" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-700" alt="thumbnail" />
                                     )}
                                     <PlayCircle className="w-20 h-20 text-white/80 group-hover:text-white group-hover:scale-110 transition-all z-10" />
                                     <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -324,7 +327,7 @@ export default function CourseDetailClient({ course, lessons }: { course: any, l
                                 <h2 className="text-4xl font-black text-slate-900 tracking-tight">Enrollment instructions</h2>
                                 <div className="p-10 rounded-[2.5rem] bg-indigo-50/50 border-2 border-dashed border-indigo-100/50 leading-relaxed text-slate-600 font-medium">
                                     {course.instructions ? (
-                                        <div dangerouslySetInnerHTML={{ __html: course.instructions.replace(/\n/g, '<br/>') }} />
+                                        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(course.instructions.replace(/\n/g, '<br/>')) }} />
                                     ) : (
                                         <p className="italic opacity-60">
                                             Follow the standard registration process. Once payment is confirmed, you'll gain instant access to all learning materials, recorded sessions, and community forums.
@@ -341,7 +344,7 @@ export default function CourseDetailClient({ course, lessons }: { course: any, l
                                      {course.instructorIds?.map((inst: any) => (
                                          <div key={inst._id} className="flex flex-col md:flex-row gap-8 items-center md:items-start">
                                              <div className="relative w-32 h-32 rounded-[2.5rem] bg-slate-200 overflow-hidden shrink-0 shadow-2xl border-4 border-white">
-                                                 <Image src={inst.image || "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1974"} fill className="object-cover" alt="inst" />
+                                                 <Image src={inst.image || "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1974"} fill sizes="128px" className="object-cover" alt="inst" />
                                              </div>
                                              <div className="space-y-4 text-center md:text-left">
                                                   <h3 className="text-2xl font-black text-slate-900">{inst.name}</h3>

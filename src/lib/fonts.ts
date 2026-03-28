@@ -6,7 +6,9 @@ import { NextResponse } from "next/server";
  * that occurs when passing raw Node.js Buffers during Server-Side Rendering.
  */
 export async function getGoogleFontDataUrl(family: string): Promise<string> {
-    const url = `https://fonts.googleapis.com/css?family=${family.replace(/ /g, '+')}:400&subset=latin`;
+    // Sanitize family name to prevent SSRF or injection
+    const sanitizedFamily = family.replace(/[^a-zA-Z0-9 ]/g, '');
+    const url = `https://fonts.googleapis.com/css?family=${sanitizedFamily.replace(/ /g, '+')}:400&subset=latin`;
     
     const cssResponse = await fetch(url, {
         headers: {

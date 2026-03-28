@@ -34,7 +34,7 @@ export default async function PublicCoursesPage() {
                 </div>
             </section>
 
-            <CoursesSection courses={publicCourses} />
+            <CoursesSection courses={publicCourses} hideExplorer={true} />
         </div>
     );
 
@@ -43,7 +43,7 @@ export default async function PublicCoursesPage() {
             <DynamicRenderer 
                 sections={cmsSections} 
                 staticFallback={staticFallbackContent} 
-                extraData={{ courses: publicCourses }}
+                extraData={{ courses: publicCourses, hideExplorer: true }}
             />
         </div>
     );

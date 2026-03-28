@@ -1,0 +1,89 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { z } from "zod";
+import { UserRole } from "@/models/User";
+import { headers } from "next/headers";
+import { isRateLimited } from "./rate-limit";
+
+export type Role = UserRole | "ANY" | "GUEST";
+
+interface ActionOptions<T extends z.ZodType> {
+    schema?: T;
+    roles?: Role[];
+    requireAuth?: boolean;
+    rateLimit?: {
+        limit: number;
+        windowMs: number;
+    };
+}
+
+export type ActionResponse<T> =
+    | { success: true; data: T }
+    | { success: false; error: string; code?: string };
+
+export function createSafeAction<T extends z.ZodType, R>(
+    options: ActionOptions<T>,
+    handler: (data: z.infer<T>, session: any) => Promise<R>
+) {
+    return async (input: z.infer<T>): Promise<ActionResponse<R>> => {
+        try {
+            // 1. Identify User/Client for Rate Limiting
+            const headerList = await headers();
+            const ip = headerList.get("x-forwarded-for") || "anonymous";
+            
+            // 2. Authentication Check
+            const session = await getServerSession(authOptions);
+            const isAuthenticated = !!session?.user;
+
+            if (options.requireAuth && !isAuthenticated) {
+                return { success: false, error: "Authentication required", code: "UNAUTHORIZED" };
+            }
+
+            // 3. Authorization (Role) Check
+            if (options.roles && options.roles.length > 0) {
+                const userRole = session?.user?.role as Role;
+                const hasRole = options.roles.includes("ANY") || options.roles.includes(userRole);
+
+                if (!hasRole && (options.requireAuth || isAuthenticated)) {
+                    return { success: false, error: "Insufficient permissions", code: "FORBIDDEN" };
+                }
+            }
+
+            // 4. Rate Limiting Check
+            if (options.rateLimit) {
+                const identifier = isAuthenticated ? session!.user.id : ip;
+                if (isRateLimited(identifier, options.rateLimit)) {
+                    return { success: false, error: "Too many requests. Please try again later.", code: "RATE_LIMITED" };
+                }
+            }
+
+            // 5. Input Validation
+            let validatedData = input;
+            if (options.schema) {
+                const result = options.schema.safeParse(input);
+                if (!result.success) {
+                    const errorMessage = result.error.errors
+                        .map((e) => `${e.path.join(".")}: ${e.message}`)
+                        .join(", ");
+                    return { success: false, error: `Validation failed: ${errorMessage}`, code: "VALIDATION_ERROR" };
+                }
+                validatedData = result.data;
+            }
+
+            // 6. Execute Handler
+            const data = await handler(validatedData, session);
+
+            return { success: true, data };
+        } catch (error: any) {
+            console.error("Action Error:", error);
+            
+            // Production error handling - hide internal details
+            const isProduction = process.env.NODE_ENV === "production";
+            const message = isProduction 
+                ? "An internal server error occurred. Please try again later."
+                : error.message || "An error occurred";
+
+            return { success: false, error: message, code: "SERVER_ERROR" };
+        }
+    };
+}

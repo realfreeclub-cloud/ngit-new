@@ -2,21 +2,23 @@
 
 import connectDB from "@/lib/db";
 import Quiz from "@/models/Quiz";
-import Question from "@/models/Question";
 import Attempt from "@/models/Attempt";
 import Answer from "@/models/Answer";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import User, { UserRole } from "@/models/User";
 import Enrollment from "@/models/Enrollment";
-
 import PaidTestRequest, { RequestStatus } from "@/models/PaidTestRequest";
+import { z } from "zod";
+import { createSafeAction } from "@/lib/safe-action";
+import { RATE_LIMIT_CONFIGS } from "@/lib/rate-limit";
 
-export async function getAvailableQuizzes() {
-    try {
+const QuizIdSchema = z.object({
+    quizId: z.string().min(1)
+});
+
+export const getAvailableQuizzes = createSafeAction(
+    { requireAuth: true, roles: [UserRole.STUDENT, UserRole.ADMIN] },
+    async (_, session) => {
         await connectDB();
-        const session = await getServerSession(authOptions);
-        if (!session?.user) throw new Error("Unauthorized");
-
         const activeEnrollments = await Enrollment.find({ userId: session.user.id, isActive: true }).lean();
         const enrolledCourseIds = activeEnrollments.map(e => e.courseId);
 
@@ -39,24 +41,16 @@ export async function getAvailableQuizzes() {
             };
         });
 
-        return {
-            success: true,
-            quizzes: JSON.parse(JSON.stringify(quizzesWithAccess))
-        };
-    } catch (error) {
-        console.error("Get Quizzes Error:", error);
-        return { success: false, error: "Failed to load quizzes" };
+        return JSON.parse(JSON.stringify(quizzesWithAccess));
     }
-}
+);
 
-export async function getQuiz(quizId: string) {
-    try {
+export const getQuiz = createSafeAction(
+    { schema: QuizIdSchema, requireAuth: true, roles: [UserRole.STUDENT, UserRole.ADMIN] },
+    async ({ quizId }, session) => {
         await connectDB();
-        const session = await getServerSession(authOptions);
-        if (!session?.user) throw new Error("Unauthorized");
-
         const quiz = await Quiz.findById(quizId).populate("questions").lean();
-        if (!quiz) return { success: false, error: "Assessment not found in our records." };
+        if (!quiz) throw new Error("Assessment not found in our records.");
 
         // 2. Pricing/Access Check for Mock Tests
         if (quiz.isMockTest) {
@@ -66,11 +60,9 @@ export async function getQuiz(quizId: string) {
                     mockTestId: quizId,
                     status: RequestStatus.APPROVED 
                 });
-                if (!request) return { 
-                    success: false, 
-                    error: "ACCESS_DENIED", 
-                    message: "This is a premium mock test. Access must be approved by admin after payment."
-                };
+                if (!request) {
+                    throw new Error("ACCESS_DENIED: This is a premium mock test. Access must be approved by admin after payment.");
+                }
             }
         } else {
             // 3. Enrollment Check for Course-specific Quizzes
@@ -79,11 +71,9 @@ export async function getQuiz(quizId: string) {
                 courseId: quiz.courseId,
                 isActive: true
             });
-            if (!enrollment) return {
-                success: false,
-                error: "ENROLLMENT_REQUIRED",
-                message: "This assessment is part of a course you are not enrolled in."
-            };
+            if (!enrollment) {
+                throw new Error("ENROLLMENT_REQUIRED: This assessment is part of a course you are not enrolled in.");
+            }
         }
 
         const questionsList = (quiz.questions as any[]).map((q: any) => {
@@ -103,24 +93,22 @@ export async function getQuiz(quizId: string) {
             };
         }).filter(Boolean);
 
-        return {
-            success: true,
-            quiz: { ...JSON.parse(JSON.stringify(quiz)), questions: questionsList }
-        };
-    } catch (error: any) {
-        console.error("Get Quiz Error:", error);
-        return { success: false, error: "Failed to load quiz", message: String(error.message || error) };
+        return { ...JSON.parse(JSON.stringify(quiz)), questions: questionsList };
     }
-}
+);
 
-export async function submitQuiz(quizId: string, answers: Record<string, any>, timeTaken: number) {
-    try {
+const SubmitQuizSchema = z.object({
+    quizId: z.string().min(1),
+    answers: z.record(z.any()),
+    timeTaken: z.number().min(0)
+});
+
+export const submitQuiz = createSafeAction(
+    { schema: SubmitQuizSchema, requireAuth: true, roles: [UserRole.STUDENT, UserRole.ADMIN], rateLimit: RATE_LIMIT_CONFIGS.SENSITIVE },
+    async ({ quizId, answers, timeTaken }, session) => {
         await connectDB();
-        const session = await getServerSession(authOptions);
-        if (!session?.user) throw new Error("Unauthorized");
-
         const quiz = await Quiz.findById(quizId).populate("questions");
-        if (!quiz) return { success: false, error: "Quiz not found" };
+        if (!quiz) throw new Error("Quiz not found");
 
         let score = 0;
         let correctCount = 0;
@@ -140,7 +128,7 @@ export async function submitQuiz(quizId: string, answers: Record<string, any>, t
         });
 
         for (const question of (quiz.questions as any[])) {
-            if (!question) continue; // Skip missing/unpopulated questions
+            if (!question) continue;
             const userAnswer = answers[question._id?.toString()];
             let isCorrect = false;
             let marksAwarded = 0;
@@ -148,7 +136,6 @@ export async function submitQuiz(quizId: string, answers: Record<string, any>, t
             if (userAnswer === undefined || userAnswer === null || (Array.isArray(userAnswer) && userAnswer.length === 0)) {
                 unattemptedCount++;
             } else {
-                // Evaluation logic based on type
                 if (question.type === "MCQ_SINGLE") {
                     const correctOption = question.options.find((o: any) => o.isCorrect);
                     isCorrect = correctOption?._id.toString() === userAnswer;
@@ -162,7 +149,6 @@ export async function submitQuiz(quizId: string, answers: Record<string, any>, t
                 } else if (question.type === "TRUE_FALSE") {
                     isCorrect = userAnswer === (question.options?.[0]?.isCorrect ? "true" : "false");
                 } else if (question.type === "ASSERTION_REASON") {
-                    // Assuming numericAnswer for A-R matches option index 0-3
                     isCorrect = parseInt(userAnswer) === question.numericAnswer;
                 }
 
@@ -182,7 +168,7 @@ export async function submitQuiz(quizId: string, answers: Record<string, any>, t
                 questionId: question._id,
                 selectedOptionIds: Array.isArray(userAnswer) ? userAnswer : (userAnswer ? [userAnswer] : []),
                 numericAnswer: question.type === "NUMERIC" ? userAnswer : undefined,
-                timeTakenSeconds: 0, // Could be tracked per Q in future
+                timeTakenSeconds: 0,
                 evaluation: {
                     isEvaluated: true,
                     isCorrect,
@@ -196,37 +182,30 @@ export async function submitQuiz(quizId: string, answers: Record<string, any>, t
         await attempt.save();
 
         return {
-            success: true,
             attemptId: attempt._id.toString(),
             score,
             totalMarks,
             metrics: { correctCount, incorrectCount, unattemptedCount },
             isPassed: attempt.isPassed
         };
-
-    } catch (error) {
-        console.error("Submit Quiz Error:", error);
-        return { success: false, error: "Failed to submit quiz" };
     }
-}
+);
 
-export async function getQuizAnalysis(attemptId: string) {
-    try {
+const AttemptIdSchema = z.object({
+    attemptId: z.string().min(1)
+});
+
+export const getQuizAnalysis = createSafeAction(
+    { schema: AttemptIdSchema, requireAuth: true, roles: [UserRole.STUDENT, UserRole.ADMIN] },
+    async ({ attemptId }, session) => {
         await connectDB();
-        const session = await getServerSession(authOptions);
-        if (!session?.user) throw new Error("Unauthorized");
-
         const attempt = await Attempt.findById(attemptId).populate("quizId").lean();
 
-        if (!attempt) return { success: false, error: "Attempt not found" };
-        if (attempt.studentId.toString() !== session.user.id) return { success: false, error: "Unauthorized" };
+        if (!attempt) throw new Error("Attempt not found");
+        if (attempt.studentId.toString() !== session.user.id && session.user.role !== UserRole.ADMIN) {
+             throw new Error("Unauthorized access to result analysis");
+        }
 
-        return {
-            success: true,
-            attempt: JSON.parse(JSON.stringify(attempt))
-        };
-    } catch (error) {
-        console.error("Get Analysis Error:", error);
-        return { success: false, error: "Failed to load analysis" };
+        return JSON.parse(JSON.stringify(attempt));
     }
-}
+);

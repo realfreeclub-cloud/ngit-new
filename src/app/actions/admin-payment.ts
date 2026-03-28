@@ -3,22 +3,21 @@
 import connectDB from "@/lib/db";
 import Payment, { PaymentStatus } from "@/models/Payment";
 import Enrollment from "@/models/Enrollment";
-import User from "@/models/User";
-import Course from "@/models/Course";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import User, { UserRole } from "@/models/User";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { createSafeAction } from "@/lib/safe-action";
 
-export async function getAdminFeeData() {
-    try {
+export const getAdminFeeData = createSafeAction(
+    { roles: [UserRole.ADMIN], requireAuth: true },
+    async () => {
         await connectDB();
         // Force model registration
         await import("@/models/Course");
         await import("@/models/User");
-        await import("@/models/Lesson");
 
         // Find all users who are Students
-        const students = await User.find({ role: "STUDENT" })
+        const students = await User.find({ role: UserRole.STUDENT })
             .select("name email phone createdAt")
             .lean();
 
@@ -35,24 +34,23 @@ export async function getAdminFeeData() {
             .lean();
 
         return {
-            success: true,
             students: JSON.parse(JSON.stringify(students)),
             enrollments: JSON.parse(JSON.stringify(enrollments)),
             payments: JSON.parse(JSON.stringify(payments))
         };
-    } catch (error: any) {
-        return { success: false, error: error.message };
     }
-}
+);
 
-export async function addManualPayment(userId: string, courseId: string, amount: number) {
-    try {
+const ManualPaymentSchema = z.object({
+    userId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid User ID"),
+    courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Course ID"),
+    amount: z.number().min(0),
+});
+
+export const addManualPayment = createSafeAction(
+    { schema: ManualPaymentSchema, roles: [UserRole.ADMIN], requireAuth: true },
+    async ({ userId, courseId, amount }) => {
         await connectDB();
-        const session = await getServerSession(authOptions);
-
-        if (!session || session.user.role !== "ADMIN") {
-            throw new Error("Unauthorized");
-        }
 
         // Create a manual payment record
         const payment = await Payment.create({
@@ -75,26 +73,24 @@ export async function addManualPayment(userId: string, courseId: string, amount:
             });
         }
 
-        revalidatePath("/admin/players");
         revalidatePath("/admin/students/fees");
-        return { success: true, payment: JSON.parse(JSON.stringify(payment)) };
-    } catch (error: any) {
-        return { success: false, error: error.message };
+        return JSON.parse(JSON.stringify(payment));
     }
-}
+);
 
-export async function assignCourseOffline(studentId: string, courseId: string) {
-    try {
+const AssignCourseSchema = z.object({
+    studentId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Student ID"),
+    courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Course ID"),
+});
+
+export const assignCourseOffline = createSafeAction(
+    { schema: AssignCourseSchema, roles: [UserRole.ADMIN], requireAuth: true },
+    async ({ studentId, courseId }) => {
         await connectDB();
-        const session = await getServerSession(authOptions);
-
-        if (!session || session.user.role !== "ADMIN") {
-            throw new Error("Unauthorized");
-        }
 
         const existingEnrollment = await Enrollment.findOne({ userId: studentId, courseId });
         if (existingEnrollment) {
-            return { success: false, error: "Student is already enrolled in this course." };
+            throw new Error("Student is already enrolled in this course.");
         }
 
         // Create enrollment directly (unpaid / offline managed)
@@ -118,22 +114,16 @@ export async function assignCourseOffline(studentId: string, courseId: string) {
         revalidatePath("/admin/students/enrollments");
         revalidatePath("/admin/students/fees");
 
-        return { success: true, enrollment: JSON.parse(JSON.stringify(enrollment)) };
-    } catch (error: any) {
-        return { success: false, error: error.message };
+        return JSON.parse(JSON.stringify(enrollment));
     }
-}
+);
 
-export async function getGlobalPaymentsData() {
-    try {
+export const getGlobalPaymentsData = createSafeAction(
+    { roles: [UserRole.ADMIN], requireAuth: true },
+    async () => {
         await connectDB();
         await import("@/models/Course");
         await import("@/models/User");
-
-        const session = await getServerSession(authOptions);
-        if (!session || session.user.role !== "ADMIN") {
-            throw new Error("Unauthorized");
-        }
 
         const allPayments = await Payment.find({})
             .populate("userId", "name email")
@@ -165,13 +155,10 @@ export async function getGlobalPaymentsData() {
         });
 
         return {
-            success: true,
             totalRevenue,
             pendingCount,
             failedCount,
             payments: JSON.parse(JSON.stringify(formattedPayments))
         };
-    } catch (error: any) {
-        return { success: false, error: error.message };
     }
-}
+);
