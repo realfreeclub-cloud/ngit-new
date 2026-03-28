@@ -4,8 +4,9 @@ import { Calendar, User, Clock, Share2, Facebook, Twitter, Linkedin, ArrowLeft, 
 import Link from "next/link";
 import { Metadata } from "next";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-    const res = await getBlogPost({ slug: params.slug });
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+    const { slug } = await params;
+    const res = await getBlogPost({ slug });
     if (!res.success) return { title: "Post Not Found | NGIT" };
     const post = res.data;
     
@@ -24,8 +25,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     };
 }
 
-export default async function PublicBlogPostPage({ params }: { params: { slug: string } }) {
-    const res = await getBlogPost({ slug: params.slug });
+export default async function PublicBlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params;
+    const res = await getBlogPost({ slug });
     
     if (!res.success) {
         notFound();
