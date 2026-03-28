@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PublicBlogListPage() {
-    const res = await listBlogPosts({ status: "PUBLISHED", limit: 12 });
+    const res = await listBlogPosts({ status: "PUBLISHED", limit: 12, page: 1 });
     const posts = res.success ? res.data.posts : [];
 
     return (
