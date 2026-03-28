@@ -21,7 +21,7 @@ export interface ICourse extends Document {
 const CourseSchema = new Schema<ICourse>(
     {
         title: { type: String, required: true },
-        slug: { type: String, required: true, unique: true },
+        slug: { type: String, required: true },
         description: { type: String, required: true },
         thumbnail: { type: String, required: true },
         price: { type: Number, default: 0 },
@@ -36,6 +36,8 @@ const CourseSchema = new Schema<ICourse>(
     },
     { timestamps: true }
 );
+
+CourseSchema.index({ slug: 1 }, { unique: true });
 
 const Course: Model<ICourse> = mongoose.models.Course || mongoose.model<ICourse>("Course", CourseSchema);
 

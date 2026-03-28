@@ -4,18 +4,22 @@ import connectDB from "@/lib/db";
 import Course from "@/models/Course";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { UserRole } from "@/models/User";
 
 const CourseSchema = z.object({
     title: z.string().min(3),
     description: z.string().min(10),
-    price: z.number().min(0),
+    price: z.preprocess((val) => Number(val), z.number().min(0)), // Parse string to number
     category: z.string(),
     type: z.enum(["ONLINE", "OFFLINE"]).optional().default("ONLINE"),
     thumbnail: z.string().url(),
 });
 
-export async function createCourse(data: z.infer<typeof CourseSchema>) {
-    try {
+import { createSafeAction } from "@/lib/safe-action";
+
+export const createCourse = createSafeAction(
+    { schema: CourseSchema, roles: [UserRole.ADMIN], requireAuth: true },
+    async (data) => {
         await connectDB();
 
         const slug = data.title.toLowerCase().replace(/ /g, "-") + "-" + Date.now();
@@ -26,11 +30,9 @@ export async function createCourse(data: z.infer<typeof CourseSchema>) {
         });
 
         revalidatePath("/admin/courses");
-        return { success: true, course: JSON.parse(JSON.stringify(course)) };
-    } catch (error: any) {
-        return { success: false, error: error.message };
+        return JSON.parse(JSON.stringify(course));
     }
-}
+);
 
 export async function getCourses(page: number = 1, limit: number = 20) {
     try {

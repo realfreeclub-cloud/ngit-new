@@ -13,6 +13,7 @@ import ContactSection from "./ContactSection";
 import TrustIndicators from "./TrustIndicators";
 import NotificationScroller from "./NotificationScroller";
 import DirectorMessageSection from "./DirectorMessageSection";
+import BlogSection from "./BlogSection";
 
 import CourseGrid from "./CourseGrid";
 import FacultyGrid from "./FacultyGrid";
@@ -30,23 +31,23 @@ export default function DynamicRenderer({ sections, staticFallback, extraData, s
     return (
         <>
             {sections.filter((s: any) => s.is_active).map((section: any, index: number) => {
-                const props = { key: section._id || index, data: section, blocks: section.blocks };
+                const sectionKey = section._id || index;
 
                 switch (section.section_type) {
                     case "HeroSection":
-                        return <HeroSection {...props} />;
+                        return <HeroSection key={sectionKey} blocks={section.blocks} />;
                     case "AboutSection":
-                        return <AboutSection {...props} />;
+                        return <AboutSection key={sectionKey} data={section} blocks={section.blocks} />;
                     case "WhyChooseSection":
-                        return <WhyChooseSection {...props} />;
+                        return <WhyChooseSection key={sectionKey} data={section} blocks={section.blocks} />;
                     case "CourseGrid":
-                        return <CourseGrid {...props} />;
+                        return <CourseGrid key={sectionKey} data={section} blocks={section.blocks} />;
                     case "CoursesSection":
-                        return <CoursesSection {...props} courses={extraData?.courses || []} />;
+                        return <CoursesSection key={sectionKey} data={section} courses={extraData?.courses || []} hideExplorer={extraData?.hideExplorer} />;
                     case "FacultyGrid":
-                        return <FacultyGrid {...props} />;
+                        return <FacultyGrid key={sectionKey} data={section} blocks={section.blocks} />;
                     case "FacultySection":
-                        return <FacultySection {...props} members={extraData?.faculty || []} />;
+                        return <FacultySection key={sectionKey} data={section} members={extraData?.faculty || []} />;
                     case "DirectorMessageSection": {
                         const members = extraData?.faculty || [];
                         const director = members.find((f: any) => 
@@ -54,30 +55,32 @@ export default function DynamicRenderer({ sections, staticFallback, extraData, s
                             f.position?.toLowerCase().includes("md") ||
                             f.name?.toLowerCase().includes("javed")
                         ) || members[0];
-                        return <DirectorMessageSection {...props} director={director} />;
+                        return <DirectorMessageSection key={sectionKey} data={section} director={director} />;
                     }
                     case "GalleryGrid":
-                        return <GalleryGrid {...props} />;
+                        return <GalleryGrid key={sectionKey} data={section} blocks={section.blocks} />;
                     case "GallerySection":
-                        return <GallerySection {...props} images={extraData?.gallery || []} />;
+                        return <GallerySection key={sectionKey} data={section} images={extraData?.gallery || []} />;
                     case "TestimonialSlider":
-                        return <TestimonialSlider {...props} />;
+                        return <TestimonialSlider key={sectionKey} data={section} blocks={section.blocks} />;
                     case "AchievementsSection":
-                        return <AchievementsSection {...props} />;
+                        return <AchievementsSection key={sectionKey} data={section} blocks={section.blocks} />;
                     case "CTASection":
-                        return <CTASection {...props} />;
+                        return <CTASection key={sectionKey} data={section} blocks={section.blocks} />;
                     case "RegistrationCTA":
-                        return <RegistrationCTA {...props} />;
+                        return <RegistrationCTA key={sectionKey} data={section} blocks={section.blocks} />;
                     case "ContactSection":
-                        return <ContactSection {...props} />;
+                        return <ContactSection key={sectionKey} data={section} blocks={section.blocks} />;
                     case "EventsSection":
-                        return <EventsSection {...props} />;
+                        return <EventsSection key={sectionKey} events={extraData?.events || []} />;
+                    case "BlogSection":
+                        return <BlogSection key={sectionKey} data={section} blogs={extraData?.blogs || []} />;
                     case "InfrastructureSection":
-                        return <InfrastructureSection {...props} />;
+                        return <InfrastructureSection key={sectionKey} data={section} blocks={section.blocks} />;
                     case "PublicResultsGrid":
-                        return <PublicResultsGrid key={props.key} data={section} results={extraData?.publicResults || []} />;
+                        return <PublicResultsGrid key={sectionKey} data={section} results={extraData?.publicResults || []} />;
                     case "PublicExamsGrid":
-                        return <PublicExamsGrid key={props.key} data={section} exams={extraData?.publicExams || []} session={session} />;
+                        return <PublicExamsGrid key={sectionKey} data={section} exams={extraData?.publicExams || []} session={session} />;
                     case "NotificationScroller": {
                         let notifications = [];
                         if (extraData?.notices && extraData.notices.length > 0) {
@@ -89,26 +92,26 @@ export default function DynamicRenderer({ sections, staticFallback, extraData, s
                                     link: n.link || `/notices`
                                 }));
                         } else {
-                            notifications = props.blocks?.map((b: any) => ({
+                            notifications = section.blocks?.map((b: any) => ({
                                 id: b._id || b.id,
                                 text: b.title || b.description || "Notification",
                                 link: b.button_link || b.image || ""
                             })) || [];
                         }
                         if (notifications.length === 0) return null;
-                        return <NotificationScroller key={props.key} notifications={notifications} />;
+                        return <NotificationScroller key={sectionKey} notifications={notifications} />;
                     }
                     case "TrustIndicators": {
-                        const stats = props.blocks?.map((b: any) => ({
+                        const stats = section.blocks?.map((b: any) => ({
                             label: b.title || "Stat",
                             value: b.subtitle || "0"
                         })) || [];
-                        return <TrustIndicators key={props.key} stats={stats} />;
+                        return <TrustIndicators key={sectionKey} stats={stats} />;
                     }
                     default:
                         // Fallback component
                         return (
-                            <section key={props.key} className="py-20 bg-slate-50 text-center">
+                            <section key={sectionKey} className="py-20 bg-slate-50 text-center">
                                 <h2 className="text-2xl font-bold mb-4">{section.section_name}</h2>
                                 <p className="text-slate-500">Component type '{section.section_type}' is currently not mapped.</p>
                             </section>

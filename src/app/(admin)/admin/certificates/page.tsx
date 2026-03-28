@@ -39,15 +39,15 @@ export default function AdminCertificatesPage() {
     const load = async () => {
         setLoading(true);
         const [cRes, crsData, fData] = await Promise.all([
-            getAdminCertificates(),
+            getAdminCertificates({}),
             getAllCourses(),
-            getFormData()
+            getFormData({})
         ]);
-        if (cRes.success) setCerts(cRes.certificates);
+        if (cRes.success) setCerts(cRes.data);
         setCourses(crsData.courses || []);
         if (fData.success) {
-            setStudents(fData.students || []);
-            setTemplates(fData.templates || []);
+            setStudents(fData.data.students || []);
+            setTemplates(fData.data.templates || []);
         }
         setLoading(false);
     };

@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { toast } from "sonner";
 import { getDetailedResult } from "@/app/actions/mockTestResults";
+import { sanitizeHtml } from "@/lib/sanitizer";
 
 export default function ResultAnalysisPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -203,7 +204,7 @@ export default function ResultAnalysisPage({ params }: { params: Promise<{ id: s
                                                 <p className={`text-sm font-black ${marks > 0 ? "text-emerald-600" : "text-rose-600"}`}>{marks > 0 ? `+${marks}` : marks} Marks</p>
                                             </div>
                                         </div>
-                                        <div className="font-bold text-slate-700 leading-relaxed text-lg prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: q?.content?.en || "" }} />
+                                        <div className="font-bold text-slate-700 leading-relaxed text-lg prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(q?.content?.en || "") }} />
                                         
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
                                             <div className={`p-4 rounded-xl border-2 ${isCorrect ? "border-emerald-200 bg-white" : "border-rose-200 bg-white"}`}>

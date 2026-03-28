@@ -5,20 +5,21 @@ import Course from "@/models/Course";
 import Payment, { PaymentStatus } from "@/models/Payment";
 import Enrollment from "@/models/Enrollment";
 import { createRazorpayOrder, verifyRazorpaySignature } from "@/services/RazorpayService";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "./notifications";
 import mongoose from "mongoose";
+import { z } from "zod";
+import { createSafeAction } from "@/lib/safe-action";
+import { RATE_LIMIT_CONFIGS } from "@/lib/rate-limit";
 
-export async function initiatePayment(courseId: string) {
-    try {
+const InitiatePaymentSchema = z.object({
+    courseId: z.string().min(1),
+});
+
+export const initiatePayment = createSafeAction(
+    { schema: InitiatePaymentSchema, requireAuth: true, rateLimit: RATE_LIMIT_CONFIGS.SENSITIVE },
+    async ({ courseId }, session) => {
         await connectDB();
-        const session = await getServerSession(authOptions);
-
-        if (!session || !session.user) {
-            throw new Error("Unauthorized");
-        }
 
         let course;
         if (mongoose.Types.ObjectId.isValid(courseId)) {
@@ -28,7 +29,7 @@ export async function initiatePayment(courseId: string) {
         }
 
         if (!course) {
-            return { success: false, error: "Course not found. Check identifier." };
+            throw new Error("Course not found. Check identifier.");
         }
 
         // Calculate pending balance instead of blindly tracking existing enrollment
@@ -38,7 +39,7 @@ export async function initiatePayment(courseId: string) {
             status: PaymentStatus.SUCCESS
         });
 
-        const totalPaid = successfulPayments.reduce((sum, p) => sum + p.amount, 0);
+        const totalPaid = successfulPayments.reduce((sum: number, p: any) => sum + p.amount, 0);
         const balance = course.price - totalPaid;
 
         if (balance <= 0) {
@@ -56,7 +57,7 @@ export async function initiatePayment(courseId: string) {
                 revalidatePath("/", "layout");
                 return { success: true, instant: true };
             }
-            return { success: false, error: "Course is already in your dashboard" };
+            throw new Error("Course is already in your dashboard");
         }
 
         // Create Razorpay Order with specific balance mapping
@@ -72,7 +73,6 @@ export async function initiatePayment(courseId: string) {
         });
 
         return {
-            success: true,
             orderId: order.id,
             amount: order.amount,
             currency: order.currency,
@@ -81,20 +81,31 @@ export async function initiatePayment(courseId: string) {
             userName: session.user.name,
             userEmail: session.user.email,
         };
-    } catch (error: any) {
-        console.error("Initiate Payment Error:", error);
-        return { success: false, error: error.message };
     }
-}
+);
 
-export async function verifyPayment(
-    razorpayOrderId: string,
-    razorpayPaymentId: string,
-    razorpaySignature: string
-) {
-    try {
+const VerifyPaymentSchema = z.object({
+    razorpayOrderId: z.string().min(1),
+    razorpayPaymentId: z.string().min(1),
+    razorpaySignature: z.string().min(1),
+});
+
+export const verifyPayment = createSafeAction(
+    { schema: VerifyPaymentSchema, requireAuth: true },
+    async ({ razorpayOrderId, razorpayPaymentId, razorpaySignature }, session) => {
         await connectDB();
 
+        // 1. First, verify the payment belongs to the current user to prevent cross-user spoofing
+        const paymentRecord = await Payment.findOne({ 
+            razorpayOrderId,
+            userId: session.user.id 
+        });
+
+        if (!paymentRecord) {
+            throw new Error("Payment record not found for this user.");
+        }
+
+        // 2. Verify signature
         const isValid = verifyRazorpaySignature(
             razorpayOrderId,
             razorpayPaymentId,
@@ -102,67 +113,54 @@ export async function verifyPayment(
         );
 
         if (!isValid) {
-            throw new Error("Invalid signature");
+            throw new Error("Invalid payment signature detected.");
         }
 
-        // Update Payment Status
-        const payment = await Payment.findOneAndUpdate(
-            { razorpayOrderId },
-            {
-                razorpayPaymentId,
-                razorpaySignature,
-                status: PaymentStatus.SUCCESS,
-            },
-            { new: true }
-        );
+        // 3. Update Payment Status (Idempotent)
+        if (paymentRecord.status !== PaymentStatus.SUCCESS) {
+            paymentRecord.razorpayPaymentId = razorpayPaymentId;
+            paymentRecord.razorpaySignature = razorpaySignature;
+            paymentRecord.status = PaymentStatus.SUCCESS;
+            await paymentRecord.save();
 
-        if (!payment) {
-            throw new Error("Payment record not found");
-        }
-
-        // Check/Create Enrollment (Idempotency)
-        const existingEnrollment = await Enrollment.findOne({
-            userId: payment.userId,
-            courseId: payment.courseId
-        });
-
-        if (!existingEnrollment) {
-            await Enrollment.create({
-                userId: payment.userId,
-                courseId: payment.courseId,
-                enrolledAt: new Date(),
-                progress: 0,
-                isActive: true
+            // 4. Check/Create Enrollment (Idempotency)
+            const existingEnrollment = await Enrollment.findOne({
+                userId: session.user.id,
+                courseId: paymentRecord.courseId
             });
-        }
 
-        // Notify user
-        await createNotification(
-            payment.userId.toString(),
-            "Payment Successful!",
-            `You have successfully enrolled in the course. Start learning now!`,
-            "SUCCESS",
-            `/student/courses/${payment.courseId}`
-        );
+            if (!existingEnrollment) {
+                await Enrollment.create({
+                    userId: session.user.id,
+                    courseId: paymentRecord.courseId,
+                    enrolledAt: new Date(),
+                    progress: 0,
+                    isActive: true
+                });
+            }
+
+            // 5. Notify user
+            await createNotification(
+                session.user.id,
+                "Payment Successful!",
+                `You have successfully enrolled in the course. Start learning now!`,
+                "SUCCESS",
+                `/student/courses/${paymentRecord.courseId}`
+            );
+        }
 
         revalidatePath("/student");
         return { success: true };
-    } catch (error: any) {
-        console.error("Verify Payment Error:", error);
-        return { success: false, error: error.message };
     }
-}
+);
 
-export async function getMyFees() {
-    try {
+export const getMyFees = createSafeAction(
+    { requireAuth: true },
+    async (_, session) => {
         await connectDB();
         // Force model registration
         await import("@/models/Course");
         await import("@/models/User");
-        await import("@/models/Lesson");
-
-        const session = await getServerSession(authOptions);
-        if (!session || !session.user) throw new Error("Unauthorized");
 
         const userId = session.user.id;
 
@@ -175,12 +173,9 @@ export async function getMyFees() {
             .lean();
 
         return {
-            success: true,
             user: { name: session.user.name, email: session.user.email },
             enrollments: JSON.parse(JSON.stringify(enrollments)),
             payments: JSON.parse(JSON.stringify(payments))
         };
-    } catch (error: any) {
-        return { success: false, error: error.message };
     }
-}
+);

@@ -15,7 +15,7 @@ interface Course {
     category: string;
 }
 
-export default function CoursesSection({ courses = [], data }: { courses?: Course[], data?: any }) {
+export default function CoursesSection({ courses = [], data, hideExplorer = false }: { courses?: Course[], data?: any, hideExplorer?: boolean }) {
     const title = data?.section_name || "Choose Your Path to Mastery";
     const subtitle = data?.subtitle || "Our Premium Programs";
     const description = data?.description || "Precisely architected curriculum designed to bridge the gap between academic learning and industry demands.";
@@ -43,7 +43,7 @@ export default function CoursesSection({ courses = [], data }: { courses?: Cours
 
                 {/* Courses Grid */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {courses.slice(0, 6).map((course, idx) => (
+                    {courses.map((course, idx) => (
                         <motion.div
                             key={course._id}
                             initial={{ opacity: 0, scale: 0.95 }}
@@ -106,10 +106,12 @@ export default function CoursesSection({ courses = [], data }: { courses?: Cours
 
                 {/* Bottom CTA */}
                 <div className="mt-20 pt-12 border-t border-slate-50 text-center flex flex-col items-center gap-8">
-                    <Link href="/courses" className="inline-flex items-center gap-3 text-slate-400 hover:text-primary font-black uppercase tracking-widest text-[11px] transition-colors group">
-                        Explore Full curriculum & Courses
-                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </Link>
+                    {!hideExplorer && (
+                        <Link href="/courses" className="inline-flex items-center gap-3 text-slate-400 hover:text-primary font-black uppercase tracking-widest text-[11px] transition-colors group">
+                            Explore Full curriculum & Courses
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </Link>
+                    )}
                     
                     <div className="space-y-4">
                         <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Need expert guidance?</p>

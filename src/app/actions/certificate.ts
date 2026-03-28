@@ -16,28 +16,26 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { Font } from "@react-pdf/renderer";
 import { getGoogleFontDataUrl } from "@/lib/fonts";
-
+import { z } from "zod";
+import { createSafeAction } from "@/lib/safe-action";
 
 // --- STUDENT: GET MY CERTIFICATES ---
-export async function getStudentCertificates() {
-    try {
+export const getStudentCertificates = createSafeAction(
+    { requireAuth: true, roles: [UserRole.STUDENT, UserRole.ADMIN] },
+    async (_, session) => {
         await connectDB();
-        const session = await getServerSession(authOptions);
-        if (!session?.user) return { success: false, error: "Unauthorized" };
-
         const certs = await Certificate.find({ studentId: session.user.id })
             .populate("courseId", "title")
             .sort({ issuedDate: -1 });
 
-        return { success: true, certificates: JSON.parse(JSON.stringify(certs)) };
-    } catch (error) {
-        return { success: false, error: "Failed to fetch certificates" };
+        return JSON.parse(JSON.stringify(certs));
     }
-}
+);
 
 // --- PUBLIC: VERIFY CERTIFICATE ---
-export async function verifyCertificate(certId: string) {
-    try {
+export const verifyCertificate = createSafeAction(
+    { schema: z.object({ certId: z.string().min(1) }), requireAuth: false },
+    async ({ certId }) => {
         await connectDB();
 
         let query = {};
@@ -51,13 +49,11 @@ export async function verifyCertificate(certId: string) {
             .populate("studentId", "name email image")
             .populate("courseId", "title description thumbnail");
 
-        if (!cert) return { success: false, error: "Certificate not found" };
+        if (!cert) throw new Error("Certificate not found");
 
-        return { success: true, certificate: JSON.parse(JSON.stringify(cert)) };
-    } catch (error) {
-        return { success: false, error: "Verification failed" };
+        return JSON.parse(JSON.stringify(cert));
     }
-}
+);
 
 // --- DOWNLOAD PDF ---
 export async function getCertificatePDF(certId: string) {
@@ -191,40 +187,37 @@ export async function getCertificatePDF(certId: string) {
 }
 
 // --- ADMIN: LIST ALL CERTIFICATES ---
-export async function getAdminCertificates() {
-    try {
+export const getAdminCertificates = createSafeAction(
+    { roles: [UserRole.ADMIN], requireAuth: true },
+    async () => {
         await connectDB();
-        const session = await getServerSession(authOptions);
-        if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
-
         const certs = await Certificate.find()
             .populate("studentId", "name email")
             .populate("courseId", "title thumbnail")
             .sort({ createdAt: -1 });
 
-        return { success: true, certificates: JSON.parse(JSON.stringify(certs)) };
-    } catch (error: any) {
-        return { success: false, error: error.message };
+        return JSON.parse(JSON.stringify(certs));
     }
-}
+);
 
 // ALIAS for backward compatibility
 export const getAllCertificates = getAdminCertificates;
 
 // --- ADMIN: ISSUE CERTIFICATE ---
-export async function issueCertificate(data: {
-    studentId: string;
-    courseId: string;
-    grade: string;
-    percentage: number;
-    courseDuration: string;
-    templateId?: string;
-    remarks?: string;
-}) {
-    try {
+const IssueCertificateSchema = z.object({
+    studentId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Student ID"),
+    courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Course ID"),
+    grade: z.string().min(1),
+    percentage: z.number().min(0).max(100),
+    courseDuration: z.string().min(1),
+    templateId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Template ID").optional(),
+    remarks: z.string().optional(),
+});
+
+export const issueCertificate = createSafeAction(
+    { schema: IssueCertificateSchema, roles: [UserRole.ADMIN], requireAuth: true },
+    async (data, session) => {
         await connectDB();
-        const session = await getServerSession(authOptions);
-        if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
         // Duplicate Check
         const existing = await Certificate.findOne({
@@ -234,7 +227,7 @@ export async function issueCertificate(data: {
         });
 
         if (existing) {
-            return { success: false, error: "This student already has an active certificate for this course." };
+            throw new Error("This student already has an active certificate for this course.");
         }
 
         // Generate Certificate Number
@@ -253,11 +246,9 @@ export async function issueCertificate(data: {
         });
 
         revalidatePath("/admin/certificates");
-        return { success: true, certificate: JSON.parse(JSON.stringify(cert)) };
-    } catch (error: any) {
-        return { success: false, error: error.message };
+        return JSON.parse(JSON.stringify(cert));
     }
-}
+);
 
 // ALIAS
 export const generateCertificate = issueCertificate;
@@ -297,20 +288,18 @@ export async function getStudentList() {
 }
 
 // --- ADMIN: GET FORM DATA ---
-export async function getFormData() {
-    try {
+export const getFormData = createSafeAction(
+    { roles: [UserRole.ADMIN], requireAuth: true },
+    async () => {
         await connectDB();
         const students = await User.find({ role: UserRole.STUDENT }).select("name email");
         const courses = await Course.find({ isPublished: true }).select("title");
         const templates = await CertificateTemplate.find().select("name");
 
         return {
-            success: true,
             students: JSON.parse(JSON.stringify(students)),
             courses: JSON.parse(JSON.stringify(courses)),
             templates: JSON.parse(JSON.stringify(templates))
         };
-    } catch (error) {
-        return { success: false, error: "Failed to load form data" };
     }
-}
+);

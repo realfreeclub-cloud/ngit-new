@@ -5,39 +5,39 @@ import User, { UserRole } from "@/models/User";
 import StudentProfile from "@/models/StudentProfile";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { z } from "zod";
+import { createSafeAction } from "@/lib/safe-action";
+import { RATE_LIMIT_CONFIGS } from "@/lib/rate-limit";
 
-export async function registerStudent(formData: {
-    // Step 1 – Personal Info
-    name: string;
-    dateOfBirth: string;
-    fatherName: string;
-    motherName: string;
-    aadharNo: string;
-    category: string;
-    // Step 2 – Contact
-    localAddress: string;
-    localPhone: string;
-    email: string;
-    permanentAddress: string;
-    permanentPhone: string;
-    // Step 3 – Academic
-    course: string;
-    // Step 4 – Account
-    password: string;
-    photoUrl?: string;
-}) {
-    try {
+const RegistrationSchema = z.object({
+    name: z.string().min(2),
+    dateOfBirth: z.string(),
+    fatherName: z.string().min(2),
+    motherName: z.string().min(2),
+    aadharNo: z.string().length(12).regex(/^\d+$/, "Aadhar must be 12 digits"),
+    category: z.string(),
+    localAddress: z.string().min(10),
+    localPhone: z.string().min(10).max(15),
+    email: z.string().email(),
+    permanentAddress: z.string().min(10),
+    permanentPhone: z.string().min(10).max(15),
+    course: z.string(),
+    password: z.string().min(8),
+    photoUrl: z.string().url().optional(),
+});
+
+export const registerStudent = createSafeAction(
+    { schema: RegistrationSchema, requireAuth: false, rateLimit: RATE_LIMIT_CONFIGS.AUTH },
+    async (formData) => {
         await connectDB();
 
         // Check if email already exists
-        const existing = await User.findOne({ email: formData.email });
+        const existing = await User.findOne({ email: formData.email }).lean();
         if (existing) {
-            return { success: false, error: "An account with this email already exists." };
+            throw new Error("An account with this email already exists.");
         }
 
-        // Hash password
+        // Hash password with high work factor
         const hashedPassword = await bcrypt.hash(formData.password, 12);
 
         // Create user account (inactive until admin approves)
@@ -69,68 +69,57 @@ export async function registerStudent(formData: {
 
         revalidatePath("/admin/students");
 
-        return { success: true, userId: user._id.toString() };
-    } catch (error: any) {
-        console.error("Registration Error:", error);
-        return { success: false, error: error.message || "Registration failed. Please try again." };
+        return { userId: user._id.toString() };
     }
-}
+);
 
-export async function getStudentRegistrations() {
-    try {
+export const getStudentRegistrations = createSafeAction(
+    { roles: [UserRole.ADMIN], requireAuth: true },
+    async () => {
         await connectDB();
-        const session = await getServerSession(authOptions);
-        if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
-
         const profiles = await StudentProfile.find({})
             .sort({ createdAt: -1 })
             .lean();
 
-        return { success: true, students: JSON.parse(JSON.stringify(profiles)) };
-    } catch (error: any) {
-        return { success: false, error: error.message };
+        return JSON.parse(JSON.stringify(profiles));
     }
-}
+);
 
-export async function approveStudent(profileId: string) {
-    try {
+const ProfileIdSchema = z.object({
+    profileId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid ObjectId"),
+});
+
+export const approveStudent = createSafeAction(
+    { schema: ProfileIdSchema, roles: [UserRole.ADMIN], requireAuth: true },
+    async ({ profileId }) => {
         await connectDB();
-        const session = await getServerSession(authOptions);
-        if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
-
         const profile = await StudentProfile.findByIdAndUpdate(
             profileId,
             { status: "Approved" },
             { new: true }
         );
 
-        if (!profile) return { success: false, error: "Profile not found" };
+        if (!profile) throw new Error("Profile not found");
 
         // Activate the user account so they can login
         await User.findByIdAndUpdate(profile.userId, { isActive: true });
 
         revalidatePath("/admin/students");
         return { success: true };
-    } catch (error: any) {
-        return { success: false, error: error.message };
     }
-}
+);
 
-export async function rejectStudent(profileId: string) {
-    try {
+export const rejectStudent = createSafeAction(
+    { schema: ProfileIdSchema, roles: [UserRole.ADMIN], requireAuth: true },
+    async ({ profileId }) => {
         await connectDB();
-        const session = await getServerSession(authOptions);
-        if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
-
         const profile = await StudentProfile.findByIdAndDelete(profileId);
-        if (!profile) return { success: false, error: "Profile not found" };
+        if (!profile) throw new Error("Profile not found");
 
         // Also delete the user account
         await User.findByIdAndDelete(profile.userId);
 
         revalidatePath("/admin/students");
         return { success: true };
-    } catch (error: any) {
-        return { success: false, error: error.message };
     }
-}
+);

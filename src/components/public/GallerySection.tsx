@@ -84,6 +84,7 @@ export default function GallerySection({ images = [], data }: { images?: Gallery
                                     src={image.url} 
                                     alt={image.title} 
                                     fill
+                                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                     className="object-cover transition-transform duration-700 group-hover:scale-110" 
                                 />
                             ) : (
@@ -150,6 +151,7 @@ export default function GallerySection({ images = [], data }: { images?: Gallery
                                         src={selectedImg.url} 
                                         alt={selectedImg.title} 
                                         fill
+                                        sizes="100vw"
                                         className="object-contain" 
                                     />
                                 ) : (

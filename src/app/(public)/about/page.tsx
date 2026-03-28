@@ -50,6 +50,7 @@ export default async function AboutPage() {
                                 src={d.intro?.image || "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070"}
                                 alt="Students learning in IT lab"
                                 fill
+                                sizes="(max-width: 768px) 100vw, 50vw"
                                 className="object-cover"
                             />
                         </div>

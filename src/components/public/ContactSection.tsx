@@ -5,8 +5,30 @@ import { Button } from "@/components/ui/button";
 import { Phone, Mail, MapPin, Send, Zap, Clock, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
-export default function ContactSection() {
+export default function ContactSection({ data, blocks }: { data?: any, blocks?: any[] }) {
+    const sectionData = {
+        title: data?.title || "Initiate Dialogue",
+        subtitle: data?.subtitle || "Connect",
+        description: data?.description || "Whether you're curious about curriculum architecture or operational protocols, our experts are ready to assist."
+    };
+
+    const firstBlock = blocks && blocks.length > 0 ? blocks[0] : null;
+    const extra = typeof firstBlock?.extra_data === 'string' ? JSON.parse(firstBlock.extra_data || "{}") : (firstBlock?.extra_data || {});
+
+    const contactInfo = extra.contact_info || [
+        { label: "Tele-Navigation", value: "+91 98765 43210", link: "tel:+919876543210", icon: Phone, color: "group-hover/item:bg-primary" },
+        { label: "Digital Logistics", value: "info@ngit.edu", link: "mailto:info@ngit.edu", icon: Mail, color: "group-hover/item:bg-secondary" },
+        { label: "Spatial Identity", value: "123, Tech Corridor, Delhi", icon: MapPin, color: "group-hover/item:bg-emerald-500" }
+    ];
+
+    const operationalGrid = extra.operational_grid || [
+        { label: "Cycle A", value: "Mon - Fri • 09:00 - 18:00" },
+        { label: "Cycle B", value: "Sat • 09:00 - 16:00" },
+        { label: "Downtime", value: "Sunday • Systems Offline", dimmed: true }
+    ];
+
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -40,13 +62,13 @@ export default function ContactSection() {
                 {/* Section Header */}
                 <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-200 text-slate-600 font-black uppercase tracking-[0.2em] text-[10px] border border-slate-300">
-                        Connect
+                        {sectionData.subtitle}
                     </div>
                     <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter leading-none">
-                        Initiate Dialogue
+                        {sectionData.title}
                     </h2>
                     <p className="text-lg text-slate-500 font-medium leading-relaxed max-w-2xl mx-auto">
-                        Whether you're curious about curriculum architecture or operational protocols, our experts are ready to assist.
+                        {sectionData.description}
                     </p>
                 </div>
 
@@ -59,35 +81,24 @@ export default function ContactSection() {
                             <h3 className="text-2xl font-black text-slate-900 mb-8 tracking-tight">Access Points</h3>
                             
                             <div className="space-y-10">
-                                <div className="flex items-start gap-6 group/item">
-                                    <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover/item:bg-primary group-hover/item:text-white transition-all duration-300 shrink-0">
-                                        <Phone className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tele-Navigation</p>
-                                        <a href="tel:+919876543210" className="text-lg font-black text-slate-900 hover:text-primary transition-colors">+91 98765 43210</a>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-start gap-6 group/item">
-                                    <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover/item:bg-secondary group-hover/item:text-white transition-all duration-300 shrink-0">
-                                        <Mail className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Digital Logistics</p>
-                                        <a href="mailto:info@ngit.edu" className="text-lg font-black text-slate-900 hover:text-secondary transition-colors">info@ngit.edu</a>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-start gap-6 group/item">
-                                    <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover/item:bg-emerald-500 group-hover/item:text-white transition-all duration-300 shrink-0">
-                                        <MapPin className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Spatial Identity</p>
-                                        <p className="text-lg font-black text-slate-900 leading-tight">123, Tech Corridor, Delhi</p>
-                                    </div>
-                                </div>
+                                {contactInfo.map((info: any, idx: number) => {
+                                    const Icon = info.icon === 'Mail' ? Mail : info.icon === 'MapPin' ? MapPin : Phone;
+                                    return (
+                                        <div key={idx} className="flex items-start gap-6 group/item">
+                                            <div className={cn("w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover/item:text-white transition-all duration-300 shrink-0", info.color || "group-hover/item:bg-primary")}>
+                                                <Icon className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{info.label}</p>
+                                                {info.link ? (
+                                                    <a href={info.link} className="text-lg font-black text-slate-900 hover:text-primary transition-colors">{info.value}</a>
+                                                ) : (
+                                                    <p className="text-lg font-black text-slate-900 leading-tight">{info.value}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -99,18 +110,12 @@ export default function ContactSection() {
                                 <h3 className="text-xl font-black tracking-tight uppercase">Operational Grid</h3>
                             </div>
                             <div className="space-y-4">
-                                <div className="flex justify-between items-center py-3 border-b border-white/5">
-                                    <span className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500">Cycle A</span>
-                                    <span className="font-bold">Mon - Fri • 09:00 - 18:00</span>
-                                </div>
-                                <div className="flex justify-between items-center py-3 border-b border-white/5">
-                                    <span className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500">Cycle B</span>
-                                    <span className="font-bold">Sat • 09:00 - 16:00</span>
-                                </div>
-                                <div className="flex justify-between items-center py-3">
-                                    <span className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500">Downtime</span>
-                                    <span className="font-bold text-slate-600">Sunday • Systems Offline</span>
-                                </div>
+                                {operationalGrid.map((row: any, idx: number) => (
+                                    <div key={idx} className={cn("flex justify-between items-center py-3 border-white/5", idx !== operationalGrid.length - 1 && "border-b")}>
+                                        <span className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500">{row.label}</span>
+                                        <span className={cn("font-bold", row.dimmed && "text-slate-600")}>{row.value}</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>

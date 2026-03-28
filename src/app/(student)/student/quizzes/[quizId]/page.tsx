@@ -20,6 +20,7 @@ import { getQuiz, submitQuiz } from "@/app/actions/student/quizzes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { sanitizeHtml } from "@/lib/sanitizer";
 
 export default function StudentQuizLivePage({ params }: { params: Promise<{ quizId: string }> }) {
     const { quizId } = use(params);
@@ -42,13 +43,13 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
 
     useEffect(() => {
         const fetchQuiz = async () => {
-            const res = await getQuiz(quizId);
+            const res = await getQuiz({ quizId });
             if (res.success) {
-                setQuiz(res.quiz);
-                setTimeLeft((res.quiz.settings?.timeLimit || 30) * 60);
+                setQuiz(res.data);
+                setTimeLeft((res.data.settings?.timeLimit || 30) * 60);
             } else {
-                setError(res.message || res.error || "Failed to load quiz");
-                toast.error(res.message || res.error || "Failed to load quiz");
+                setError(res.error || "Failed to load quiz");
+                toast.error(res.error || "Failed to load quiz");
             }
             setLoading(false);
         };
@@ -62,7 +63,7 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
         const timeTaken = timeLimitSecs - timeLeft;
 
         try {
-            const res = await submitQuiz(quizId, answers, timeTaken);
+            const res = await submitQuiz({ quizId, answers, timeTaken });
             if (res.success) {
                 toast.success("Test submitted successfully!");
                 document.exitFullscreen?.().catch(() => { });
@@ -292,7 +293,7 @@ export default function StudentQuizLivePage({ params }: { params: Promise<{ quiz
                     </div>
 
                     <div className="flex-1 max-w-4xl mx-auto w-full pb-32 md:pb-0">
-                        <div className="text-lg md:text-2xl font-medium text-slate-800 leading-relaxed mb-6 md:mb-10 prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: currentQ?.content?.[language] || currentQ?.content?.en || "" }} />
+                        <div className="text-lg md:text-2xl font-medium text-slate-800 leading-relaxed mb-6 md:mb-10 prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentQ?.content?.[language] || currentQ?.content?.en || "") }} />
 
                         {/* MCQ Rendering (Single & Multiple) */}
                         {["MCQ_SINGLE", "MCQ_MULTIPLE"].includes(currentQ?.type) && (

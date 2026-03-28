@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useState } from "react";
 import { getAvailableQuizzes } from "@/app/actions/student/quizzes";
 import { submitTestRequest } from "@/app/actions/paidTestRequests";
@@ -35,9 +37,9 @@ export default function StudentQuizzesPage() {
 
     const loadQuizzes = async () => {
         setLoading(true);
-        const res = await getAvailableQuizzes();
+        const res = await getAvailableQuizzes({});
         if (res.success) {
-            setQuizzes(res.quizzes);
+            setQuizzes(res.data);
         } else {
             toast.error(res.error || "Failed to load tests");
         }

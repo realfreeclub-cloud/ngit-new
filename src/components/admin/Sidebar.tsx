@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 const menuItems = [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "Content Mgmt", href: "/admin/content", icon: FileText },
+    { label: "Blog Posts", href: "/admin/blogs", icon: FileText },
     { label: "Latest Updates", href: "/admin/notices", icon: Bell },
     {
         label: "Mock Test Manager",
