@@ -2,15 +2,15 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-// Security Headers implementation
+// Security Headers
 const securityHeaders = {
-    "Content-Security-Policy": 
+    "Content-Security-Policy":
         `default-src 'self'; ` +
         `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com; ` +
         `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; ` +
         `img-src 'self' data: blob: https://*; ` +
         `font-src 'self' https://fonts.gstatic.com; ` +
-        `frame-src 'self' https://api.razorpay.com https://*.razorpay.com; ` +
+        `frame-src 'self' https://api.razorpay.com https://*.razorpay.com https://www.youtube-nocookie.com https://www.youtube.com https://player.vimeo.com; ` +
         `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com; ` +
         `upgrade-insecure-requests;`,
     "X-Frame-Options": "DENY",
@@ -23,45 +23,65 @@ const securityHeaders = {
 export async function middleware(request: NextRequest) {
     const response = NextResponse.next();
 
-    // 1. Apply Security Headers
+    // Apply Security Headers to all responses
     Object.entries(securityHeaders).forEach(([key, value]) => {
         response.headers.set(key, value);
     });
 
-    // 2. Auth & Role Protection
     const token = await getToken({ req: request });
     const { pathname } = request.nextUrl;
 
-    // Admin Route Protection
+    // ─── Admin Route Protection ──────────────────────────────────────────────
     if (pathname.startsWith("/admin")) {
-        // Allow admin login without session
-        if (pathname === "/admin/login") return response;
+        // Admin login page is always accessible
+        if (pathname === "/admin/login") {
+            // Redirect already-logged-in admins straight to dashboard
+            if (token?.role === "ADMIN") {
+                return NextResponse.redirect(new URL("/admin", request.url));
+            }
+            return response;
+        }
 
+        // No token → redirect to admin login
         if (!token) {
-            const url = new URL("/login", request.url);
+            const url = new URL("/admin/login", request.url);
             url.searchParams.set("callbackUrl", pathname);
             return NextResponse.redirect(url);
         }
+
+        // Wrong role → redirect to home
         if (token.role !== "ADMIN") {
             return NextResponse.redirect(new URL("/", request.url));
         }
     }
 
-    // Student Route Protection
+    // ─── Student Route Protection ────────────────────────────────────────────
     if (pathname.startsWith("/student")) {
-         // Allow student login without session
-        if (pathname === "/student/login") return response;
+        // Student login page is always accessible
+        if (pathname === "/student/login") {
+            // Redirect already-logged-in students straight to dashboard
+            if (token) {
+                const dest = token.role === "ADMIN" ? "/admin" : "/student";
+                return NextResponse.redirect(new URL(dest, request.url));
+            }
+            return response;
+        }
 
+        // No token → redirect to student login (with callback)
         if (!token) {
-            const url = new URL("/login", request.url);
+            const url = new URL("/student/login", request.url);
             url.searchParams.set("callbackUrl", pathname);
             return NextResponse.redirect(url);
         }
     }
 
-    // Redirect logged in users away from public login/register
-    if ((pathname === "/login" || pathname === "/student/login") && token) {
-        return NextResponse.redirect(new URL("/", request.url));
+    // ─── Legacy /login → redirect to student login ───────────────────────────
+    if (pathname === "/login") {
+        if (token) {
+            const dest = token.role === "ADMIN" ? "/admin" : "/student";
+            return NextResponse.redirect(new URL(dest, request.url));
+        }
+        return NextResponse.redirect(new URL("/student/login", request.url));
     }
 
     return response;

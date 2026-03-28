@@ -31,10 +31,12 @@ import { authOptions } from "@/lib/auth";
 
 import { listBlogPosts } from "@/app/actions/blog";
 import BlogSection from "@/components/public/BlogSection";
+import { getPublicFeedback } from "@/app/actions/feedback";
+import VideoFeedbackSection from "@/components/public/VideoFeedbackSection";
 
 export default async function PublicHomePage() {
     const session = await getServerSession(authOptions);
-    const [slides, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, noticesRes, dynamicData, resultsRes, examsRes, blogRes] = await Promise.all([
+    const [slides, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, noticesRes, dynamicData, resultsRes, examsRes, blogRes, feedbackRes] = await Promise.all([
         getCMSContent("HOME_SLIDER"),
         getCMSContent("HOME_STATS"),
         getCMSContent("HOME_ABOUT"),
@@ -46,7 +48,8 @@ export default async function PublicHomePage() {
         getDynamicPageData("home"),
         getPublicMockTestResults(),
         getPublicExams(),
-        listBlogPosts({ status: "PUBLISHED", limit: 3 })
+        listBlogPosts({ status: "PUBLISHED", limit: 3 }),
+        getPublicFeedback({ limit: 6 }),
     ]);
 
     const facultyMembers = (facultyRes.success ? facultyRes.faculty : []).slice(0, 6);
@@ -57,6 +60,7 @@ export default async function PublicHomePage() {
     const firstSectionResults = (Object.values(publicResultsGrouped)[0] as any[] || []).slice(0, 6);
     const publicExams = ((examsRes as any)?.success ? (examsRes as any).exams : []).slice(0, 6);
     const publicBlogs = (blogRes.success ? blogRes.data.posts : []).slice(0, 3);
+    const publicFeedback = feedbackRes.success ? feedbackRes.data : [];
 
     const cmsSections = dynamicData.success && dynamicData.sections ? dynamicData.sections : [];
 
@@ -81,6 +85,7 @@ export default async function PublicHomePage() {
                     publicResults: firstSectionResults as any[],
                     publicExams: publicExams,
                     blogs: publicBlogs,
+                    feedback: publicFeedback,
                     notices: noticesRes.success ? noticesRes.notices : [],
                     session: session
                 }}
@@ -125,6 +130,9 @@ export default async function PublicHomePage() {
 
                         {/* Achievements Section */}
                         <AchievementsSection />
+
+                        {/* Video Testimonials */}
+                        <VideoFeedbackSection feedbacks={publicFeedback} />
 
                         {/* Blog Section */}
                         <BlogSection blogs={publicBlogs} />

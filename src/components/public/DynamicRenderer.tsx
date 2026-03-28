@@ -14,6 +14,7 @@ import TrustIndicators from "./TrustIndicators";
 import NotificationScroller from "./NotificationScroller";
 import DirectorMessageSection from "./DirectorMessageSection";
 import BlogSection from "./BlogSection";
+import VideoFeedbackSection from "./VideoFeedbackSection";
 
 import CourseGrid from "./CourseGrid";
 import FacultyGrid from "./FacultyGrid";
@@ -75,6 +76,8 @@ export default function DynamicRenderer({ sections, staticFallback, extraData, s
                         return <EventsSection key={sectionKey} events={extraData?.events || []} />;
                     case "BlogSection":
                         return <BlogSection key={sectionKey} data={section} blogs={extraData?.blogs || []} />;
+                    case "VideoFeedbackSection":
+                        return <VideoFeedbackSection key={sectionKey} data={section} feedbacks={extraData?.feedback || []} />;
                     case "InfrastructureSection":
                         return <InfrastructureSection key={sectionKey} data={section} blocks={section.blocks} />;
                     case "PublicResultsGrid":

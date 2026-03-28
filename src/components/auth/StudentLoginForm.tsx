@@ -32,14 +32,21 @@ export default function StudentLoginForm() {
         setLoading(true);
         try {
             const res = await signIn("credentials", { email, password, redirect: false });
+
             if (res?.error) {
-                toast.error("Invalid email or password");
+                if (res.error === "ACCOUNT_PENDING_APPROVAL") {
+                    toast.error("Your account is pending admin approval. Please wait for activation.");
+                } else {
+                    toast.error("Invalid email or password. Please try again.");
+                }
             } else {
                 toast.success("Welcome back!");
+                // Refresh server state first, then read updated session
+                router.refresh();
                 const response = await fetch("/api/auth/session");
                 const session = await response.json();
-                
-                if (callbackUrl) {
+
+                if (callbackUrl && !callbackUrl.startsWith("/admin")) {
                     router.push(callbackUrl);
                 } else if (session?.user?.role === "ADMIN") {
                     router.push("/admin");

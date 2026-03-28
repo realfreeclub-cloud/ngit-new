@@ -17,7 +17,8 @@ import {
     Layout,
     ChevronDown,
     BrainCircuit,
-    Bell
+    Bell,
+    Video
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +26,7 @@ const menuItems = [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "Content Mgmt", href: "/admin/content", icon: FileText },
     { label: "Blog Posts", href: "/admin/blogs", icon: FileText },
+    { label: "Video Testimonials", href: "/admin/feedback", icon: Video },
     { label: "Latest Updates", href: "/admin/notices", icon: Bell },
     {
         label: "Mock Test Manager",

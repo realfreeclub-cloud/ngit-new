@@ -18,20 +18,22 @@ export const authOptions: NextAuthOptions = {
                 }
 
                 await connectDB();
-                const user = await User.findOne({ email: credentials.email });
+                // Fetch only the fields needed for authentication
+                const user = await User.findOne({ email: credentials.email })
+                    .select("name email password role isActive");
 
                 if (!user || !user.password) {
-                    throw new Error("User not found");
+                    throw new Error("Invalid Credentials");
                 }
 
                 const isValid = await bcrypt.compare(credentials.password, user.password);
 
                 if (!isValid) {
-                    throw new Error("Invalid password");
+                    throw new Error("Invalid Credentials");
                 }
 
                 if (!user.isActive) {
-                    throw new Error("Your account is pending admin approval. Please wait for activation.");
+                    throw new Error("ACCOUNT_PENDING_APPROVAL");
                 }
 
                 return {
@@ -60,7 +62,7 @@ export const authOptions: NextAuthOptions = {
         },
     },
     pages: {
-        signIn: "/login",
+        signIn: "/student/login",
     },
     session: {
         strategy: "jwt",
