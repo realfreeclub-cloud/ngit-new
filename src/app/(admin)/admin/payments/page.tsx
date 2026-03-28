@@ -28,13 +28,13 @@ export default function AdminPaymentsPage() {
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
-            const res = await getGlobalPaymentsData();
+            const res = await getGlobalPaymentsData({});
             if (res.success) {
-                setPayments(res.payments || []);
+                setPayments(res.data.payments || []);
                 setStats({
-                    totalRevenue: res.totalRevenue || 0,
-                    pendingCount: res.pendingCount || 0,
-                    failedCount: res.failedCount || 0
+                    totalRevenue: res.data.totalRevenue || 0,
+                    pendingCount: res.data.pendingCount || 0,
+                    failedCount: res.data.failedCount || 0
                 });
             } else {
                 toast.error("Failed to fetch payments data");

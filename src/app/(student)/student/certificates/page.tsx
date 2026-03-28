@@ -16,7 +16,7 @@ export default function StudentCertificatesPage() {
     useEffect(() => {
         async function load() {
             try {
-                const res = await getStudentCertificates();
+                const res = await getStudentCertificates({});
                 if (res.success) {
                     setCertificates(res.data as any[]);
                 } else {

@@ -27,12 +27,12 @@ export default function StudentFeesPage() {
         setLoading(true);
         try {
             const [feeRes, invRes] = await Promise.all([
-                getMyFees(),
+                getMyFees({}),
                 getStudentInvoices()
             ]);
 
             if (feeRes.success) {
-                setData(prev => ({ ...prev, user: feeRes.user, enrollments: feeRes.enrollments || [], payments: feeRes.payments || [] }));
+                setData(prev => ({ ...prev, user: feeRes.data.user, enrollments: feeRes.data.enrollments || [], payments: feeRes.data.payments || [] }));
             } else {
                 toast.error(feeRes.error || "Failed to load fee data");
             }
@@ -54,31 +54,39 @@ export default function StudentFeesPage() {
         setProcessingId(courseId);
         try {
             // Initiate
-            const res = await initiatePayment(courseId);
+            const res = await initiatePayment({ courseId });
             if (!res.success) {
                 toast.error(res.error || "Failed to initiate payment");
                 setProcessingId(null);
                 return;
             }
 
+            const paymentData = res.data;
+            if (paymentData.instant) {
+                toast.success("Enrolled successfully!");
+                loadData();
+                setProcessingId(null);
+                return;
+            }
+
             const options = {
-                key: res.key,
-                amount: res.amount,
-                currency: res.currency,
+                key: paymentData.key,
+                amount: paymentData.amount,
+                currency: paymentData.currency,
                 name: "NGIT LMS",
-                description: `Payment for ${res.courseTitle}`,
-                order_id: res.orderId,
+                description: `Payment for ${paymentData.courseTitle}`,
+                order_id: paymentData.orderId,
                 prefill: {
-                    name: res.userName,
-                    email: res.userEmail,
+                    name: paymentData.userName,
+                    email: paymentData.userEmail,
                 },
                 theme: { color: "#0f172a" },
                 handler: async function (response: any) {
-                    const verifyRes = await verifyPayment(
-                        response.razorpay_order_id,
-                        response.razorpay_payment_id,
-                        response.razorpay_signature
-                    );
+                    const verifyRes = await verifyPayment({
+                        razorpayOrderId: response.razorpay_order_id,
+                        razorpayPaymentId: response.razorpay_payment_id,
+                        razorpaySignature: response.razorpay_signature
+                    });
 
                     if (verifyRes.success) {
                         toast.success("Payment Successful!");

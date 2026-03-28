@@ -37,7 +37,7 @@ export default function StudentFeesPage() {
         setLoading(true);
         try {
             const [feeRes, invRes] = await Promise.all([
-                getAdminFeeData(),
+                getAdminFeeData({}),
                 getAdminInvoices()
             ]);
 

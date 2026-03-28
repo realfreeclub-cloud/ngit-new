@@ -38,19 +38,20 @@ export default function AdminStudentsPage() {
 
     const fetchStudents = useCallback(async () => {
         setLoading(true);
-        const res = await getStudentRegistrations();
-        if (res.success && res.students) {
-            setStudents(res.students as StudentProfile[]);
-        } else {
+        const res = await getStudentRegistrations({});
+        if (!res.success) {
             toast.error(res.error || "Failed to load students");
+            setLoading(false);
+            return;
         }
+        setStudents(res.data as StudentProfile[]);
         setLoading(false);
     }, []);
 
     useEffect(() => { fetchStudents(); }, [fetchStudents]);
 
     const handleApprove = async (id: string) => {
-        const res = await approveStudent(id);
+        const res = await approveStudent({ profileId: id });
         if (res.success) {
             toast.success("Student approved! Login access granted.");
             fetchStudents();
@@ -62,7 +63,7 @@ export default function AdminStudentsPage() {
 
     const handleReject = async (id: string) => {
         if (!confirm("Reject and delete this application? This cannot be undone.")) return;
-        const res = await rejectStudent(id);
+        const res = await rejectStudent({ profileId: id });
         if (res.success) {
             toast.error("Application rejected and removed.");
             fetchStudents();
