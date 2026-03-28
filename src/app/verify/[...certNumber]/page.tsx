@@ -32,9 +32,9 @@ export default function VerificationPage({ params }: { params: Promise<{ certNum
     useEffect(() => {
         async function check() {
             setLoading(true);
-            const res = await verifyCertificate(certNumber);
+            const res = await verifyCertificate({ certId: certNumber });
             if (res.success) {
-                setCert(res.certificate);
+                setCert(res.data);
             } else {
                 setError(res.error || "Certificate could not be verified.");
             }

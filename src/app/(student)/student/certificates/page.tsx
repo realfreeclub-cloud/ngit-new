@@ -18,7 +18,7 @@ export default function StudentCertificatesPage() {
             try {
                 const res = await getStudentCertificates();
                 if (res.success) {
-                    setCertificates(res.certificates);
+                    setCertificates(res.data as any[]);
                 } else {
                     toast.error("Failed to load certificates");
                 }
