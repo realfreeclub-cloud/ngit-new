@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PublicBlogListPage() {
-    const res = await listBlogPosts({ status: "PUBLISHED", limit: 12 });
+    const res = await listBlogPosts({ status: "PUBLISHED", limit: 12, page: 1 });
     const posts = res.success ? res.data.posts : [];
 
     return (
@@ -22,8 +22,8 @@ export default async function PublicBlogListPage() {
                     <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/10 text-blue-200 font-black text-[10px] uppercase tracking-[0.3em] mb-8 backdrop-blur-xl border border-white/5">
                         The NGIT Archive
                     </div>
-                    <h1 className="text-4xl md:text-7xl font-black text-white mb-8 tracking-tighter leading-none italic">
-                        Knowledge <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">Synthesis</span>
+                    <h1 className="text-4xl md:text-7xl font-black text-white mb-8 tracking-tight leading-none italic">
+                        Knowledge <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 pr-4">Synthesis</span>
                     </h1>
                     <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed font-medium">
                         Exploring the boundaries of technology, leadership, and industrial pedagogy through rigorous analysis and storytelling.

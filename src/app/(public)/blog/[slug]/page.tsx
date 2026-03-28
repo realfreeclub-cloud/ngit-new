@@ -58,7 +58,7 @@ export default async function PublicBlogPostPage({ params }: { params: { slug: s
                             </div>
                         </div>
 
-                        <h1 className="text-4xl md:text-7xl font-black text-slate-900 tracking-tighter leading-none italic mb-10">
+                        <h1 className="text-4xl md:text-7xl font-black text-slate-900 tracking-tight leading-none italic mb-10">
                             {post.title}
                         </h1>
 
