@@ -30,6 +30,22 @@ const cmsModules = [
         stats: "Dynamic slugs"
     },
     {
+        title: "Blog & Newsletter",
+        description: "Publish articles, news updates, and educational resources for your students.",
+        href: "/admin/blogs",
+        icon: FileText,
+        color: "bg-orange-500",
+        stats: "Pub. Articles"
+    },
+    {
+        title: "Video Testimonials",
+        description: "Manage student feedback and video reviews shown on the landing page.",
+        href: "/admin/feedback",
+        icon: MousePointer2,
+        color: "bg-rose-500",
+        stats: "Social Proof"
+    },
+    {
         title: "Navigation & Footer",
         description: "Manage your main menu links, footer description, and social media connectivity.",
         href: "/admin/layout",

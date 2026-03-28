@@ -17,7 +17,7 @@ export default function AdvancedCmsPage() {
     const [blocks, setBlocks] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const sectionTypes = ["HeroSection", "CourseGrid", "FacultyGrid", "GalleryGrid", "TestimonialSlider", "CTASection", "AboutSection", "WhyChooseSection", "ContactSection", "AchievementsSection", "CoursesSection", "FacultySection", "EventsSection", "InfrastructureSection", "PublicResultsGrid", "PublicExamsGrid", "NotificationScroller", "TrustIndicators"];
+    const sectionTypes = ["HeroSection", "CourseGrid", "FacultyGrid", "GalleryGrid", "TestimonialSlider", "CTASection", "AboutSection", "WhyChooseSection", "ContactSection", "AchievementsSection", "CoursesSection", "FacultySection", "EventsSection", "InfrastructureSection", "PublicResultsGrid", "PublicExamsGrid", "NotificationScroller", "TrustIndicators", "VideoFeedbackSection", "BlogSection"];
 
     const DATA_DRIVEN_SECTIONS: Record<string, { label: string, link: string }> = {
         "CoursesSection": { label: "Courses", link: "/admin/courses" },
@@ -28,7 +28,9 @@ export default function AdvancedCmsPage() {
         "PublicResultsGrid": { label: "Exam Results", link: "/admin/results" },
         "PublicExamsGrid": { label: "Available Exams", link: "/admin/mock-tests/list" },
         "GallerySection": { label: "Gallery", link: "/admin/gallery" },
-        "GalleryGrid": { label: "Gallery", link: "/admin/gallery" }
+        "GalleryGrid": { label: "Gallery", link: "/admin/gallery" },
+        "VideoFeedbackSection": { label: "Video Testimonials", link: "/admin/feedback" },
+        "BlogSection": { label: "Blog Posts", link: "/admin/blogs" }
     };
 
     const HIDDEN_PAGES = ["courses", "faculty"];
