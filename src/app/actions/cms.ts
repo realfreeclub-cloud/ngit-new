@@ -151,7 +151,27 @@ export async function getDynamicPageData(pageName: string) {
         const sections: any[] = await CmsSection.find({ page_id: page._id, is_active: true }).sort({ sort_order: 1 }).lean();
         
         const sectionsData = await Promise.all(sections.map(async (section: any) => {
-            const blocks = await CmsContentBlock.find({ section_id: section._id }).sort({ sort_order: 1 }).lean();
+            const now = new Date();
+            const blocks = await CmsContentBlock.find({ 
+                section_id: section._id,
+                is_active: { $ne: false },
+                $and: [
+                    { 
+                        $or: [
+                            { start_date: { $exists: false } },
+                            { start_date: { $eq: null } },
+                            { start_date: { $lte: now } }
+                        ]
+                    },
+                    {
+                        $or: [
+                            { end_date: { $exists: false } },
+                            { end_date: { $eq: null } },
+                            { end_date: { $gte: now } }
+                        ]
+                    }
+                ]
+            }).sort({ sort_order: 1 }).lean();
             return {
                 ...section,
                 blocks

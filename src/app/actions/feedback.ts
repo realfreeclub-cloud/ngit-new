@@ -11,11 +11,12 @@ import { revalidatePath } from "next/cache";
 
 const FeedbackSchema = z.object({
     id: z.string().optional(),
-    name: z.string().min(2, "Name must be at least 2 characters").max(100),
+    name: z.string().max(100).optional(),
     role: z.string().max(100).optional(),
     course: z.string().max(150).optional(),
     videoUrl: z.string().url("Must be a valid URL").max(500),
-    review: z.string().min(10, "Review must be at least 10 characters").max(1000),
+    aspectRatio: z.enum(["16:9", "9:16", "1:1"]).optional().default("16:9"),
+    review: z.string().max(1000).optional(),
     rating: z.number().min(1).max(5).optional(),
     isActive: z.boolean().default(true),
     sortOrder: z.number().default(0),

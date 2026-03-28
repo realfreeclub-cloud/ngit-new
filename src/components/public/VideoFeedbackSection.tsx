@@ -3,20 +3,20 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, Play, ChevronLeft, ChevronRight, Quote, User, BookOpen, Zap } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Feedback {
     _id: string;
-    name: string;
+    name?: string;
     role?: string;
     course?: string;
     videoUrl: string;
-    review: string;
+    aspectRatio?: "16:9" | "9:16" | "1:1";
+    review?: string;
     rating?: number;
 }
 
-// ─── Video Embed Parser ──────────────────────────────────────────────────────
-
-function getEmbedUrl(url: string): { type: "youtube" | "vimeo" | "direct"; src: string } {
+function getEmbedUrl(url: string): { type: "youtube" | "vimeo" | "direct"; src: string; isShort: boolean; videoId?: string } {
     // YouTube
     const ytMatch = url.match(
         /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
@@ -25,6 +25,8 @@ function getEmbedUrl(url: string): { type: "youtube" | "vimeo" | "direct"; src: 
         return {
             type: "youtube",
             src: `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0&modestbranding=1`,
+            isShort: url.includes('/shorts/'),
+            videoId: ytMatch[1]
         };
     }
     // Vimeo
@@ -33,10 +35,11 @@ function getEmbedUrl(url: string): { type: "youtube" | "vimeo" | "direct"; src: 
         return {
             type: "vimeo",
             src: `https://player.vimeo.com/video/${vimeoMatch[1]}?dnt=1`,
+            isShort: false
         };
     }
     // Direct video
-    return { type: "direct", src: url };
+    return { type: "direct", src: url, isShort: false };
 }
 
 // ─── Lazy Video Card ─────────────────────────────────────────────────────────
@@ -44,6 +47,14 @@ function getEmbedUrl(url: string): { type: "youtube" | "vimeo" | "direct"; src: 
 function VideoCard({ feedback, isActive }: { feedback: Feedback; isActive: boolean }) {
     const [playing, setPlaying] = useState(false);
     const embed = getEmbedUrl(feedback.videoUrl);
+
+    // Auto-detect shorts if aspect ratio is not explicitly set or default horizontal is applied to shorts
+    let ratioClass = "aspect-video"; // default 16:9
+    if (feedback.aspectRatio === "9:16" || (!feedback.aspectRatio && embed.isShort)) {
+        ratioClass = "aspect-[9/16]";
+    } else if (feedback.aspectRatio === "1:1") {
+        ratioClass = "aspect-square";
+    }
 
     // Reset player when card loses active state (slider)
     useEffect(() => {
@@ -53,7 +64,7 @@ function VideoCard({ feedback, isActive }: { feedback: Feedback; isActive: boole
     return (
         <div className="h-full flex flex-col bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden shadow-xl hover:shadow-2xl hover:border-primary/20 transition-all duration-500 group">
             {/* Video Section */}
-            <div className="relative aspect-video bg-slate-900 overflow-hidden">
+            <div className={cn("relative bg-slate-900 overflow-hidden shrink-0", ratioClass)}>
                 {playing ? (
                     embed.type === "direct" ? (
                         <video
@@ -84,6 +95,13 @@ function VideoCard({ feedback, isActive }: { feedback: Feedback; isActive: boole
                         aria-label={`Play testimonial video of ${feedback.name}`}
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-950" />
+                        {embed.type === 'youtube' && embed.videoId && (
+                            <img
+                                src={`https://img.youtube.com/vi/${embed.videoId}/hqdefault.jpg`}
+                                alt={`${feedback.name} testimonial thumbnail`}
+                                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-500"
+                            />
+                        )}
                         {/* Decorative grid */}
                         <div className="absolute inset-0 opacity-10"
                             style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "32px 32px" }}
@@ -105,50 +123,56 @@ function VideoCard({ feedback, isActive }: { feedback: Feedback; isActive: boole
             </div>
 
             {/* Content */}
-            <div className="p-8 flex-1 flex flex-col gap-6">
-                {/* Rating */}
-                {feedback.rating && (
-                    <div className="flex items-center gap-1">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                                key={i}
-                                className={`w-4 h-4 ${i < feedback.rating! ? "text-amber-400 fill-amber-400" : "text-slate-200 fill-slate-200"}`}
-                            />
-                        ))}
-                    </div>
-                )}
+            {(feedback.rating || feedback.review || feedback.name || feedback.course) && (
+                <div className="p-8 flex-1 flex flex-col gap-6">
+                    {/* Rating */}
+                    {feedback.rating && (
+                        <div className="flex items-center gap-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                                <Star
+                                    key={i}
+                                    className={`w-4 h-4 ${i < feedback.rating! ? "text-amber-400 fill-amber-400" : "text-slate-200 fill-slate-200"}`}
+                                />
+                            ))}
+                        </div>
+                    )}
 
-                {/* Review */}
-                <div className="relative flex-1">
-                    <Quote className="w-8 h-8 text-slate-100 absolute -top-2 -left-2" />
-                    <p className="text-slate-600 font-medium leading-relaxed italic pl-4 line-clamp-4">
-                        {feedback.review}
-                    </p>
-                </div>
-
-                {/* Author */}
-                <div className="flex items-center gap-4 pt-6 border-t border-slate-50">
-                    <div className="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center text-white text-lg font-black italic shrink-0">
-                        {feedback.name.charAt(0)}
-                    </div>
-                    <div>
-                        <p className="font-black text-slate-900 leading-none">{feedback.name}</p>
-                        {feedback.role && (
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
-                                {feedback.role}
+                    {/* Review */}
+                    {feedback.review && (
+                        <div className="relative flex-1">
+                            <Quote className="w-8 h-8 text-slate-100 absolute -top-2 -left-2" />
+                            <p className="text-slate-600 font-medium leading-relaxed italic pl-4 line-clamp-4">
+                                {feedback.review}
                             </p>
-                        )}
-                        {feedback.course && (
-                            <div className="flex items-center gap-1 mt-1">
-                                <BookOpen className="w-3 h-3 text-primary" />
-                                <span className="text-[10px] font-black text-primary uppercase tracking-widest">
-                                    {feedback.course}
-                                </span>
+                        </div>
+                    )}
+
+                    {/* Author */}
+                    {(feedback.name || feedback.role || feedback.course) && (
+                        <div className={cn("flex items-center gap-4 border-slate-50", feedback.review ? "pt-6 border-t" : "")}>
+                            <div className="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center text-white text-lg font-black italic shrink-0">
+                                {feedback.name ? feedback.name.charAt(0) : "V"}
                             </div>
-                        )}
-                    </div>
+                            <div>
+                                <p className="font-black text-slate-900 leading-none">{feedback.name || "Video Testimonial"}</p>
+                                {feedback.role && (
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                                        {feedback.role}
+                                    </p>
+                                )}
+                                {feedback.course && (
+                                    <div className="flex items-center gap-1 mt-1">
+                                        <BookOpen className="w-3 h-3 text-primary" />
+                                        <span className="text-[10px] font-black text-primary uppercase tracking-widest">
+                                            {feedback.course}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
-            </div>
+            )}
         </div>
     );
 }

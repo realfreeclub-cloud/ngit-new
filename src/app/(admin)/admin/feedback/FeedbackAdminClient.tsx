@@ -15,11 +15,12 @@ import { cn } from "@/lib/utils";
 
 interface Feedback {
     _id: string;
-    name: string;
+    name?: string;
     role?: string;
     course?: string;
     videoUrl: string;
-    review: string;
+    aspectRatio?: "16:9" | "9:16" | "1:1";
+    review?: string;
     rating?: number;
     isActive: boolean;
     sortOrder: number;
@@ -31,6 +32,7 @@ const emptyForm = {
     role: "",
     course: "",
     videoUrl: "",
+    aspectRatio: "16:9",
     review: "",
     rating: 5,
     isActive: true,
@@ -92,6 +94,7 @@ function FeedbackForm({
                 role: form.role || undefined,
                 course: form.course || undefined,
                 videoUrl: form.videoUrl,
+                aspectRatio: form.aspectRatio,
                 review: form.review,
                 rating: form.rating || undefined,
                 isActive: form.isActive,
@@ -146,14 +149,12 @@ function FeedbackForm({
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className={labelClass}>Student Name *</label>
+                            <label className={labelClass}>Student Name</label>
                             <input
                                 className={inputClass}
                                 value={form.name}
                                 onChange={(e) => set("name", e.target.value)}
                                 placeholder="e.g. Rahul Sharma"
-                                required
-                                minLength={2}
                                 maxLength={100}
                             />
                         </div>
@@ -180,31 +181,46 @@ function FeedbackForm({
                         />
                     </div>
 
-                    <div>
-                        <label className={labelClass}>Video URL * (YouTube, Vimeo, or direct MP4)</label>
-                        <input
-                            className={inputClass}
-                            type="url"
-                            value={form.videoUrl}
-                            onChange={(e) => set("videoUrl", e.target.value)}
-                            placeholder="https://www.youtube.com/watch?v=..."
-                            required
-                        />
-                        <p className="text-[10px] text-slate-400 mt-1.5 ml-1">
-                            Supported: YouTube, YouTube Shorts, Vimeo, direct .mp4 links
-                        </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className={labelClass}>Video URL * (YouTube, Vimeo, or direct MP4)</label>
+                            <input
+                                className={inputClass}
+                                type="url"
+                                value={form.videoUrl}
+                                onChange={(e) => set("videoUrl", e.target.value)}
+                                placeholder="https://www.youtube.com/watch?v=..."
+                                required
+                            />
+                            <p className="text-[10px] text-slate-400 mt-1.5 ml-1">
+                                Supported: YouTube, YouTube Shorts, Vimeo, direct .mp4 links
+                            </p>
+                        </div>
+                        <div>
+                            <label className={labelClass}>Video Aspect Ratio</label>
+                            <select
+                                className={inputClass}
+                                value={form.aspectRatio || "16:9"}
+                                onChange={(e) => set("aspectRatio", e.target.value)}
+                            >
+                                <option value="16:9">Standard Horizontal (16:9)</option>
+                                <option value="9:16">Vertical / Shorts (9:16)</option>
+                                <option value="1:1">Square (1:1)</option>
+                            </select>
+                            <p className="text-[10px] text-slate-400 mt-1.5 ml-1">
+                                Adjusts layout. YouTube shorts default to 9:16 automatically.
+                            </p>
+                        </div>
                     </div>
 
                     <div>
-                        <label className={labelClass}>Review Text * (10–1000 characters)</label>
+                        <label className={labelClass}>Review Text (Max 1000 chars)</label>
                         <textarea
                             className="w-full p-5 rounded-2xl bg-slate-50 border border-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/20 text-slate-900 font-medium placeholder:text-slate-300 transition-all resize-none"
                             value={form.review}
                             onChange={(e) => set("review", e.target.value)}
                             placeholder="What the student says about NGIT..."
                             rows={4}
-                            required
-                            minLength={10}
                             maxLength={1000}
                         />
                         <p className="text-[10px] text-slate-400 mt-1 ml-1 text-right">
@@ -386,10 +402,10 @@ export default function FeedbackAdminClient({
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex items-center gap-3">
                                         <div className="w-11 h-11 rounded-xl bg-slate-900 flex items-center justify-center text-white font-black italic text-lg shrink-0">
-                                            {fb.name.charAt(0)}
+                                            {fb.name ? fb.name.charAt(0) : "V"}
                                         </div>
                                         <div>
-                                            <p className="font-black text-slate-900 leading-none">{fb.name}</p>
+                                            <p className="font-black text-slate-900 leading-none">{fb.name || "Video Testimonial"}</p>
                                             {fb.role && (
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
                                                     {fb.role}
@@ -410,7 +426,7 @@ export default function FeedbackAdminClient({
                                 </div>
 
                                 {/* Stars */}
-                                {fb.rating && (
+                                {fb.rating ? (
                                     <div className="flex items-center gap-0.5">
                                         {Array.from({ length: 5 }).map((_, i) => (
                                             <Star
@@ -419,12 +435,14 @@ export default function FeedbackAdminClient({
                                             />
                                         ))}
                                     </div>
-                                )}
+                                ) : null}
 
                                 {/* Review snippet */}
-                                <p className="text-slate-500 text-sm font-medium leading-relaxed italic line-clamp-3">
-                                    "{fb.review}"
-                                </p>
+                                {fb.review && (
+                                    <p className="text-slate-500 text-sm font-medium leading-relaxed italic line-clamp-3">
+                                        "{fb.review}"
+                                    </p>
+                                )}
 
                                 {/* Video URL */}
                                 <div className="flex items-center gap-2 py-2 px-3 bg-slate-50 rounded-xl">
@@ -437,7 +455,7 @@ export default function FeedbackAdminClient({
                                 {/* Sort & Date */}
                                 <div className="flex items-center justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                     <span>Order: #{fb.sortOrder}</span>
-                                    <span>{new Date(fb.createdAt).toLocaleDateString()}</span>
+                                    <span suppressHydrationWarning>{new Date(fb.createdAt).toLocaleDateString("en-GB")}</span>
                                 </div>
                             </div>
 
