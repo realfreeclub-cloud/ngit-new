@@ -20,7 +20,7 @@ const securityHeaders = {
     "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const response = NextResponse.next();
 
     // Apply Security Headers to all responses
@@ -33,9 +33,8 @@ export async function middleware(request: NextRequest) {
 
     // ─── Admin Route Protection ──────────────────────────────────────────────
     if (pathname.startsWith("/admin")) {
-        // Admin login page is always accessible
         if (pathname === "/admin/login") {
-            // Redirect already-logged-in admins straight to dashboard
+            // Already-logged-in admins go straight to dashboard
             if (token?.role === "ADMIN") {
                 return NextResponse.redirect(new URL("/admin", request.url));
             }
@@ -49,7 +48,7 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(url);
         }
 
-        // Wrong role → redirect to home
+        // Wrong role → back to home
         if (token.role !== "ADMIN") {
             return NextResponse.redirect(new URL("/", request.url));
         }
@@ -57,9 +56,8 @@ export async function middleware(request: NextRequest) {
 
     // ─── Student Route Protection ────────────────────────────────────────────
     if (pathname.startsWith("/student")) {
-        // Student login page is always accessible
         if (pathname === "/student/login") {
-            // Redirect already-logged-in students straight to dashboard
+            // Already logged in → go to correct dashboard
             if (token) {
                 const dest = token.role === "ADMIN" ? "/admin" : "/student";
                 return NextResponse.redirect(new URL(dest, request.url));
@@ -67,7 +65,7 @@ export async function middleware(request: NextRequest) {
             return response;
         }
 
-        // No token → redirect to student login (with callback)
+        // No token → redirect to student login
         if (!token) {
             const url = new URL("/student/login", request.url);
             url.searchParams.set("callbackUrl", pathname);
@@ -87,7 +85,7 @@ export async function middleware(request: NextRequest) {
     return response;
 }
 
-export default middleware;
+export default proxy;
 
 export const config = {
     matcher: [
