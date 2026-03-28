@@ -32,25 +32,27 @@ export default function LoginForm({ title, description, role }: LoginFormProps) 
             });
 
             if (res?.error) {
-                toast.error(res.error);
+                if (res.error === "ACCOUNT_PENDING_APPROVAL") {
+                    toast.error("Your account is pending admin approval.");
+                } else {
+                    toast.error("Invalid email or password.");
+                }
             } else {
                 toast.success("Welcome back!");
-
-                // Fetch session to get role for redirection
+                router.refresh();
                 const response = await fetch('/api/auth/session');
                 const session = await response.json();
 
-                // Redirect based on role
                 if (session?.user?.role === 'ADMIN') {
                     router.push("/admin");
                 } else if (session?.user?.role === 'STUDENT') {
                     router.push("/student");
                 } else {
-                    router.push("/"); // Fallback
+                    router.push("/");
                 }
             }
         } catch (error) {
-            toast.error("Something went wrong");
+            toast.error("Something went wrong. Please try again.");
         } finally {
             setLoading(false);
         }

@@ -18,9 +18,9 @@ export const authOptions: NextAuthOptions = {
                 }
 
                 await connectDB();
-                // Security: Only select specific fields needed for auth
+                // Fetch only the fields needed for authentication
                 const user = await User.findOne({ email: credentials.email })
-                    .select("+password +role +isActive name email");
+                    .select("name email password role isActive");
 
                 if (!user || !user.password) {
                     throw new Error("Invalid Credentials");
@@ -62,7 +62,7 @@ export const authOptions: NextAuthOptions = {
         },
     },
     pages: {
-        signIn: "/login",
+        signIn: "/student/login",
     },
     session: {
         strategy: "jwt",
