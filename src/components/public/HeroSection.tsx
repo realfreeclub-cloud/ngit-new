@@ -40,7 +40,13 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
             {/* Advanced Background Layers with Cross-Fade */}
             <div className="absolute inset-0 z-0">
                 {sliderBlocks.map((block: any, idx: number) => {
-                    const extra = typeof block.extra_data === 'object' ? block.extra_data : {};
+                    let extra = {};
+                    try {
+                        extra = typeof block.extra_data === 'string' ? JSON.parse(block.extra_data) : (block.extra_data || {});
+                    } catch (e) {
+                        extra = block.extra_data || {};
+                    }
+                    
                     const hasValidImage = !!block.image;
                     const safeImage = block.image || defaultBlock.image;
                     
@@ -49,9 +55,9 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                     const defaultImageOp = isTextEmpty ? 1 : (hasValidImage ? 0.6 : 0.2);
                     const defaultGradOp = isTextEmpty ? 0 : (hasValidImage ? 0.5 : 1);
 
-                    const imageOp = extra?.image_opacity !== undefined && extra?.image_opacity !== "" ? Number(extra.image_opacity) / 100 : defaultImageOp;
-                    const gradOp = extra?.gradient_opacity !== undefined && extra?.gradient_opacity !== "" ? Number(extra.gradient_opacity) / 100 : defaultGradOp;
-                    const colorOverlay = extra?.overlay_color || "";
+                    const imageOp = (extra as any)?.image_opacity !== undefined && (extra as any)?.image_opacity !== "" ? Number((extra as any).image_opacity) / 100 : defaultImageOp;
+                    const gradOp = (extra as any)?.gradient_opacity !== undefined && (extra as any)?.gradient_opacity !== "" ? Number((extra as any).gradient_opacity) / 100 : defaultGradOp;
+                    const colorOverlay = (extra as any)?.overlay_color || "";
 
                     return (
                         <div 
