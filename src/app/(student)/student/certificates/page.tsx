@@ -16,9 +16,9 @@ export default function StudentCertificatesPage() {
     useEffect(() => {
         async function load() {
             try {
-                const res = await getStudentCertificates();
+                const res = await getStudentCertificates({});
                 if (res.success) {
-                    setCertificates(res.certificates);
+                    setCertificates(res.data as any[]);
                 } else {
                     toast.error("Failed to load certificates");
                 }

@@ -20,9 +20,9 @@ export default function CourseAssignmentPage() {
     const loadData = async () => {
         setLoading(true);
         try {
-            const res = await getAdminFeeData();
+            const res = await getAdminFeeData({});
             if (res.success) {
-                setData({ students: res.students, enrollments: res.enrollments, payments: res.payments });
+                setData(res.data);
             }
             // Fetch courses
             const coursesRes = await fetch("/api/public/courses");
@@ -47,7 +47,7 @@ export default function CourseAssignmentPage() {
         }
 
         try {
-            const res = await assignCourseOffline(selectedStudent, selectedCourse);
+            const res = await assignCourseOffline({ studentId: selectedStudent, courseId: selectedCourse });
             if (res.success) {
                 toast.success("Course assigned successfully. A pending fee record was generated.");
                 setSelectedStudent("");

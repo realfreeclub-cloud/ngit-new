@@ -37,12 +37,12 @@ export default function StudentFeesPage() {
         setLoading(true);
         try {
             const [feeRes, invRes] = await Promise.all([
-                getAdminFeeData(),
+                getAdminFeeData({}),
                 getAdminInvoices()
             ]);
 
             if (feeRes.success) {
-                setData({ students: feeRes.students, enrollments: feeRes.enrollments, payments: feeRes.payments });
+                setData(feeRes.data);
             } else toast.error(feeRes.error || "Failed to load fee data");
 
             if (invRes.success) {
@@ -63,7 +63,7 @@ export default function StudentFeesPage() {
     const handleMarkPaid = async (userId: string, courseId: string, amount: number) => {
         if (!confirm(`Mark ₹${amount} as PAID manually?`)) return;
         try {
-            const res = await addManualPayment(userId, courseId, amount);
+            const res = await addManualPayment({ userId, courseId, amount });
             if (res.success) {
                 toast.success("Payment recorded!");
                 loadData();
