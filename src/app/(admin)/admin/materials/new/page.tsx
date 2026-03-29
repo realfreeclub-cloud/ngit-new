@@ -8,6 +8,8 @@ import { Save, FileText, ArrowLeft, Upload, Link as LinkIcon } from "lucide-reac
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createMaterial } from "@/app/actions/materials";
+import { getAllCourses } from "@/app/actions/courses";
+import { useEffect } from "react";
 
 export default function CreateMaterialPage() {
     const router = useRouter();
@@ -19,6 +21,15 @@ export default function CreateMaterialPage() {
         url: "",
         size: "Unknown"
     });
+    const [courses, setCourses] = useState<{ _id: string, title: string }[]>([]);
+
+    useEffect(() => {
+        const loadCourses = async () => {
+            const res = await getAllCourses();
+            if (res.success && res.courses) setCourses(res.courses);
+        };
+        loadCourses();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -70,13 +81,18 @@ export default function CreateMaterialPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-1">
                             <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Course / Subject <span className="text-red-500">*</span></label>
-                            <Input
+                            <select
                                 required
                                 value={formData.course}
                                 onChange={(e) => setFormData({ ...formData, course: e.target.value })}
-                                placeholder="e.g. IIT-JEE Foundation"
-                                className="h-11 border-slate-200 focus:border-primary"
-                            />
+                                className="w-full h-11 border border-slate-200 rounded-xl px-3 bg-white focus:border-primary outline-none text-sm font-medium"
+                            >
+                                <option value="" disabled>Select a mapped course...</option>
+                                {courses.map(c => (
+                                    <option key={c._id} value={c.title}>{c.title}</option>
+                                ))}
+                            </select>
+                            <p className="text-[10px] text-slate-400 mt-1">Material maps strictly to the course title here.</p>
                         </div>
                         <div className="space-y-1">
                             <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Content Type</label>
