@@ -2,7 +2,7 @@
 
 import connectDB from "@/lib/db";
 import Course from "@/models/Course";
-import Lesson from "@/models/Lesson";
+import Lesson, { LessonType } from "@/models/Lesson";
 import Enrollment from "@/models/Enrollment";
 import Quiz from "@/models/Quiz";
 import { getServerSession } from "next-auth";
@@ -34,6 +34,26 @@ export async function getCourseDetails(courseId: string) {
 
         if (!course) return { success: false, error: "Course not found" };
 
+        // Dynamically compute live status
+        const now = new Date();
+        const updatedLessons = lessons.map(lesson => {
+            if (lesson.type === "YOUTUBE_LIVE" && lesson.scheduledDate && lesson.scheduledTime) {
+                const scheduledDate = new Date(lesson.scheduledDate);
+                const [hours, minutes] = lesson.scheduledTime.split(":").map(Number);
+                scheduledDate.setHours(hours, minutes, 0, 0);
+                
+                const diffMins = (now.getTime() - scheduledDate.getTime()) / (1000 * 60);
+                
+                if (diffMins >= 0 && (!lesson.duration || diffMins < lesson.duration)) {
+                    lesson.status = "live";
+                } else if (lesson.duration && diffMins >= lesson.duration) {
+                    lesson.status = "completed";
+                    lesson.type = LessonType.YOUTUBE_RECORDED as any;
+                }
+            }
+            return lesson;
+        });
+
         // Extract completed lesson IDs as plain strings for easy comparison
         const completedLessonIds: string[] = (enrollment?.completedLessons ?? []).map(
             (id: any) => id.toString()
@@ -42,7 +62,7 @@ export async function getCourseDetails(courseId: string) {
         return {
             success: true,
             course: JSON.parse(JSON.stringify(course)),
-            lessons: JSON.parse(JSON.stringify(lessons)),
+            lessons: JSON.parse(JSON.stringify(updatedLessons)),
             enrollment: JSON.parse(JSON.stringify(enrollment)),
             completedLessonIds,
             userId: session.user.id
@@ -61,6 +81,22 @@ export async function getLesson(lessonId: string) {
 
         const lesson = await Lesson.findById(lessonId).lean();
         if (!lesson) return { success: false, error: "Lesson not found" };
+
+        if (lesson.type === "YOUTUBE_LIVE" && lesson.scheduledDate && lesson.scheduledTime) {
+            const now = new Date();
+            const scheduledDate = new Date(lesson.scheduledDate);
+            const [hours, minutes] = lesson.scheduledTime.split(":").map(Number);
+            scheduledDate.setHours(hours, minutes, 0, 0);
+            
+            const diffMins = (now.getTime() - scheduledDate.getTime()) / (1000 * 60);
+            
+            if (diffMins >= 0 && (!lesson.duration || diffMins < lesson.duration)) {
+                lesson.status = "live";
+            } else if (lesson.duration && diffMins >= lesson.duration) {
+                lesson.status = "completed";
+                lesson.type = LessonType.YOUTUBE_RECORDED as any;
+            }
+        }
 
         return {
             success: true,
@@ -122,12 +158,30 @@ export async function createLesson(courseId: string, data: any) {
             description: data.description ?? "",
             type: data.type,
             isFree: data.isFree ?? false,
-            duration: data.duration ?? "",
+            duration: Number(data.duration) || 0,
             order,
+            // New YouTube fields
+            videoType: data.videoType || undefined,
+            videoUrl: data.videoUrl || "",
+            videoId: data.videoId || "",
+            isLive: data.isLive ?? false,
+            scheduledDate: data.scheduledDate ? new Date(data.scheduledDate) : undefined,
+            scheduledTime: data.scheduledTime || "",
+            status: data.status || "upcoming",
         };
 
+        // Automatic YouTube ID extraction logic if needed
+        if ((data.type === "YOUTUBE_LIVE" || data.type === "YOUTUBE_RECORDED") && data.videoUrl) {
+           const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+           const match = data.videoUrl.match(regExp);
+           const extractedId = (match && match[7].length === 11) ? match[7] : null;
+           lessonData.videoId = extractedId || data.videoId;
+           lessonData.videoType = data.type === "YOUTUBE_LIVE" ? "youtube_live" : "youtube_recorded";
+           lessonData.isLive = data.type === "YOUTUBE_LIVE";
+        }
+
         // VIDEO / PDF: store the URL
-        if (data.type !== "QUIZ") {
+        if (data.type !== "QUIZ" && data.type !== "YOUTUBE_LIVE" && data.type !== "YOUTUBE_RECORDED") {
             lessonData.contentUrl = data.contentUrl ?? "";
         }
         // QUIZ: store quizId reference (clear contentUrl)
@@ -304,13 +358,32 @@ export async function updateLesson(lessonId: string, courseId: string, data: any
             description: data.description ?? "",
             type: data.type,
             isFree: data.isFree ?? false,
-            duration: data.duration ?? "",
+            duration: Number(data.duration) || 0,
+            videoType: data.videoType || undefined,
+            videoUrl: data.videoUrl || "",
+            videoId: data.videoId || "",
+            isLive: data.isLive ?? false,
+            scheduledDate: data.scheduledDate ? new Date(data.scheduledDate) : undefined,
+            scheduledTime: data.scheduledTime || "",
+            status: data.status || "upcoming",
         };
+
+        if ((data.type === "YOUTUBE_LIVE" || data.type === "YOUTUBE_RECORDED") && data.videoUrl) {
+           const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+           const match = data.videoUrl.match(regExp);
+           const extractedId = (match && match[7].length === 11) ? match[7] : null;
+           update.videoId = extractedId || data.videoId;
+           update.videoType = data.type === "YOUTUBE_LIVE" ? "youtube_live" : "youtube_recorded";
+           update.isLive = data.type === "YOUTUBE_LIVE";
+        }
 
         if (data.type === "QUIZ") {
             // QUIZ type: store linked quizId, clear contentUrl
             update.quizId = data.quizId ? new mongoose.Types.ObjectId(data.quizId) : null;
             update.contentUrl = "";
+        } else if (data.type === "YOUTUBE_LIVE" || data.type === "YOUTUBE_RECORDED") {
+            update.quizId = null;
+            update.contentUrl = ""; // we use videoUrl instead
         } else {
             // VIDEO / PDF: store URL, clear quizId
             update.contentUrl = data.contentUrl ?? "";
