@@ -68,4 +68,14 @@ export const authOptions: NextAuthOptions = {
         strategy: "jwt",
     },
     secret: process.env.NEXTAUTH_SECRET,
+    logger: {
+        error(code, metadata) {
+            if (code === "JWT_SESSION_ERROR") {
+                // Silently ignore: Usually a stale cookie from changing NEXTAUTH_SECRET in development
+                return;
+            }
+            console.error(code, metadata);
+        },
+        warn(code) {},
+    },
 };

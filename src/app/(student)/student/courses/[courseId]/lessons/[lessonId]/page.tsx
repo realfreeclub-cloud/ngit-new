@@ -7,7 +7,7 @@ import { getCourseDetails, getLesson } from "@/app/actions/courses";
 import VideoPlayer from "@/components/student/VideoPlayer";
 import {
     CheckCircle2, ChevronLeft, ChevronRight, FileText,
-    Download, Trophy, ArrowRight, Loader2, BookOpen, Brain
+    Download, Trophy, ArrowRight, Loader2, BookOpen, Brain, Globe, Video
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -18,11 +18,16 @@ interface Lesson {
     _id: string;
     title: string;
     description?: string;
-    type: "VIDEO" | "PDF" | "QUIZ";
+    type: "VIDEO" | "PDF" | "QUIZ" | "YOUTUBE_LIVE" | "YOUTUBE_RECORDED";
     contentUrl?: string;
-    duration?: string;
+    duration?: number;
     order: number;
     attachments?: { title: string; url: string; size?: string }[];
+    videoId?: string;
+    isLive?: boolean;
+    scheduledDate?: string;
+    scheduledTime?: string;
+    status?: "upcoming" | "live" | "completed";
 }
 
 export default function LessonPage({
@@ -219,6 +224,43 @@ export default function LessonPage({
                         type="VIDEO"
                         onComplete={handleComplete}
                     />
+                )}
+                {(lesson.type === "YOUTUBE_LIVE" || lesson.type === "YOUTUBE_RECORDED") && lesson.videoId && (
+                    <div className="w-full aspect-video bg-black rounded-[1.75rem] overflow-hidden relative shadow-lg">
+                        {lesson.type === "YOUTUBE_LIVE" && lesson.status === "upcoming" ? (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 border border-slate-800 p-8 text-center text-white">
+                                <Globe className="w-16 h-16 text-red-500 mb-4 animate-pulse opacity-80" />
+                                <h3 className="text-3xl font-black mb-2 tracking-tight">Live Stream Starting Soon</h3>
+                                <p className="text-slate-400 max-w-md mb-8">
+                                    This live session will begin shortly. Please wait until the instructor goes live, or check the scheduled time below.
+                                </p>
+                                <div className="bg-slate-800/80 px-8 py-5 rounded-2xl flex flex-col gap-1 items-center border border-slate-700 shadow-xl">
+                                    <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Scheduled for</span>
+                                    <span className="text-xl font-black text-rose-400">
+                                        {lesson.scheduledDate ? new Date(lesson.scheduledDate).toLocaleDateString() : ""} at {lesson.scheduledTime}
+                                    </span>
+                                </div>
+                            </div>
+                        ) : (
+                            <iframe
+                                src={`https://www.youtube.com/embed/${lesson.videoId}?autoplay=0`}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                className="w-full h-full border-0"
+                            ></iframe>
+                        )}
+                        {lesson.status === "live" && (
+                            <div className="absolute top-6 left-6 bg-red-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-2 animate-pulse shadow-xl">
+                                <span className="w-2 h-2 bg-white rounded-full"></span>
+                                LIVE NOW
+                            </div>
+                        )}
+                        {lesson.type === "YOUTUBE_RECORDED" && (
+                            <div className="absolute top-6 left-6 bg-blue-600/90 backdrop-blur-sm border border-blue-400/30 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full shadow-xl">
+                                RECORDED LECTURE
+                            </div>
+                        )}
+                    </div>
                 )}
                 {lesson.type === "PDF" && (
                     <div className="w-full aspect-video bg-slate-50 rounded-[1.75rem] border border-slate-200 flex flex-col items-center justify-center gap-5 p-10">

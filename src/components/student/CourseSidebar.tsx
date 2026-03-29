@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { getCourseDetails } from "@/app/actions/courses";
 import Link from "next/link";
-import { CheckCircle, Lock, PlayCircle, FileText, Brain, ChevronLeft, Trophy } from "lucide-react";
+import { CheckCircle, Lock, PlayCircle, FileText, Brain, ChevronLeft, Trophy, Globe, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Lesson {
@@ -34,6 +34,8 @@ const typeIcon = (type: string) => {
         case "VIDEO": return <PlayCircle className="w-3.5 h-3.5" />;
         case "PDF": return <FileText className="w-3.5 h-3.5" />;
         case "QUIZ": return <Brain className="w-3.5 h-3.5" />;
+        case "YOUTUBE_LIVE": return <Globe className="w-3.5 h-3.5 text-red-500" />;
+        case "YOUTUBE_RECORDED": return <Video className="w-3.5 h-3.5 text-blue-500" />;
         default: return <PlayCircle className="w-3.5 h-3.5" />;
     }
 };

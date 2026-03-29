@@ -35,7 +35,12 @@ import { getPublicFeedback } from "@/app/actions/feedback";
 import VideoFeedbackSection from "@/components/public/VideoFeedbackSection";
 
 export default async function PublicHomePage() {
-    const session = await getServerSession(authOptions);
+    let session = null;
+    try {
+        session = await getServerSession(authOptions);
+    } catch (e) {
+        console.warn("Home page session fetch suppressed:", e);
+    }
     const [slides, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, noticesRes, dynamicData, resultsRes, examsRes, blogRes, feedbackRes] = await Promise.all([
         getCMSContent("HOME_SLIDER"),
         getCMSContent("HOME_STATS"),
@@ -48,7 +53,7 @@ export default async function PublicHomePage() {
         getDynamicPageData("home"),
         getPublicMockTestResults(),
         getPublicExams(),
-        listBlogPosts({ status: "PUBLISHED", limit: 3 }),
+        listBlogPosts({ status: "PUBLISHED", limit: 3, page: 1 }),
         getPublicFeedback({ limit: 6 }),
     ]);
 

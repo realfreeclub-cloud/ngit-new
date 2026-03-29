@@ -25,12 +25,15 @@ const LESSON_TYPES = [
     { value: "VIDEO", label: "Video Lesson", icon: Video, color: "text-indigo-600", bg: "bg-indigo-50" },
     { value: "PDF", label: "PDF / Document", icon: FileText, color: "text-red-600", bg: "bg-red-50" },
     { value: "QUIZ", label: "Quiz / Test", icon: Brain, color: "text-purple-600", bg: "bg-purple-50" },
+    { value: "YOUTUBE_LIVE", label: "YouTube Live", icon: Globe, color: "text-red-500", bg: "bg-red-50" },
+    { value: "YOUTUBE_RECORDED", label: "YouTube Rec.", icon: Video, color: "text-blue-600", bg: "bg-blue-50" },
 ];
 
 const EMPTY_LESSON = {
     title: "", description: "", contentUrl: "",
     type: "VIDEO", duration: "", isFree: false,
-    quizId: "",
+    quizId: "", videoUrl: "", scheduledDate: "",
+    scheduledTime: "",
 };
 
 export default function CourseContentPage() {
@@ -133,9 +136,12 @@ export default function CourseContentPage() {
             description: lesson.description ?? "",
             contentUrl: lesson.contentUrl ?? "",
             type: lesson.type,
-            duration: lesson.duration ?? "",
+            duration: lesson.duration?.toString() ?? "",
             isFree: lesson.isFree,
             quizId: lesson.quizId ?? "",
+            videoUrl: lesson.videoUrl ?? "",
+            scheduledDate: lesson.scheduledDate ? new Date(lesson.scheduledDate).toISOString().split('T')[0] : "",
+            scheduledTime: lesson.scheduledTime ?? "",
         });
         setModalOpen(true);
         const q = await getQuizzesForCourse(courseId);
@@ -147,7 +153,10 @@ export default function CourseContentPage() {
         e.preventDefault();
         if (!lessonForm.title.trim()) { toast.error("Lesson title is required"); return; }
         if (lessonForm.type === "VIDEO" && !lessonForm.contentUrl.trim()) {
-            toast.error("Video URL or YouTube ID is required"); return;
+            toast.error("Video URL is required"); return;
+        }
+        if ((lessonForm.type === "YOUTUBE_LIVE" || lessonForm.type === "YOUTUBE_RECORDED") && !lessonForm.videoUrl?.trim()) {
+            toast.error("YouTube URL is required"); return;
         }
         if (lessonForm.type === "PDF" && !lessonForm.contentUrl.trim()) {
             toast.error("PDF URL is required"); return;
@@ -343,11 +352,18 @@ export default function CourseContentPage() {
                                                         Free Preview
                                                     </span>
                                                 )}
-                                                {lesson.contentUrl && (
+                                                {lesson.contentUrl && lesson.type !== "YOUTUBE_LIVE" && lesson.type !== "YOUTUBE_RECORDED" && (
                                                     <span className="text-[10px] text-slate-400 font-mono truncate max-w-[180px]">
                                                         {lesson.contentUrl}
                                                     </span>
                                                 )}
+                                                {lesson.videoId && (lesson.type === "YOUTUBE_LIVE" || lesson.type === "YOUTUBE_RECORDED") && (
+                                                    <span className="text-[10px] text-slate-400 font-mono truncate max-w-[180px]">
+                                                        YouTube ID: {lesson.videoId}
+                                                    </span>
+                                                )}
+                                                {lesson.status === "live" && <span className="text-[10px] font-black text-white bg-red-600 px-2 py-0.5 rounded animate-pulse">LIVE NOW</span>}
+                                                {lesson.status === "upcoming" && lesson.type === "YOUTUBE_LIVE" && <span className="text-[10px] font-black text-slate-600 bg-slate-100 px-2 py-0.5 rounded">UPCOMING</span>}
                                             </div>
                                         </div>
 
@@ -590,17 +606,55 @@ export default function CourseContentPage() {
                                         Video URL / YouTube ID <span className="text-red-400">*</span>
                                     </label>
                                     <Input
-                                        placeholder="https://youtube.com/watch?v=... or youtu.be/... or VIDEO_ID"
+                                        placeholder="https://example.com/video.mp4 or YouTube URL"
                                         className="h-11 rounded-xl font-mono text-xs bg-white border-indigo-200"
                                         value={lessonForm.contentUrl}
                                         onChange={e => setLessonForm({ ...lessonForm, contentUrl: e.target.value })}
                                     />
                                     <div className="text-[10px] text-indigo-500 space-y-0.5">
-                                        <p>✅ <strong>YouTube watch URL:</strong> https://youtube.com/watch?v=dQw4w9WgXcQ</p>
-                                        <p>✅ <strong>Short link:</strong> https://youtu.be/dQw4w9WgXcQ</p>
-                                        <p>✅ <strong>Bare ID:</strong> dQw4w9WgXcQ</p>
                                         <p>✅ <strong>Direct MP4:</strong> https://example.com/video.mp4</p>
+                                        <p>✅ <strong>YouTube watch URL:</strong> https://youtube.com/watch?v=dQw4w9WgXcQ</p>
                                     </div>
+                                </div>
+                            )}
+
+                            {/* YOUTUBE_LIVE / YOUTUBE_RECORDED */}
+                            {(lessonForm.type === "YOUTUBE_LIVE" || lessonForm.type === "YOUTUBE_RECORDED") && (
+                                <div className="space-y-4 p-4 bg-red-50 rounded-2xl border border-red-100">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black uppercase tracking-wider text-red-600">
+                                            YouTube URL <span className="text-red-400">*</span>
+                                        </label>
+                                        <Input
+                                            placeholder="https://youtube.com/watch?v=... or youtu.be/..."
+                                            className="h-11 rounded-xl font-mono text-xs bg-white border-red-200"
+                                            value={lessonForm.videoUrl || ""}
+                                            onChange={e => setLessonForm({ ...lessonForm, videoUrl: e.target.value })}
+                                        />
+                                    </div>
+                                    
+                                    {lessonForm.type === "YOUTUBE_LIVE" && (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-black uppercase tracking-wider text-red-600">Scheduled Date</label>
+                                                <Input
+                                                    type="date"
+                                                    className="h-11 rounded-xl bg-white border-red-200"
+                                                    value={lessonForm.scheduledDate || ""}
+                                                    onChange={e => setLessonForm({ ...lessonForm, scheduledDate: e.target.value })}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-black uppercase tracking-wider text-red-600">Scheduled Time</label>
+                                                <Input
+                                                    type="time"
+                                                    className="h-11 rounded-xl bg-white border-red-200"
+                                                    value={lessonForm.scheduledTime || ""}
+                                                    onChange={e => setLessonForm({ ...lessonForm, scheduledTime: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 

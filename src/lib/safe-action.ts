@@ -31,9 +31,22 @@ export function createSafeAction<T extends z.ZodType, R>(
             const headerList = await headers();
             const ip = headerList.get("x-forwarded-for") || "anonymous";
             
-            // 2. Authentication Check
-            const session = await getServerSession(authOptions);
-            const isAuthenticated = !!session?.user;
+            // 2. Lazy Authentication Check
+            let session: any = null;
+            let isAuthenticated = false;
+
+            // Only fetch session if auth is required, or specific roles are specified, or if rate limit might need it
+            // "ANY" role implies no specific role is needed unless requireAuth is true.
+            const needsAuth = options.requireAuth || (options.roles && options.roles.length > 0 && !options.roles.includes("ANY"));
+            
+            if (needsAuth || options.rateLimit) {
+                try {
+                    session = await getServerSession(authOptions);
+                    isAuthenticated = !!session?.user;
+                } catch (e) {
+                    console.warn("Silent NextAuth Session Fetch Error Suppressed", e);
+                }
+            }
 
             if (options.requireAuth && !isAuthenticated) {
                 return { success: false, error: "Authentication required", code: "UNAUTHORIZED" };
