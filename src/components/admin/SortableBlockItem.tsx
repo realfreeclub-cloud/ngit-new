@@ -55,6 +55,9 @@ export function SortableBlockItem({ block, index, onUpdate, onSave, onDelete, se
         setUploading(false);
     };
 
+    const needsMedia = ["HeroSection", "TestimonialSlider", "InfrastructureSection", "GalleryGrid", "AboutSection", "AchievementsSection", "VideoFeedbackSection", "CourseGrid", "FacultyGrid"].includes(sectionType);
+    const needsCTA = ["HeroSection", "CTASection", "AboutSection"].includes(sectionType);
+    const needsStructure = ["HeroSection"].includes(sectionType);
     const isHero = sectionType === "HeroSection";
 
     return (
@@ -72,7 +75,9 @@ export function SortableBlockItem({ block, index, onUpdate, onSave, onDelete, se
                         <Move className="w-4 h-4" />
                     </div>
                     <div>
-                        <h4 className="font-extrabold text-lg text-slate-800 tracking-tight">Slide Module {index + 1}</h4>
+                        <h4 className="font-extrabold text-lg text-slate-800 tracking-tight">
+                            {isHero ? `Slide Module ${index + 1}` : `Block Data ${index + 1}`}
+                        </h4>
                         <p className="text-[10px] uppercase font-black tracking-widest text-slate-400 mt-0.5 max-w-[200px] truncate">{block.title || "Untitled Block"}</p>
                     </div>
                 </div>
@@ -96,71 +101,71 @@ export function SortableBlockItem({ block, index, onUpdate, onSave, onDelete, se
 
             <div className="p-6 sm:p-8 pt-6 space-y-8">
                 {/* Upper Grid: Media & Text */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-8">
+                <div className={cn("grid gap-8", needsMedia ? "md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2" : "grid-cols-1")}>
                     
                     {/* Media Column */}
-                    <div className="space-y-6">
-                        <div className="relative aspect-video rounded-3xl overflow-hidden bg-slate-100 border-2 border-slate-50 shadow-inner group/img">
-                            {block.image ? (
-                                <Image src={block.image} alt="Preview" fill className="object-cover" />
-                            ) : (
-                                <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
-                                    <ImageIcon className="w-10 h-10 mb-2 opacity-50" />
-                                    <span className="text-[10px] font-black uppercase tracking-tighter">No Media Source</span>
-                                </div>
-                            )}
-                            <label className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm opacity-0 group-hover/img:opacity-100 transition-all flex items-center justify-center cursor-pointer">
-                                <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={uploading} />
-                                <div className="bg-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 text-slate-900 shadow-xl hover:scale-105 transition-transform">
-                                    {uploading ? <Clock className="w-4 h-4 animate-spin text-blue-500" /> : <Upload className="w-4 h-4 text-blue-500" />}
-                                    {uploading ? "Uploading..." : "Replace Media"}
-                                </div>
-                            </label>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-6 p-5 bg-slate-50 rounded-[2rem]">
-                            {isHero && (
-                                <div className="space-y-2 col-span-2 sm:col-span-1">
-                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Animation Type</label>
-                                    <Select value={block.animation || "slide"} onValueChange={(val) => onUpdate(block._id, "animation", val)}>
-                                        <SelectTrigger className="h-10 rounded-xl bg-white border-slate-200 font-bold text-xs"><SelectValue /></SelectTrigger>
-                                        <SelectContent className="rounded-xl border-none shadow-2xl">
-                                            <SelectItem value="slide">Slide In</SelectItem>
-                                            <SelectItem value="fade">Dissolve</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            )}
-                            {isHero && (
-                                <div className="space-y-2 col-span-2 sm:col-span-1">
-                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Timer (ms)</label>
-                                    <Input 
-                                        type="number" 
-                                        value={block.duration || 5000} 
-                                        className="h-10 rounded-xl bg-white border-slate-200 font-bold text-xs"
-                                        onChange={(e) => onUpdate(block._id, "duration", parseInt(e.target.value))} 
-                                    />
-                                </div>
-                            )}
-                            <div className="space-y-2 col-span-2">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Image Focus Position</label>
-                                <div className="grid grid-cols-3 gap-1 bg-slate-200 p-1 rounded-xl">
-                                    {(['top', 'center', 'bottom'] as const).map(pos => (
-                                        <button 
-                                            key={pos}
-                                            onClick={() => onUpdate(block._id, "image_position", pos)}
-                                            className={cn(
-                                                "py-1.5 rounded-lg text-[9px] font-black uppercase transition-all whitespace-nowrap overflow-hidden text-ellipsis",
-                                                (block.image_position || 'center') === pos ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-800"
-                                            )}
-                                        >
-                                            {pos}
-                                        </button>
-                                    ))}
-                                </div>
+                    {needsMedia && (
+                        <div className="space-y-6">
+                            <div className="relative aspect-video rounded-3xl overflow-hidden bg-slate-100 border-2 border-slate-50 shadow-inner group/img">
+                                {block.image ? (
+                                    <Image src={block.image} alt="Preview" fill className="object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                                        <ImageIcon className="w-10 h-10 mb-2 opacity-50" />
+                                        <span className="text-[10px] font-black uppercase tracking-tighter">No Media Source</span>
+                                    </div>
+                                )}
+                                <label className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm opacity-0 group-hover/img:opacity-100 transition-all flex items-center justify-center cursor-pointer">
+                                    <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={uploading} />
+                                    <div className="bg-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 text-slate-900 shadow-xl hover:scale-105 transition-transform">
+                                        {uploading ? <Clock className="w-4 h-4 animate-spin text-blue-500" /> : <Upload className="w-4 h-4 text-blue-500" />}
+                                        {uploading ? "Uploading..." : "Replace Media"}
+                                    </div>
+                                </label>
                             </div>
+                            
+                            {isHero && (
+                                <div className="grid grid-cols-2 gap-6 p-5 bg-slate-50 rounded-[2rem]">
+                                    <div className="space-y-2 col-span-2 sm:col-span-1">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Animation Type</label>
+                                        <Select value={block.animation || "slide"} onValueChange={(val) => onUpdate(block._id, "animation", val)}>
+                                            <SelectTrigger className="h-10 rounded-xl bg-white border-slate-200 font-bold text-xs"><SelectValue /></SelectTrigger>
+                                            <SelectContent className="rounded-xl border-none shadow-2xl">
+                                                <SelectItem value="slide">Slide In</SelectItem>
+                                                <SelectItem value="fade">Dissolve</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2 col-span-2 sm:col-span-1">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Timer (ms)</label>
+                                        <Input 
+                                            type="number" 
+                                            value={block.duration || 5000} 
+                                            className="h-10 rounded-xl bg-white border-slate-200 font-bold text-xs"
+                                            onChange={(e) => onUpdate(block._id, "duration", parseInt(e.target.value))} 
+                                        />
+                                    </div>
+                                    <div className="space-y-2 col-span-2">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Image Focus Position</label>
+                                        <div className="grid grid-cols-3 gap-1 bg-slate-200 p-1 rounded-xl">
+                                            {(['top', 'center', 'bottom'] as const).map(pos => (
+                                                <button 
+                                                    key={pos}
+                                                    onClick={() => onUpdate(block._id, "image_position", pos)}
+                                                    className={cn(
+                                                        "py-1.5 rounded-lg text-[9px] font-black uppercase transition-all whitespace-nowrap overflow-hidden text-ellipsis",
+                                                        (block.image_position || 'center') === pos ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                                                    )}
+                                                >
+                                                    {pos}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    </div>
+                    )}
 
                     {/* Text Column */}
                     <div className="space-y-6">
@@ -197,110 +202,114 @@ export function SortableBlockItem({ block, index, onUpdate, onSave, onDelete, se
                 </div>
 
                 {/* Call To Actions Grid */}
-                <div className="grid md:grid-cols-2 gap-6 p-6 sm:p-8 bg-blue-50/50 rounded-[2rem] border border-blue-100/50">
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Primary Action Route</span>
+                {needsCTA && (
+                    <div className="grid md:grid-cols-2 gap-6 p-6 sm:p-8 bg-blue-50/50 rounded-[2rem] border border-blue-100/50 mt-8">
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 mb-1">
+                                <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Primary Action Route</span>
+                            </div>
+                            <div className="space-y-3">
+                                <Input 
+                                    placeholder="Button Label (e.g., Get Started)" 
+                                    className="h-11 rounded-xl bg-white border-slate-200 text-sm font-bold shadow-sm" 
+                                    value={block.button_text || ""} 
+                                    onChange={(e) => onUpdate(block._id, "button_text", e.target.value)} 
+                                />
+                                <Input 
+                                    placeholder="Target URL Path" 
+                                    className="h-11 rounded-xl bg-white/60 border-slate-200 text-xs font-mono" 
+                                    value={block.button_link || ""} 
+                                    onChange={(e) => onUpdate(block._id, "button_link", e.target.value)} 
+                                />
+                            </div>
                         </div>
-                        <div className="space-y-3">
-                            <Input 
-                                placeholder="Button Label (e.g., Get Started)" 
-                                className="h-11 rounded-xl bg-white border-slate-200 text-sm font-bold shadow-sm" 
-                                value={block.button_text || ""} 
-                                onChange={(e) => onUpdate(block._id, "button_text", e.target.value)} 
-                            />
-                            <Input 
-                                placeholder="Target URL Path" 
-                                className="h-11 rounded-xl bg-white/60 border-slate-200 text-xs font-mono" 
-                                value={block.button_link || ""} 
-                                onChange={(e) => onUpdate(block._id, "button_link", e.target.value)} 
-                            />
-                        </div>
-                    </div>
 
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Secondary Action Route</span>
-                        </div>
-                        <div className="space-y-3">
-                            <Input 
-                                placeholder="Button Label (e.g., Learn More)" 
-                                className="h-11 rounded-xl bg-white border-slate-200 text-sm font-bold shadow-sm" 
-                                value={block.secondary_button_text || ""} 
-                                onChange={(e) => onUpdate(block._id, "secondary_button_text", e.target.value)} 
-                            />
-                            <Input 
-                                placeholder="Target URL Path" 
-                                className="h-11 rounded-xl bg-white/60 border-slate-200 text-xs font-mono" 
-                                value={block.secondary_button_link || ""} 
-                                onChange={(e) => onUpdate(block._id, "secondary_button_link", e.target.value)} 
-                            />
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 mb-1">
+                                <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Secondary Action Route</span>
+                            </div>
+                            <div className="space-y-3">
+                                <Input 
+                                    placeholder="Button Label (e.g., Learn More)" 
+                                    className="h-11 rounded-xl bg-white border-slate-200 text-sm font-bold shadow-sm" 
+                                    value={block.secondary_button_text || ""} 
+                                    onChange={(e) => onUpdate(block._id, "secondary_button_text", e.target.value)} 
+                                />
+                                <Input 
+                                    placeholder="Target URL Path" 
+                                    className="h-11 rounded-xl bg-white/60 border-slate-200 text-xs font-mono" 
+                                    value={block.secondary_button_link || ""} 
+                                    onChange={(e) => onUpdate(block._id, "secondary_button_link", e.target.value)} 
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* Display Control Footer */}
-                <div className="rounded-[2rem] bg-slate-900 text-white p-6 sm:p-8 space-y-8 relative overflow-hidden">
+                <div className="rounded-[2rem] bg-slate-900 text-white p-6 sm:p-8 space-y-8 relative overflow-hidden mt-8">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-slate-800 rounded-full blur-[100px] opacity-50 -translate-y-1/2 translate-x-1/4 pointer-events-none" />
                     
-                    <div className="relative">
-                        <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full" /> Structure & Display Settings
-                        </h5>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Height Scale</label>
-                                <Select value={block.image_size || "full"} onValueChange={(val) => onUpdate(block._id, "image_size", val)}>
-                                    <SelectTrigger className="h-10 rounded-xl bg-slate-800/80 border-slate-700 text-xs font-bold shadow-none"><SelectValue /></SelectTrigger>
-                                    <SelectContent className="rounded-xl shadow-2xl">
-                                        <SelectItem value="small">Small (400px)</SelectItem>
-                                        <SelectItem value="medium">Medium (600px)</SelectItem>
-                                        <SelectItem value="large">Large (800px)</SelectItem>
-                                        <SelectItem value="full">Ultra (Hero)</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Object Fitting</label>
-                                <Select value={block.object_fit || "cover"} onValueChange={(val) => onUpdate(block._id, "object_fit", val)}>
-                                    <SelectTrigger className="h-10 rounded-xl bg-slate-800/80 border-slate-700 text-xs font-bold shadow-none"><SelectValue /></SelectTrigger>
-                                    <SelectContent className="rounded-xl shadow-2xl">
-                                        <SelectItem value="cover">Cover Bounds</SelectItem>
-                                        <SelectItem value="contain">Contain Full</SelectItem>
-                                        <SelectItem value="fill">Fill (Distort)</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Aspect Ratio</label>
-                                <Select value={block.aspect_ratio || "none"} onValueChange={(val) => onUpdate(block._id, "aspect_ratio", val)}>
-                                    <SelectTrigger className="h-10 rounded-xl bg-slate-800/80 border-slate-700 text-xs font-bold shadow-none"><SelectValue /></SelectTrigger>
-                                    <SelectContent className="rounded-xl shadow-2xl">
-                                        <SelectItem value="none">Original Auto</SelectItem>
-                                        <SelectItem value="16:9">Widescreen (16:9)</SelectItem>
-                                        <SelectItem value="4:3">Standard (4:3)</SelectItem>
-                                        <SelectItem value="1:1">Square Grid (1:1)</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Layout Grid</label>
-                                <Select value={block.layout || "full-background"} onValueChange={(val) => onUpdate(block._id, "layout", val)}>
-                                    <SelectTrigger className="h-10 rounded-xl bg-slate-800/80 border-slate-700 text-xs font-bold shadow-none"><SelectValue /></SelectTrigger>
-                                    <SelectContent className="rounded-xl shadow-2xl">
-                                        <SelectItem value="full-background">Immersive Overlay</SelectItem>
-                                        <SelectItem value="centered">Centered Focus</SelectItem>
-                                        <SelectItem value="left-content">Split Layout (Left)</SelectItem>
-                                        <SelectItem value="right-content">Split Layout (Right)</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                    {needsStructure && (
+                        <div className="relative">
+                            <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full" /> Structure & Display Settings
+                            </h5>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Height Scale</label>
+                                    <Select value={block.image_size || "full"} onValueChange={(val) => onUpdate(block._id, "image_size", val)}>
+                                        <SelectTrigger className="h-10 rounded-xl bg-slate-800/80 border-slate-700 text-xs font-bold shadow-none"><SelectValue /></SelectTrigger>
+                                        <SelectContent className="rounded-xl shadow-2xl">
+                                            <SelectItem value="small">Small (400px)</SelectItem>
+                                            <SelectItem value="medium">Medium (600px)</SelectItem>
+                                            <SelectItem value="large">Large (800px)</SelectItem>
+                                            <SelectItem value="full">Ultra (Hero)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Object Fitting</label>
+                                    <Select value={block.object_fit || "cover"} onValueChange={(val) => onUpdate(block._id, "object_fit", val)}>
+                                        <SelectTrigger className="h-10 rounded-xl bg-slate-800/80 border-slate-700 text-xs font-bold shadow-none"><SelectValue /></SelectTrigger>
+                                        <SelectContent className="rounded-xl shadow-2xl">
+                                            <SelectItem value="cover">Cover Bounds</SelectItem>
+                                            <SelectItem value="contain">Contain Full</SelectItem>
+                                            <SelectItem value="fill">Fill (Distort)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Aspect Ratio</label>
+                                    <Select value={block.aspect_ratio || "none"} onValueChange={(val) => onUpdate(block._id, "aspect_ratio", val)}>
+                                        <SelectTrigger className="h-10 rounded-xl bg-slate-800/80 border-slate-700 text-xs font-bold shadow-none"><SelectValue /></SelectTrigger>
+                                        <SelectContent className="rounded-xl shadow-2xl">
+                                            <SelectItem value="none">Original Auto</SelectItem>
+                                            <SelectItem value="16:9">Widescreen (16:9)</SelectItem>
+                                            <SelectItem value="4:3">Standard (4:3)</SelectItem>
+                                            <SelectItem value="1:1">Square Grid (1:1)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Layout Grid</label>
+                                    <Select value={block.layout || "full-background"} onValueChange={(val) => onUpdate(block._id, "layout", val)}>
+                                        <SelectTrigger className="h-10 rounded-xl bg-slate-800/80 border-slate-700 text-xs font-bold shadow-none"><SelectValue /></SelectTrigger>
+                                        <SelectContent className="rounded-xl shadow-2xl">
+                                            <SelectItem value="full-background">Immersive Overlay</SelectItem>
+                                            <SelectItem value="centered">Centered Focus</SelectItem>
+                                            <SelectItem value="left-content">Split Layout (Left)</SelectItem>
+                                            <SelectItem value="right-content">Split Layout (Right)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
 
-                    <div className="relative pt-6 border-t border-slate-800">
+                    <div className={cn("relative pt-6 border-slate-800", needsStructure ? "border-t" : "")}>
                         <div className="grid md:grid-cols-2 gap-4 items-center">
                             <div>
                                 <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Time-based Scheduling</h5>

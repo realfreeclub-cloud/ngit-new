@@ -182,7 +182,7 @@ export function HeroBlockEditor({ sectionId, sectionType, initialBlocks }: HeroB
                                     <p className="text-2xl font-black">{blocks.filter(b => b.start_date || b.end_date).length}</p>
                                 </div>
                             </div>
-                            <p className="text-[9px] text-slate-500 font-medium italic px-2">Changes are reflected instantly in this preview box. Changes persist to sliders on 'Sync/Save' command.</p>
+                            <p className="text-[9px] text-slate-500 font-medium italic px-2">Changes are reflected instantly in this preview box. Changes persist to live layout on 'Sync/Save' command.</p>
                         </div>
                     </div>
                 </div>
