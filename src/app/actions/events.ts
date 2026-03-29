@@ -43,3 +43,30 @@ export async function getEvents() {
         return { success: false, error: "Failed to fetch events" };
     }
 }
+
+export async function getEvent(id: string) {
+    try {
+        await connectDB();
+        const event = await Event.findById(id).lean();
+        if (!event) return { success: false, error: "Event not found" };
+        return { success: true, event: JSON.parse(JSON.stringify(event)) };
+    } catch (error) {
+        return { success: false, error: "Failed to fetch event" };
+    }
+}
+
+export async function updateEvent(id: string, data: any) {
+    try {
+        await connectDB();
+        const updateData = { ...data };
+        if (data.date) updateData.date = new Date(data.date);
+        
+        const event = await Event.findByIdAndUpdate(id, updateData, { new: true }).lean();
+        revalidatePath("/admin/events");
+        revalidatePath("/", "layout");
+        return { success: true, event: JSON.parse(JSON.stringify(event)) };
+    } catch (error: any) {
+        console.error("Update Event Error:", error);
+        return { success: false, error: error.message || "Failed to update event" };
+    }
+}

@@ -205,8 +205,7 @@ export async function getQuizzesForCourse(courseId: string) {
         if (session?.user?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
         const quizzes = await Quiz.find({ 
-            courseId,
-            isMockTest: { $ne: true }
+            courseId
         })
             .select("_id title settings isPublished")
             .sort({ createdAt: -1 })

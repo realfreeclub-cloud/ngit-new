@@ -122,9 +122,11 @@ export default function AdminEventsPage() {
                                     </td>
                                     <td className="px-8 py-6 text-right">
                                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-slate-100 text-slate-400 hover:text-primary">
-                                                <Edit3 className="w-4 h-4" />
-                                            </Button>
+                                            <Link href={`/admin/events/edit/${event._id}`}>
+                                                <Button variant="ghost" size="icon" className="rounded-xl hover:bg-slate-100 text-slate-400 hover:text-primary">
+                                                    <Edit3 className="w-4 h-4" />
+                                                </Button>
+                                            </Link>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
