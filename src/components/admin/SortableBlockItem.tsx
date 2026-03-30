@@ -171,32 +171,43 @@ export function SortableBlockItem({ block, index, onUpdate, onSave, onDelete, se
                     <div className="space-y-6">
                         <div className="space-y-4">
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Primary Headline</label>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                                    {sectionType === "TrustIndicators" ? "Stat Label (e.g. Success Rate)" : 
+                                     sectionType === "WhyChooseSection" ? "Reason Title" : 
+                                     "Primary Headline"}
+                                </label>
                                 <Input 
-                                    placeholder="E.g., Welcome to NGIT"
+                                    placeholder={sectionType === "TrustIndicators" ? "Success Rate" : "E.g., Welcome to NGIT"}
                                     className="h-12 rounded-xl bg-slate-50 border-none font-extrabold text-slate-900 text-base focus-visible:ring-1 focus-visible:ring-blue-500" 
                                     value={block.title || ""} 
                                     onChange={(e) => onUpdate(block._id, "title", e.target.value)} 
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Overline Badge / Subtitle</label>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                                    {sectionType === "TrustIndicators" ? "Stat Value (e.g. 98%)" : 
+                                     "Overline Badge / Subtitle"}
+                                </label>
                                 <Input 
-                                    placeholder="E.g., Excellence in Education"
+                                    placeholder={sectionType === "TrustIndicators" ? "15+" : "E.g., Excellence in Education"}
                                     className="h-10 rounded-xl bg-slate-50 border-none font-bold text-sm text-blue-600 focus-visible:ring-1 focus-visible:ring-blue-500" 
                                     value={block.subtitle || ""} 
                                     onChange={(e) => onUpdate(block._id, "subtitle", e.target.value)} 
                                 />
                             </div>
-                            <div className="space-y-1.5 flex-1">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Narrative / Description</label>
-                                <Textarea 
-                                    placeholder="Enter full descriptive text for this section..."
-                                    className="rounded-xl bg-slate-50 border-none min-h-[120px] py-4 leading-relaxed font-medium focus-visible:ring-1 focus-visible:ring-blue-500 resize-none" 
-                                    value={block.description || ""} 
-                                    onChange={(e) => onUpdate(block._id, "description", e.target.value)} 
-                                />
-                            </div>
+                            {sectionType !== "TrustIndicators" && (
+                                <div className="space-y-1.5 flex-1">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                                        {sectionType === "WhyChooseSection" ? "Reason Description" : "Narrative / Description"}
+                                    </label>
+                                    <Textarea 
+                                        placeholder="Enter full descriptive text for this section..."
+                                        className="rounded-xl bg-slate-50 border-none min-h-[120px] py-4 leading-relaxed font-medium focus-visible:ring-1 focus-visible:ring-blue-500 resize-none" 
+                                        value={block.description || ""} 
+                                        onChange={(e) => onUpdate(block._id, "description", e.target.value)} 
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

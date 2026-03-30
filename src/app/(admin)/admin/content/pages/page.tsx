@@ -39,7 +39,8 @@ export default function AdvancedCmsPage() {
         "GallerySection": { label: "Gallery", link: "/admin/gallery" },
         "GalleryGrid": { label: "Gallery", link: "/admin/gallery" },
         "VideoFeedbackSection": { label: "Video Testimonials", link: "/admin/feedback" },
-        "BlogSection": { label: "Blog Posts", link: "/admin/blogs" }
+        "BlogSection": { label: "Blog Posts", link: "/admin/blogs" },
+        "NotificationScroller": { label: "Latest Updates/Notices", link: "/admin/notices" }
     };
 
     const HIDDEN_PAGES = ["courses", "faculty"];
