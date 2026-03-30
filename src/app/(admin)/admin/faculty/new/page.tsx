@@ -20,6 +20,8 @@ export default function CreateFacultyPage() {
         phone: "",
         image: "",
         qualification: "",
+        experience: "",
+        specialization: "",
         bio: ""
     });
 
@@ -107,14 +109,37 @@ export default function CreateFacultyPage() {
                         </div>
                     </div>
 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                                <GraduationCap className="w-3 h-3" /> Qualification
+                            </label>
+                            <Input
+                                value={formData.qualification}
+                                onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
+                                placeholder="Ph.D. in Applied Mathematics"
+                                className="h-11 border-slate-200 focus:border-primary"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                Experience
+                            </label>
+                            <Input
+                                value={formData.experience}
+                                onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                                placeholder="e.g. 10+ Years"
+                                className="h-11 border-slate-200 focus:border-primary"
+                            />
+                        </div>
+                    </div>
+
                     <div className="space-y-1">
-                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                            <GraduationCap className="w-3 h-3" /> Qualification
-                        </label>
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Area of Specialization</label>
                         <Input
-                            value={formData.qualification}
-                            onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
-                            placeholder="Ph.D. in Applied Mathematics"
+                            value={formData.specialization}
+                            onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+                            placeholder="e.g. Artificial Intelligence, Data Structures"
                             className="h-11 border-slate-200 focus:border-primary"
                         />
                     </div>

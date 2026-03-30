@@ -7,6 +7,8 @@ export interface IFaculty extends Document {
     phone: string;
     image?: string;
     qualification?: string;
+    experience?: string;
+    specialization?: string;
     bio?: string;
     createdAt: Date;
     updatedAt: Date;
@@ -20,6 +22,8 @@ const FacultySchema = new Schema<IFaculty>(
         phone: { type: String },
         image: { type: String },
         qualification: { type: String },
+        experience: { type: String },
+        specialization: { type: String },
         bio: { type: String },
     },
     { timestamps: true }

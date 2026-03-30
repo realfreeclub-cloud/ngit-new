@@ -59,21 +59,24 @@ export default function FacultySection({ members, data }: { members?: any[], dat
     const title = data?.section_name || "Learn from the Industry Masters";
     const subtitle = data?.subtitle || "Elite Faculty";
     
-    const displayFaculty = members && members.length > 0 ? members.map((m, i) => ({
+    const displayFaculty = (members && members.length > 0) ? members.map((m, i) => ({
         id: m._id || i,
         name: m.name,
         subject: m.position,
-        qualification: m.qualification || m.degree || "Expert",
+        qualification: m.qualification || "Expert",
         experience: m.experience || "N/A",
-        bio: m.bio || m.specialization || "Dedicated professional committed to educational excellence.",
+        bio: m.bio || "Dedicated professional committed to educational excellence.",
+        specialization: m.specialization || "Expert",
         shortBio: m.bio ? (m.bio.length > 100 ? m.bio.substring(0, 100) + "..." : m.bio) : (m.position + " at NGIT Academy."),
         image: m.image
-    })) : defaultFaculty.map(f => ({
+    })) : (members?.length === 0 ? [] : defaultFaculty.map(f => ({
         ...f,
         id: f.id.toString(),
         bio: f.specialization,
         shortBio: f.specialization
-    }));
+    })));
+
+    if (displayFaculty.length === 0) return null;
 
     const totalPages = Math.ceil(displayFaculty.length / itemsPerPage);
     const visibleFaculty = displayFaculty.slice(page * itemsPerPage, (page + 1) * itemsPerPage);

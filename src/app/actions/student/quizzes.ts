@@ -199,13 +199,21 @@ export const getQuizAnalysis = createSafeAction(
     { schema: AttemptIdSchema, requireAuth: true, roles: [UserRole.STUDENT, UserRole.ADMIN] },
     async ({ attemptId }, session) => {
         await connectDB();
-        const attempt = await Attempt.findById(attemptId).populate("quizId").lean();
+        const attempt = await Attempt.findById(attemptId).populate({
+            path: "quizId",
+            populate: { path: "questions" }
+        }).lean();
 
         if (!attempt) throw new Error("Attempt not found");
         if (attempt.studentId.toString() !== session.user.id && session.user.role !== UserRole.ADMIN) {
              throw new Error("Unauthorized access to result analysis");
         }
 
-        return JSON.parse(JSON.stringify(attempt));
+        const answers = await Answer.find({ attemptId }).lean();
+
+        return JSON.parse(JSON.stringify({
+            ...attempt,
+            answers
+        }));
     }
 );

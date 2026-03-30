@@ -46,7 +46,7 @@ export default function DynamicRenderer({ sections, staticFallback, extraData, s
                     case "CoursesSection":
                         return <CoursesSection key={sectionKey} data={section} courses={extraData?.courses || []} hideExplorer={extraData?.hideExplorer} />;
                     case "FacultyGrid":
-                        return <FacultyGrid key={sectionKey} data={section} blocks={section.blocks} />;
+                        return <FacultyGrid key={sectionKey} data={section} blocks={section.blocks} members={extraData?.faculty || []} />;
                     case "FacultySection":
                         return <FacultySection key={sectionKey} data={section} members={extraData?.faculty || []} />;
                     case "DirectorMessageSection": {

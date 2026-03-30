@@ -1,9 +1,0 @@
-﻿src/app/(admin)/admin/quizzes/[id]/analytics/page.tsx(49,28): error TS18048: 'stats' is possibly 'undefined'.
-src/app/(admin)/admin/quizzes/[id]/analytics/page.tsx(55,31): error TS18048: 'stats' is possibly 'undefined'.
-src/app/(admin)/admin/quizzes/[id]/analytics/page.tsx(61,31): error TS18048: 'stats' is possibly 'undefined'.
-src/app/(admin)/admin/quizzes/[id]/analytics/page.tsx(67,28): error TS18048: 'stats' is possibly 'undefined'.
-src/app/(admin)/admin/quizzes/[id]/analytics/page.tsx(70,28): error TS18048: 'stats' is possibly 'undefined'.
-src/app/(admin)/admin/quizzes/[id]/analytics/page.tsx(89,44): error TS18048: 'stats' is possibly 'undefined'.
-src/app/(admin)/admin/quizzes/[id]/analytics/page.tsx(89,79): error TS18048: 'stats' is possibly 'undefined'.
-src/app/(admin)/admin/quizzes/[id]/analytics/page.tsx(115,78): error TS18048: 'stats' is possibly 'undefined'.
-src/app/(admin)/admin/quizzes/[id]/analytics/page.tsx(119,74): error TS18048: 'stats' is possibly 'undefined'.

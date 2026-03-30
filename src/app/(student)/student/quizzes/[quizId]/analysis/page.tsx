@@ -26,9 +26,9 @@ export default function QuizAnalysisPage({ params }: { params: Promise<{ quizId:
     useEffect(() => {
         if (!attemptId) return;
         const fetchAnalysis = async () => {
-            const res = await getQuizAnalysis(attemptId);
+            const res = await getQuizAnalysis({ attemptId });
             if (res.success) {
-                setAnalysis(res.attempt);
+                setAnalysis(res.data);
             } else {
                 toast.error(res.error || "Failed to load analysis");
             }
@@ -56,8 +56,9 @@ export default function QuizAnalysisPage({ params }: { params: Promise<{ quizId:
         );
     }
 
-    const { quizId: quiz, score, totalMarks, answers, isPassed } = analysis;
-    const accuracy = Math.round((score / totalMarks) * 100);
+    const { quizId: quiz, totalScore: score, totalMarks, answers, isPassed } = analysis;
+    const accuracy = totalMarks > 0 ? Math.round((score / totalMarks) * 100) : 0;
+    const timeTaken = analysis.endTime ? (new Date(analysis.endTime).getTime() - new Date(analysis.startTime).getTime()) / 1000 : 0;
 
     return (
         <div className="min-h-screen bg-slate-50 py-12 px-4">
@@ -90,7 +91,7 @@ export default function QuizAnalysisPage({ params }: { params: Promise<{ quizId:
                         </div>
                         <div className="space-y-1">
                             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Time</p>
-                            <p className="text-4xl font-black text-slate-900">{Math.round(analysis.timeTaken / 60)}m</p>
+                            <p className="text-4xl font-black text-slate-900">{Math.round(timeTaken / 60)}m</p>
                         </div>
                     </div>
                 </div>
@@ -102,8 +103,8 @@ export default function QuizAnalysisPage({ params }: { params: Promise<{ quizId:
                     </h2>
 
                     {quiz.questions.map((question: any, idx: number) => {
-                        const userAnswer = answers.find((a: any) => a.questionId === question._id);
-                        const isCorrect = userAnswer?.isCorrect;
+                        const userAnswer = (answers as any[]).find((a: any) => a.questionId === question._id);
+                        const isCorrect = userAnswer?.evaluation?.isCorrect;
 
                         return (
                             <div key={question._id} className={`bg-white rounded-[2rem] p-8 border-2 ${isCorrect ? 'border-emerald-100' : 'border-red-100'} shadow-sm`}>
@@ -112,12 +113,12 @@ export default function QuizAnalysisPage({ params }: { params: Promise<{ quizId:
                                         {idx + 1}
                                     </div>
                                     <div className="flex-1 space-y-4">
-                                        <h3 className="text-lg font-bold text-slate-900">{question.text}</h3>
+                                        <h3 className="text-lg font-bold text-slate-900">{question.content?.en}</h3>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            {question.options.map((option: string, optIdx: number) => {
-                                                const isSelected = userAnswer?.selectedOption === option;
-                                                const isAnswer = question.correctAnswer === option;
+                                            {question.options.map((option: any, optIdx: number) => {
+                                                const isSelected = userAnswer?.selectedOptionIds?.includes(option._id);
+                                                const isAnswer = option.isCorrect;
 
                                                 let style = "bg-slate-50 border-slate-100 text-slate-500";
                                                 if (isAnswer) style = "bg-emerald-50 border-emerald-200 text-emerald-700 font-bold";
@@ -125,7 +126,7 @@ export default function QuizAnalysisPage({ params }: { params: Promise<{ quizId:
 
                                                 return (
                                                     <div key={optIdx} className={`p-4 rounded-xl border flex items-center justify-between ${style}`}>
-                                                        <span>{option}</span>
+                                                        <span>{option.text?.en}</span>
                                                         {isAnswer && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
                                                         {isSelected && !isCorrect && <XCircle className="w-5 h-5 text-red-500" />}
                                                     </div>
@@ -133,10 +134,10 @@ export default function QuizAnalysisPage({ params }: { params: Promise<{ quizId:
                                             })}
                                         </div>
 
-                                        {question.explanation && (
+                                        {question.explanation?.en && (
                                             <div className="mt-4 bg-primary/5 p-4 rounded-xl text-sm text-slate-600">
                                                 <span className="font-bold text-primary block mb-1">Explanation:</span>
-                                                {question.explanation}
+                                                {question.explanation.en}
                                             </div>
                                         )}
                                     </div>
