@@ -30,10 +30,10 @@ export default function NewCoursePage() {
 
         const res = await createCourse(formData);
 
-        if (res.success && res.course?._id) {
+        if (res.success) {
             toast.success("Course created! Now add some lessons.");
             // Go straight to content manager to start adding lessons
-            router.push(`/admin/courses/${res.course._id}`);
+            router.push(`/admin/courses/${res.data._id}`);
         } else {
             toast.error(res.error || "Failed to create course");
             setLoading(false);

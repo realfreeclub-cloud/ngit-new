@@ -1,8 +1,23 @@
 import { Users } from "lucide-react";
 import Image from "next/image";
 
-export default function FacultyGrid({ data, blocks }: { data: any, blocks: any[] }) {
-    if (!blocks || blocks.length === 0) return null;
+export default function FacultyGrid({ data, blocks, members }: { data: any, blocks?: any[], members?: any[] }) {
+    const displayItems = members && members.length > 0 
+        ? members.map(m => ({
+            _id: m._id,
+            title: m.name,
+            subtitle: m.position,
+            description: m.bio || m.qualification,
+            image: m.image,
+            extra_data: JSON.stringify({
+                designation: m.position,
+                experience: m.experience || "Expert",
+                qualification: m.qualification
+            })
+        }))
+        : (blocks || []);
+
+    if (displayItems.length === 0) return null;
 
     return (
         <div className="container mx-auto px-4 lg:px-10 py-20">
@@ -11,7 +26,7 @@ export default function FacultyGrid({ data, blocks }: { data: any, blocks: any[]
             </div>
             
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {blocks.map((block: any, idx: number) => {
+                {displayItems.map((block: any, idx: number) => {
                     const extra = typeof block.extra_data === 'string' ? JSON.parse(block.extra_data || "{}") : (block.extra_data || {});
                     return (
                         <div
