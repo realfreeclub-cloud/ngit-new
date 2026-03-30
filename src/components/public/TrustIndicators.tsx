@@ -39,10 +39,10 @@ interface TrustIndicatorsProps {
 }
 
 export default function TrustIndicators({ stats }: TrustIndicatorsProps) {
-    const displayStats = stats && stats.length === 4 ? stats.map((s, i) => ({
-        ...defaultStats[i],
-        value: s.value,
-        label: s.label
+    const displayStats = stats && stats.length > 0 ? stats.map((s, i) => ({
+        ...(defaultStats[i % defaultStats.length] || defaultStats[0]),
+        value: s.value || s.subtitle || "0",
+        label: s.label || s.title || "Stat"
     })) : defaultStats;
 
     return (
