@@ -53,7 +53,7 @@ const nextConfig = {
                 headers: [
                     {
                         key: "Permissions-Policy",
-                        value: "geolocation=*",
+                        value: "geolocation=(self)",
                     },
                 ],
             },
