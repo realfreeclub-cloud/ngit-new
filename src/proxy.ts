@@ -16,7 +16,7 @@ const securityHeaders = {
     "X-Frame-Options": "DENY",
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "strict-origin-when-cross-origin",
-    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=(self), interest-cohort=()",
     "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
 };
 
