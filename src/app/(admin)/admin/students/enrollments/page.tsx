@@ -24,11 +24,13 @@ export default function CourseAssignmentPage() {
             if (res.success) {
                 setData(res.data);
             }
-            // Fetch courses
-            const coursesRes = await fetch("/api/public/courses");
-            if (coursesRes.ok) {
-                const cData = await coursesRes.json();
-                setCourses(cData.courses || []);
+            // Use server-side service directly
+            const { getCourses } = await import("@/services/CourseService");
+            const cData = await getCourses(1, 100);
+            if (cData) {
+                // Sort OFFLINE courses to the top
+                const sorted = [...cData].sort((a: any, b: any) => (b.type === 'OFFLINE' ? 1 : -1));
+                setCourses(sorted);
             }
         } catch (error) {
             console.error(error);

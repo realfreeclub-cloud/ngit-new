@@ -44,7 +44,7 @@ export async function getCourses(page: number = 1, limit: number = 20) {
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
-            .select('title description price category thumbnail isPublished level instructor duration lessonCount enrollmentCount')
+            .select('title description price category thumbnail isPublished level instructor duration lessonCount enrollmentCount type')
             .lean();
             
         return JSON.parse(JSON.stringify(courses));
