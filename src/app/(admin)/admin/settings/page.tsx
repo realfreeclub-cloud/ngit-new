@@ -24,7 +24,7 @@ export default function AdminSettingsPage() {
         setLoading(true);
         const res = await updateUserDetails({ name });
         if (res.success) {
-            await update({ name }); // Update next-auth session
+            await update({ name }); // This triggers the JWT/Session update callback
             toast.success("Profile updated successfully");
         } else {
             toast.error(res.error || "Failed to update profile");

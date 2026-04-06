@@ -81,3 +81,27 @@ export async function deleteImageAction(id: string) {
         return { success: false, error: "Failed to delete image" };
     }
 }
+export async function saveExternalImageUrlAction({ url, title, category }: { url: string, title: string, category: string }) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user) return { success: false, error: "Unauthorized" };
+        
+        await connectDB();
+        
+        const newMedia = await Media.create({
+            url,
+            title,
+            category: category || "Others",
+            uploadedBy: session.user.id,
+            mimeType: "image/external",
+            size: 0
+        });
+
+        revalidatePath("/gallery");
+        revalidatePath("/admin/gallery");
+        
+        return { success: true, media: JSON.parse(JSON.stringify(newMedia)) };
+    } catch (error: any) {
+        return { success: false, error: "Link preservation failed" };
+    }
+}

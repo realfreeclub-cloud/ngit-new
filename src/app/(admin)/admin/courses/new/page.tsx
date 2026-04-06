@@ -42,43 +42,47 @@ export default function NewCoursePage() {
 
 
     return (
-        <div className="max-w-4xl space-y-8 pb-20">
-            <div className="flex items-center gap-4">
+        <div className="max-w-5xl mx-auto space-y-8 pb-32 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Header section center aligned on desktop */}
+            <div className="flex items-center gap-6 mb-4">
                 <Link href="/admin/courses">
-                    <Button variant="ghost" size="icon" className="rounded-full">
+                    <Button variant="outline" size="icon" className="rounded-2xl w-12 h-12 border-2 border-slate-100 hover:bg-white hover:border-primary/20 shadow-sm transition-all">
                         <ArrowLeft className="w-5 h-5" />
                     </Button>
                 </Link>
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Create New Course</h1>
-                    <p className="text-muted-foreground mt-1">Fill in the details to launch a new academic program.</p>
+                <div className="space-y-1">
+                    <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-2">Create New Course</h1>
+                    <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Academic Program Setup — V1.2</p>
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="bg-white border rounded-[2.5rem] p-10 shadow-sm space-y-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <form onSubmit={handleSubmit} className="bg-white border-2 border-slate-50 rounded-[3rem] p-8 md:p-14 shadow-2xl shadow-slate-200/50 space-y-12 relative overflow-hidden">
+                {/* Visual Accent */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl opacity-50" />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 relative z-10">
                     {/* Basic Info */}
-                    <div className="space-y-6 md:col-span-2 border-b pb-8">
-                        <h2 className="text-lg font-bold flex items-center gap-2">
-                            <div className="w-1.5 h-6 bg-primary rounded-full" />
-                            Basic Information
+                    <div className="space-y-8 md:col-span-2 border-b-2 border-dashed border-slate-100 pb-12">
+                        <h2 className="text-xl font-black flex items-center gap-3 text-slate-900">
+                            <div className="w-2.5 h-8 bg-primary rounded-full shadow-lg shadow-primary/20" />
+                            Core Curriculm Details
                         </h2>
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-700 ml-1">Course Title</label>
+                        <div className="grid grid-cols-1 gap-8">
+                            <div className="space-y-2.5">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Official Course Title</label>
                                 <Input
-                                    placeholder="e.g. Advanced Physics for JEE"
-                                    className="h-14 rounded-2xl px-6 bg-slate-50/50"
+                                    placeholder="e.g. Advanced Diploma in Professional Computing"
+                                    className="h-16 rounded-2xl px-8 bg-slate-50 border-none font-black text-slate-900 text-lg hover:bg-slate-100 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
                                     value={formData.title}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                     required
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-700 ml-1">Detailed Description</label>
+                            <div className="space-y-2.5">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Academic Summary / Narrative</label>
                                 <Textarea
-                                    placeholder="Tell students what they will learn..."
-                                    className="min-h-[150px] rounded-2xl px-6 py-4 bg-slate-50/50"
+                                    placeholder="Briefly explain the course objectives, target audience, and expected outcomes..."
+                                    className="min-h-[160px] rounded-[2rem] px-8 py-6 bg-slate-50 border-none font-bold text-slate-700 text-base hover:bg-slate-100 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all shadow-inner resize-none"
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     required
@@ -88,56 +92,56 @@ export default function NewCoursePage() {
                     </div>
 
                     {/* Pricing & Category */}
-                    <div className="space-y-6">
-                        <h2 className="text-lg font-bold flex items-center gap-2">
-                            <div className="w-1.5 h-6 bg-indigo-500 rounded-full" />
-                            Pricing & Metadata
+                    <div className="space-y-8">
+                        <h2 className="text-xl font-black flex items-center gap-3 text-slate-900">
+                            <div className="w-2.5 h-8 bg-indigo-500 rounded-full shadow-lg shadow-indigo-500/20" />
+                            Investment & Placement
                         </h2>
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700 ml-1">Price (₹)</label>
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-2.5">
+                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Base Tuition (₹)</label>
                                     <Input
                                         type="number"
-                                        placeholder="0 for free"
-                                        className="h-14 rounded-2xl px-6 bg-slate-50/50"
+                                        placeholder="0 for Open Enrollment"
+                                        className="h-14 rounded-2xl px-6 bg-slate-50 border-2 border-transparent font-black text-slate-900 focus:bg-white focus:ring-2 focus:ring-primary/20"
                                         value={formData.price}
                                         onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
                                         required
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700 ml-1">Course Type</label>
+                                <div className="space-y-2.5">
+                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Delivery Model</label>
                                     <select
-                                        className="flex h-14 w-full rounded-2xl border border-input bg-slate-50/50 px-6 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary outline-none"
+                                        className="flex h-14 w-full rounded-2xl border-2 border-slate-50 bg-slate-50 px-6 font-black text-xs uppercase tracking-widest text-slate-700 focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer"
                                         value={formData.type}
                                         onChange={(e) => setFormData({ ...formData, type: e.target.value as "ONLINE" | "OFFLINE" })}
                                     >
-                                        <option value="ONLINE">Online (Digital LMS)</option>
-                                        <option value="OFFLINE">Offline (Classroom)</option>
+                                        <option value="ONLINE">Digital Cloud Access</option>
+                                        <option value="OFFLINE">Physical Campus Training</option>
                                     </select>
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-700 ml-1">Course Category</label>
-                                <div className="flex flex-col xl:flex-row gap-4">
+                            <div className="space-y-2.5">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Academic Category</label>
+                                <div className="flex flex-col gap-4">
                                     <select
-                                        className="flex h-14 flex-1 rounded-2xl border border-input bg-slate-50/50 px-6 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary outline-none min-w-0"
+                                        className="flex h-14 flex-1 rounded-2xl border-2 border-slate-50 bg-slate-50 px-6 font-black text-xs uppercase tracking-widest text-slate-700 focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer"
                                         value={formData.category}
                                         onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                                     >
                                         {categories.map(c => <option key={c} value={c}>{c}</option>)}
                                     </select>
-                                    <div className="flex gap-2 flex-1 min-w-0">
+                                    <div className="flex gap-2">
                                         <Input
-                                            placeholder="New Category"
-                                            className="h-14 flex-1 min-w-0 rounded-2xl px-4 bg-slate-50/50"
+                                            placeholder="Tag New Category..."
+                                            className="h-14 flex-1 rounded-2xl px-6 bg-white border-2 border-slate-100 font-bold"
                                             value={newCategory}
                                             onChange={(e) => setNewCategory(e.target.value)}
                                         />
                                         <Button
                                             type="button"
-                                            className="h-14 rounded-2xl px-6 shrink-0"
+                                            className="h-14 rounded-2xl px-6 font-black uppercase text-[10px] tracking-widest bg-slate-900 hover:bg-black shadow-lg"
                                             onClick={() => {
                                                 if (newCategory && !categories.includes(newCategory)) {
                                                     setCategories([...categories, newCategory]);
@@ -146,7 +150,7 @@ export default function NewCoursePage() {
                                                 }
                                             }}
                                         >
-                                            Add
+                                            Append
                                         </Button>
                                     </div>
                                 </div>
@@ -155,21 +159,27 @@ export default function NewCoursePage() {
                     </div>
 
                     {/* Media */}
-                    <div className="space-y-6">
-                        <h2 className="text-lg font-bold flex items-center gap-2">
-                            <div className="w-1.5 h-6 bg-emerald-500 rounded-full" />
-                            Course Media
+                    <div className="space-y-8">
+                        <h2 className="text-xl font-black flex items-center gap-3 text-slate-900">
+                            <div className="w-2.5 h-8 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/20" />
+                            Program Visuals
                         </h2>
-                        <div className="space-y-4">
-                            <div className="w-full aspect-video rounded-3xl bg-slate-100 flex flex-col items-center justify-center border-2 border-dashed border-slate-300 text-slate-400">
-                                <Upload className="w-8 h-8 mb-2" />
-                                <p className="text-xs font-bold uppercase tracking-widest">Upload Thumbnail</p>
+                        <div className="space-y-6">
+                            <div className="w-full aspect-video rounded-[2rem] bg-slate-50 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 text-slate-400 group hover:border-primary/20 hover:bg-primary/5 transition-all cursor-pointer overflow-hidden shadow-inner relative">
+                                {formData.thumbnail ? (
+                                    <img src={formData.thumbnail} alt="Preview" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                                ) : (
+                                    <>
+                                        <Upload className="w-10 h-10 mb-2 opacity-30 group-hover:scale-110 group-hover:text-primary transition-all" />
+                                        <p className="text-[10px] font-black uppercase tracking-widest">Awaiting Identity Visual</p>
+                                    </>
+                                )}
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-700 ml-1">Thumbnail URL (Temporary)</label>
+                            <div className="space-y-2.5">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Asset URL / Secure Source</label>
                                 <Input
-                                    placeholder="https://..."
-                                    className="h-12 rounded-xl px-4 bg-slate-50/50"
+                                    placeholder="Enter secure image URL..."
+                                    className="h-14 rounded-2xl px-6 bg-slate-50 border-none font-bold text-slate-500 text-sm focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
                                     value={formData.thumbnail}
                                     onChange={(e) => setFormData({ ...formData, thumbnail: e.target.value })}
                                 />
@@ -178,21 +188,28 @@ export default function NewCoursePage() {
                     </div>
                 </div>
 
-                <div className="pt-10 flex gap-4">
+                <div className="pt-12 flex flex-col md:flex-row gap-6 border-t-2 border-slate-50">
                     <Button
                         type="submit"
                         disabled={loading}
-                        className="h-16 rounded-[2rem] px-12 text-lg font-bold shadow-xl shadow-primary/20"
+                        className="h-20 flex-1 rounded-[2rem] text-xl font-black shadow-2xl shadow-primary/30 gap-4 group"
                     >
                         {loading ? (
                             <>
-                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                Creating Program...
+                                <Loader2 className="h-6 w-6 animate-spin" />
+                                Processing Admission Portal...
                             </>
-                        ) : "Create Course & Continue"}
+                        ) : (
+                            <>
+                                Initialize Academic Program
+                                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center group-hover:translate-x-2 transition-transform">
+                                   <ArrowLeft className="w-5 h-5 rotate-180" />
+                                </div>
+                            </>
+                        )}
                     </Button>
-                    <Link href="/admin/courses">
-                        <Button variant="ghost" className="h-16 rounded-[2rem] px-8 text-lg font-medium">Cancel</Button>
+                    <Link href="/admin/courses" className="flex md:hidden">
+                        <Button variant="ghost" className="h-16 w-full rounded-[2rem] font-bold text-slate-400">Cancel Setup</Button>
                     </Link>
                 </div>
             </form>

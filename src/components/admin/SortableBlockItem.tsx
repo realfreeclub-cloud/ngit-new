@@ -170,32 +170,66 @@ export function SortableBlockItem({ block, index, onUpdate, onSave, onDelete, se
                     {/* Text Column */}
                     <div className="space-y-6">
                         <div className="space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
-                                    {sectionType === "TrustIndicators" ? "Stat Label (e.g. Success Rate)" : 
-                                     sectionType === "WhyChooseSection" ? "Reason Title" : 
-                                     "Primary Headline"}
-                                </label>
-                                <Input 
-                                    placeholder={sectionType === "TrustIndicators" ? "Success Rate" : "E.g., Welcome to NGIT"}
-                                    className="h-12 rounded-xl bg-slate-50 border-none font-extrabold text-slate-900 text-base focus-visible:ring-1 focus-visible:ring-blue-500" 
-                                    value={block.title || ""} 
-                                    onChange={(e) => onUpdate(block._id, "title", e.target.value)} 
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
-                                    {sectionType === "TrustIndicators" ? "Stat Value (e.g. 98%)" : 
-                                     "Overline Badge / Subtitle"}
-                                </label>
-                                <Input 
-                                    placeholder={sectionType === "TrustIndicators" ? "15+" : "E.g., Excellence in Education"}
-                                    className="h-10 rounded-xl bg-slate-50 border-none font-bold text-sm text-blue-600 focus-visible:ring-1 focus-visible:ring-blue-500" 
-                                    value={block.subtitle || ""} 
-                                    onChange={(e) => onUpdate(block._id, "subtitle", e.target.value)} 
-                                />
-                            </div>
-                            {sectionType !== "TrustIndicators" && (
+                            {sectionType === "TrustIndicators" ? (
+                                <>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Metrics Counter / Value</label>
+                                        <Input 
+                                            placeholder="e.g. 5000+ or 98%"
+                                            className="h-16 rounded-xl bg-slate-900 border-none font-black text-white text-3xl focus-visible:ring-1 focus-visible:ring-blue-500 tracking-tight" 
+                                            value={block.subtitle || ""} 
+                                            onChange={(e) => onUpdate(block._id, "subtitle", e.target.value)} 
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Metric Label / Recognition</label>
+                                        <Input 
+                                            placeholder="e.g. Students Trained"
+                                            className="h-10 rounded-xl bg-slate-50 border-none font-bold text-sm text-slate-900 focus-visible:ring-1 focus-visible:ring-blue-500" 
+                                            value={block.title || ""} 
+                                            onChange={(e) => onUpdate(block._id, "title", e.target.value)} 
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Associated Icon Class</label>
+                                        <Select value={block.icon_name || "Trophy"} onValueChange={(val) => onUpdate(block._id, "icon_name", val)}>
+                                            <SelectTrigger className="h-10 rounded-xl bg-white border-slate-200 font-bold text-xs"><SelectValue /></SelectTrigger>
+                                            <SelectContent className="rounded-xl shadow-2xl border-none">
+                                                <SelectItem value="Trophy">Trophy (Years of Mastery)</SelectItem>
+                                                <SelectItem value="Users">Users (Students Trained)</SelectItem>
+                                                <SelectItem value="TrendingUp">Trending Up (Success Rate)</SelectItem>
+                                                <SelectItem value="Target">Target (High Ranks/Milestones)</SelectItem>
+                                                <SelectItem value="ShieldCheck">Shield (Trusted Certification)</SelectItem>
+                                                <SelectItem value="Zap">Zap (Instant Processing)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                                            {sectionType === "WhyChooseSection" ? "Reason Title" : "Primary Headline"}
+                                        </label>
+                                        <Input 
+                                            placeholder="E.g., Welcome to NGIT"
+                                            className="h-12 rounded-xl bg-slate-50 border-none font-extrabold text-slate-900 text-base focus-visible:ring-1 focus-visible:ring-blue-500" 
+                                            value={block.title || ""} 
+                                            onChange={(e) => onUpdate(block._id, "title", e.target.value)} 
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Overline Badge / Subtitle</label>
+                                        <Input 
+                                            placeholder="E.g., Excellence in Education"
+                                            className="h-10 rounded-xl bg-slate-50 border-none font-bold text-sm text-blue-600 focus-visible:ring-1 focus-visible:ring-blue-500" 
+                                            value={block.subtitle || ""} 
+                                            onChange={(e) => onUpdate(block._id, "subtitle", e.target.value)} 
+                                        />
+                                    </div>
+                                </>
+                            )}
+                            {sectionType !== "TrustIndicators" && !["CourseGrid", "FacultyGrid"].includes(sectionType) && (
                                 <div className="space-y-1.5 flex-1">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
                                         {sectionType === "WhyChooseSection" ? "Reason Description" : "Narrative / Description"}

@@ -38,9 +38,30 @@ export function HeroBlockEditor({ sectionId, sectionType, initialBlocks }: HeroB
     const [blocks, setBlocks] = useState(initialBlocks);
 
     const handleCreateBlock = async () => {
+        let title = "New Interaction Block";
+        let subtitle = "";
+        let description = "";
+
+        if (sectionType === "TrustIndicators") {
+            const nextIdx = blocks.length % 4;
+            const defaults = [
+                { title: "Years of Mastery", subtitle: "15+" },
+                { title: "Students Architected", subtitle: "5000+" },
+                { title: "Success Deployment", subtitle: "98%" },
+                { title: "Elite Milestones", subtitle: "45+" }
+            ];
+            title = defaults[nextIdx].title;
+            subtitle = defaults[nextIdx].subtitle;
+        } else if (sectionType === "WhyChooseSection") {
+            title = "Expert Mentorship";
+            description = "Instructional excellence from certified industry veterans.";
+        }
+
         const res = await createCmsContentBlock({
             section_id: sectionId,
-            title: "New Interaction Block",
+            title,
+            subtitle,
+            description,
             sort_order: blocks.length,
             is_active: true
         });
