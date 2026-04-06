@@ -38,12 +38,20 @@ interface TrustIndicatorsProps {
     stats?: any[];
 }
 
+const iconMap: Record<string, any> = { Trophy, Users, TrendingUp, Target, ShieldCheck, Zap };
+
 export default function TrustIndicators({ stats }: TrustIndicatorsProps) {
-    const displayStats = stats && stats.length > 0 ? stats.map((s, i) => ({
-        ...(defaultStats[i % defaultStats.length] || defaultStats[0]),
-        value: s.value || s.subtitle || "0",
-        label: s.label || s.title || "Stat"
-    })) : defaultStats;
+    const displayStats = stats && stats.length > 0 ? stats.map((s, i) => {
+        const base = defaultStats[i % defaultStats.length] || defaultStats[0];
+        const CustomIcon = s.icon_name ? iconMap[s.icon_name] : null;
+        
+        return {
+            ...base,
+            icon: CustomIcon || base.icon,
+            value: s.subtitle || s.value || "0",
+            label: s.title || s.label || "Stat"
+        };
+    }) : defaultStats;
 
     return (
         <section className="bg-white border-y border-slate-100 py-24 relative overflow-hidden">
