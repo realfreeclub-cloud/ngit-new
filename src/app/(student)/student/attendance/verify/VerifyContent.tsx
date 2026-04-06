@@ -30,9 +30,14 @@ export default function VerifyContent() {
             (pos) => {
                 handleSubmit(code, pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
             },
-            () => {
-                // Attempt without location
-                handleSubmit(code, 0, 0);
+            (error) => {
+                if (error.code === error.PERMISSION_DENIED) {
+                    setStatus("error");
+                    setMessage("Location access denied. Please enable location permissions in your browser to verify attendance.");
+                } else {
+                    // Attempt without location or fallback gracefully
+                    handleSubmit(code, 0, 0);
+                }
             },
             { enableHighAccuracy: true, timeout: 8000 }
         );

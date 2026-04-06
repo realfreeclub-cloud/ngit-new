@@ -40,7 +40,7 @@ export default function VideoPlayer({ title, url, type, onComplete }: VideoPlaye
                         title={title}
                         src={videoSrc}
                         className="w-full h-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; geolocation; gyroscope; picture-in-picture"
                         allowFullScreen
                     />
                 ) : (

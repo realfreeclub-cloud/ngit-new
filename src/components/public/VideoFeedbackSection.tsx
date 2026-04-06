@@ -78,7 +78,7 @@ function VideoCard({ feedback, isActive }: { feedback: Feedback; isActive: boole
                         <iframe
                             src={embed.src + "&autoplay=1"}
                             className="w-full h-full"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; geolocation; gyroscope; picture-in-picture"
                             allowFullScreen
                             loading="lazy"
                             title={`${feedback.name} testimonial`}
