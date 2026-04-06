@@ -81,7 +81,7 @@ export default async function Footer() {
                                     target="_blank"
                                     className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:bg-primary hover:text-white hover:border-primary hover:-translate-y-1.5 hover:shadow-[0_10px_20px_-10px_rgba(59,130,246,0.6)] transition-all duration-300"
                                 >
-                                    <span className="text-xs font-black uppercase tracking-tighter tracking-[0.2em]">{social.platform?.[0]}</span>
+                                    <span className="text-xs font-black uppercase tracking-[0.2em]">{social.platform?.[0]}</span>
                                 </Link>
                             ))}
                         </div>

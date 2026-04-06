@@ -328,7 +328,7 @@ export default function AdvancedCmsPage() {
                                     <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-500 rounded-full blur-xl opacity-20" />
                                 </div>
                                 <div className="space-y-3">
-                                    <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase tracking-[0.05em]">Module Selection Required</h3>
+                                    <h3 className="text-2xl font-black text-slate-900 uppercase tracking-[0.05em]">Module Selection Required</h3>
                                     <p className="text-slate-400 font-bold leading-relaxed text-sm">Please identify a page and component module from the architecture tree to begin configuration.</p>
                                 </div>
                             </div>
