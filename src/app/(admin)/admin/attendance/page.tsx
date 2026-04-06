@@ -415,6 +415,10 @@ export default function AttendancePage() {
                                                 </div>
                                                 <span className="font-mono font-black text-2xl tabular-nums">{formatTime(timeLeft)}</span>
                                             </div>
+                                            <div className="bg-indigo-50 border-2 border-indigo-100 rounded-2xl py-3 px-8 shadow-inner mt-4 w-fit mx-auto">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-0.5">Manual Entry Code</p>
+                                                <p className="font-mono text-3xl font-black text-indigo-700 tracking-[0.2em]">{activeCode}</p>
+                                            </div>
                                             <p className="text-slate-400 text-xs font-black mt-6 uppercase tracking-[0.25em]">Session Broadcaster</p>
                                         </div>
                                     ) : (

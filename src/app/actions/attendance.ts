@@ -32,7 +32,7 @@ function deg2rad(deg: number) {
 
 // --- ADMIN ACTIONS ---
 
-export async function generateQRSession(batchId: string, lat?: number, lng?: number, radius: number = 100) {
+export async function generateQRSession(batchId: string, lat?: number, lng?: number, radius: number = 500) {
     try {
         await connectDB();
         const session = await getServerSession(authOptions);
@@ -44,8 +44,8 @@ export async function generateQRSession(batchId: string, lat?: number, lng?: num
             { isActive: false }
         );
 
-        // Generate Secure Code (UUID or hex)
-        const code = crypto.randomBytes(16).toString('hex');
+        // Generate Secure Code (6 characters, uppercase) for manual entry fallback
+        const code = crypto.randomBytes(3).toString('hex').toUpperCase();
 
         const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
@@ -136,12 +136,13 @@ export async function submitAttendance(code: string, lat: number, lng: number, a
                 activeSession.location.lng
             );
 
-            // Allow tolerance of accuracy + radius or just strict radius? 
-            // Usually 100m radius is generous enough for GPS drift.
-            if (distance > activeSession.location.radius) {
+            // Allow tolerance of accuracy + radius
+            // Usually 500m radius is generous enough, plus the accuracy reported by GPS.
+            const allowedRadius = activeSession.location.radius + (accuracy || 0);
+            if (distance > allowedRadius) {
                 return {
                     success: false,
-                    error: `You are too far from the class location (${Math.round(distance)}m away). Allowed: ${activeSession.location.radius}m.`
+                    error: `You are too far from the class location (${Math.round(distance)}m away). Allowed: ${Math.round(allowedRadius)}m.`
                 };
             }
         }
