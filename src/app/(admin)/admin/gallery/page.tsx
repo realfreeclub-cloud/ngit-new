@@ -15,6 +15,7 @@ import {
     X,
     Copy
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function AdminGalleryPage() {
     const [loading, setLoading] = useState(false);

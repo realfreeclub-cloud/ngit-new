@@ -72,16 +72,12 @@ export default function PublicNavbar() {
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-3 group">
                         {headerData?.logoImage ? (
-                            <img src={headerData.logoImage} alt="Logo" className="h-14 w-auto object-contain" />
+                            <img src={headerData.logoImage} alt="Logo" className="h-20 md:h-24 w-auto object-contain" />
                         ) : (
-                            <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center font-bold text-white text-2xl shadow-lg group-hover:scale-105 transition-transform duration-300">
+                            <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center font-bold text-white text-3xl shadow-lg group-hover:scale-105 transition-transform duration-300">
                                 N
                             </div>
                         )}
-                        <div className="hidden sm:block">
-                            <span className="text-2xl font-heading font-bold tracking-tight text-gray-900 block leading-none">{headerData?.logoText || "NGIT"}</span>
-                            <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Institute of Technology</p>
-                        </div>
                     </Link>
 
                     {/* Desktop Menu */}

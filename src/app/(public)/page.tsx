@@ -33,6 +33,7 @@ import { listBlogPosts } from "@/app/actions/blog";
 import BlogSection from "@/components/public/BlogSection";
 import { getPublicFeedback } from "@/app/actions/feedback";
 import VideoFeedbackSection from "@/components/public/VideoFeedbackSection";
+import NoticeSliderSection from "@/components/public/NoticeSliderSection";
 
 export default async function PublicHomePage() {
     let session = null;
@@ -141,6 +142,9 @@ export default async function PublicHomePage() {
 
                         {/* Blog Section */}
                         <BlogSection blogs={publicBlogs} />
+
+                        {/* Notice Slider Section */}
+                        <NoticeSliderSection notices={noticesRes.success ? noticesRes.notices : []} />
 
                         {/* Courses Section */}
                         <CoursesSection courses={publicCourses} />
