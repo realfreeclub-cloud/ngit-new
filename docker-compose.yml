@@ -6,15 +6,8 @@ services:
     container_name: ngit-app
     restart: always
     ports:
-      - "3001:3000"
+      - "3000:3000"
     env_file:
       - .env.production
-
-    volumes:
-      - ./public/uploads:/app/public/uploads
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
+    # volumes:
+    #   - ./public/uploads:/app/public/uploads # Only if using local file storage
