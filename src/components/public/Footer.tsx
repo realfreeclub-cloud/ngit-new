@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getHeaderFooterData } from "@/app/actions/layoutContent";
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, Zap, ArrowUpRight, ShieldCheck, Globe } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface FooterLink {
     label: string;
@@ -97,7 +98,7 @@ export default async function Footer() {
                     <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-12">
                         {regularSections.map((section, idx) => (
                             <div key={idx} className="space-y-8">
-                                <h4 className="text-[12px] font-black uppercase tracking-[0.4em] text-white tracking-widest relative">
+                                <h4 className="text-[12px] font-black uppercase text-white tracking-widest relative">
                                     {section.title}
                                     <span className="block w-8 h-1 bg-primary mt-3 rounded-full opacity-50" />
                                 </h4>
@@ -119,7 +120,7 @@ export default async function Footer() {
 
                         {/* Instant Communication */}
                         <div className="md:col-span-1 space-y-8">
-                            <h4 className="text-[12px] font-black uppercase tracking-[0.4em] text-white tracking-widest relative">
+                            <h4 className="text-[12px] font-black uppercase text-white tracking-widest relative">
                                 {contactSection?.title || "CONNECT"}
                                 <span className="block w-8 h-1 bg-emerald-500 mt-3 rounded-full opacity-50" />
                             </h4>
