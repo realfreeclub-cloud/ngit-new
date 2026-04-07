@@ -20,7 +20,7 @@ const RegistrationSchema = z.object({
     localPhone: z.string().min(10).max(15),
     email: z.string().email(),
     permanentAddress: z.string().min(10),
-    permanentPhone: z.string().min(10).max(15),
+    permanentPhone: z.string().max(15).optional(),
     course: z.string(),
     password: z.string().min(8),
     photoUrl: z.string().url().optional(),

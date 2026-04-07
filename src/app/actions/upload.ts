@@ -81,6 +81,7 @@ export async function deleteImageAction(id: string) {
         return { success: false, error: "Failed to delete image" };
     }
 }
+
 export async function saveExternalImageUrlAction({ url, title, category }: { url: string, title: string, category: string }) {
     try {
         const session = await getServerSession(authOptions);
@@ -89,6 +90,7 @@ export async function saveExternalImageUrlAction({ url, title, category }: { url
         await connectDB();
         
         const newMedia = await Media.create({
+            filename: "external-link",
             url,
             title,
             category: category || "Others",
@@ -102,6 +104,7 @@ export async function saveExternalImageUrlAction({ url, title, category }: { url
         
         return { success: true, media: JSON.parse(JSON.stringify(newMedia)) };
     } catch (error: any) {
-        return { success: false, error: "Link preservation failed" };
+        console.error("External Link Error:", error);
+        return { success: false, error: "Link preservation failed: " + error.message };
     }
 }
