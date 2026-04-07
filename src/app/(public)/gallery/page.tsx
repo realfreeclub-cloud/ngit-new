@@ -2,6 +2,7 @@ import { getDynamicPageData } from "@/app/actions/cms";
 import DynamicRenderer from "@/components/public/DynamicRenderer";
 import { Camera, ImageIcon } from "lucide-react";
 import Image from "next/image";
+import { getGalleryImages } from "@/app/actions/upload";
 
 const staticFallbackContent = (
     <div className="min-h-screen bg-slate-50 pt-32 pb-24">
@@ -24,12 +25,21 @@ const staticFallbackContent = (
 );
 
 export default async function PublicGalleryPage() {
-    const dynamicData = await getDynamicPageData("gallery");
+    const [dynamicData, galleryRes] = await Promise.all([
+        getDynamicPageData("gallery"),
+        getGalleryImages()
+    ]);
+    
     const cmsSections = dynamicData.success && dynamicData.sections ? dynamicData.sections : [];
+    const galleryImages = galleryRes.success ? galleryRes.images : [];
 
     return (
         <div className="min-h-screen">
-            <DynamicRenderer sections={cmsSections} staticFallback={staticFallbackContent} />
+            <DynamicRenderer 
+                sections={cmsSections} 
+                staticFallback={staticFallbackContent} 
+                extraData={{ gallery: galleryImages }}
+            />
         </div>
     );
 }

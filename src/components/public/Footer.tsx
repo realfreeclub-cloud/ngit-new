@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getHeaderFooterData } from "@/app/actions/layoutContent";
-import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, Zap, ArrowUpRight, ShieldCheck } from "lucide-react";
+import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, Zap, ArrowUpRight, ShieldCheck, Globe } from "lucide-react";
 
 interface FooterLink {
     label: string;
@@ -36,75 +36,80 @@ export default async function Footer() {
     const contactSection = footerData.sections?.find(s => s.title.toLowerCase().includes('contact'));
     const regularSections = footerData.sections?.filter(s => !s.title.toLowerCase().includes('contact')) || [];
 
-    return (
-        <footer className="relative bg-[#020617] text-slate-400 border-t border-white/5 pt-20 lg:pt-28 pb-10 overflow-hidden">
-            {/* Ambient Background Glows */}
-            <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] mix-blend-screen pointer-events-none" />
-            <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[150px] mix-blend-screen pointer-events-none" />
-            
-            {/* Top Light Effect */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent blur-[1px]" />
+    const getIcon = (platform: string) => {
+        const p = platform.toLowerCase();
+        if (p.includes('facebook')) return <Facebook className="w-5 h-5" />;
+        if (p.includes('twitter')) return <Twitter className="w-5 h-5" />;
+        if (p.includes('instagram')) return <Instagram className="w-5 h-5" />;
+        if (p.includes('youtube')) return <Youtube className="w-5 h-5" />;
+        return <Globe className="w-5 h-5" />;
+    };
 
+    return (
+        <footer className="relative bg-[#020617] text-slate-400 border-t border-white/5 pt-24 lg:pt-32 pb-12 overflow-hidden">
+            {/* Background Architecture */}
+            <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[140px] mix-blend-screen pointer-events-none" />
+            <div className="absolute bottom-0 right-1/4 w-[700px] h-[700px] bg-primary/5 rounded-full blur-[160px] mix-blend-screen pointer-events-none" />
+            
             <div className="container relative z-10 px-6 mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-16 mb-20">
-                    {/* Brand Identity */}
-                    <div className="lg:col-span-4 xl:col-span-5 space-y-8">
-                        <div className="flex items-center gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 lg:gap-20 mb-24">
+                    {/* Brand Cluster */}
+                    <div className="lg:col-span-5 space-y-10">
+                        <div className="space-y-6">
                             {footerData.logoImage ? (
-                                <img src={footerData.logoImage} alt={footerData.logoText || "Logo"} className="h-20 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
+                                <img 
+                                    src={footerData.logoImage} 
+                                    alt="NGIT Logo" 
+                                    className="h-20 w-auto object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:scale-105 transition-transform duration-500" 
+                                />
                             ) : (
-                                <>
-                                    <div className="w-20 h-20 bg-gradient-to-br from-primary to-blue-600 rounded-2xl flex items-center justify-center font-black text-white text-4xl shadow-[0_0_20px_rgba(59,130,246,0.4)]">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-20 h-20 bg-gradient-to-br from-primary to-blue-600 rounded-3xl flex items-center justify-center font-black text-white text-4xl shadow-[0_20px_40px_-10px_rgba(59,130,246,0.5)] transition-transform hover:rotate-3">
                                         N
                                     </div>
-                                    <div>
-                                        <h3 className="text-2xl font-black tracking-tighter text-white leading-none">
-                                            {footerData.logoText || "NGIT"}
-                                        </h3>
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400 mt-1">
-                                            Advanced Institute
-                                        </p>
-                                    </div>
-                                </>
+                                    <h3 className="text-3xl font-black tracking-tighter text-white">
+                                        {footerData.logoText || "NGIT"}
+                                    </h3>
+                                </div>
                             )}
+                            
+                            <p className="text-lg lg:text-xl text-slate-400/80 font-medium leading-relaxed max-w-md">
+                                {footerData.description || "Architecting the future of technical education with precision, innovation, and industry-first success strategies."}
+                            </p>
                         </div>
 
-                        <p className="text-base lg:text-lg text-slate-400/90 font-medium leading-relaxed max-w-sm">
-                            {footerData.description || "Empowering the next generation of technology leaders with industry-aligned education since 2009."}
-                        </p>
-
-                        <div className="flex flex-wrap gap-3">
+                        {/* Professional Social Grid */}
+                        <div className="flex flex-wrap gap-4">
                             {footerData.social?.map((social, idx) => (
                                 <Link
                                     key={idx}
                                     href={social.url}
                                     target="_blank"
-                                    className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:bg-primary hover:text-white hover:border-primary hover:-translate-y-1.5 hover:shadow-[0_10px_20px_-10px_rgba(59,130,246,0.6)] transition-all duration-300"
+                                    className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:bg-primary hover:text-white hover:border-primary hover:-translate-y-2 hover:shadow-[0_15px_30px_-5px_rgba(59,130,246,0.5)] transition-all duration-500 group"
                                 >
-                                    <span className="text-xs font-black uppercase tracking-[0.2em]">{social.platform?.[0]}</span>
+                                    {getIcon(social.platform)}
                                 </Link>
                             ))}
                         </div>
                     </div>
 
-                    {/* Navigation Clusters */}
-                    <div className="lg:col-span-8 xl:col-span-7 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 lg:gap-12">
+                    {/* Navigation Ecosystem */}
+                    <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-12">
                         {regularSections.map((section, idx) => (
-                            <div key={idx} className="space-y-6 lg:space-y-8">
-                                <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-white/90 relative inline-block">
+                            <div key={idx} className="space-y-8">
+                                <h4 className="text-[12px] font-black uppercase tracking-[0.4em] text-white tracking-widest relative">
                                     {section.title}
-                                    <span className="absolute -bottom-2 left-0 w-4 h-0.5 bg-primary/50" />
+                                    <span className="block w-8 h-1 bg-primary mt-3 rounded-full opacity-50" />
                                 </h4>
-                                <ul className="space-y-3">
+                                <ul className="space-y-4">
                                     {section.links?.map((link, linkIdx) => (
                                         <li key={linkIdx}>
                                             <Link
                                                 href={link.href}
-                                                className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-white transition-colors group"
+                                                className="group flex items-center gap-3 text-[15px] font-semibold text-slate-400 hover:text-white transition-all"
                                             >
-                                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500/0 group-hover:bg-blue-500 transition-colors" />
+                                                <div className="w-1.5 h-1.5 rounded-full bg-primary/0 group-hover:bg-primary group-hover:scale-125 transition-all" />
                                                 <span className="group-hover:translate-x-1 transition-transform">{link.label}</span>
-                                                <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-blue-400" />
                                             </Link>
                                         </li>
                                     ))}
@@ -112,99 +117,73 @@ export default async function Footer() {
                             </div>
                         ))}
 
-                        {/* Direct Contact Column */}
-                        <div className="space-y-6 lg:space-y-8 sm:col-span-2 md:col-span-1 pt-6 sm:pt-0 border-t border-white/5 sm:border-t-0">
-                            <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-white/90 relative inline-block">
-                                {contactSection?.title || "Connect"}
-                                <span className="absolute -bottom-2 left-0 w-4 h-0.5 bg-blue-500/50" />
+                        {/* Instant Communication */}
+                        <div className="md:col-span-1 space-y-8">
+                            <h4 className="text-[12px] font-black uppercase tracking-[0.4em] text-white tracking-widest relative">
+                                {contactSection?.title || "CONNECT"}
+                                <span className="block w-8 h-1 bg-emerald-500 mt-3 rounded-full opacity-50" />
                             </h4>
-                            <div className="space-y-5">
+                            <div className="space-y-6">
                                 {contactSection?.links?.map((link, idx) => {
                                     const isPhone = link.href.startsWith("tel:");
                                     const isMail = link.href.startsWith("mailto:");
 
-                                    if (isPhone) {
-                                        return (
-                                            <a key={idx} href={link.href} className="flex items-start gap-4 text-sm font-medium hover:text-white transition-colors group">
-                                                <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-blue-600 group-hover:border-blue-500 group-hover:text-white group-hover:shadow-[0_0_20px_-5px_rgba(59,130,246,0.5)] transition-all shrink-0">
-                                                    <Phone className="w-4 h-4" />
-                                                </div>
-                                                <div className="flex flex-col pt-1">
-                                                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">Phone Line</span>
-                                                    <span className="text-[15px] text-slate-300 group-hover:text-white transition-colors font-semibold tracking-wide">
-                                                        {link.label.replace("Phone: ", "")}
-                                                    </span>
-                                                </div>
-                                            </a>
-                                        );
-                                    } else if (isMail) {
-                                        return (
-                                            <a key={idx} href={link.href} className="flex items-start gap-4 text-sm font-medium hover:text-white transition-colors group">
-                                                <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-emerald-600 group-hover:border-emerald-500 group-hover:text-white group-hover:shadow-[0_0_20px_-5px_rgba(16,185,129,0.5)] transition-all shrink-0">
-                                                    <Mail className="w-4 h-4" />
-                                                </div>
-                                                <div className="flex flex-col pt-1">
-                                                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">Email Desk</span>
-                                                    <span className="text-[15px] text-slate-300 group-hover:text-white transition-colors font-semibold tracking-wide">
-                                                        {link.label.replace("Email: ", "")}
-                                                    </span>
-                                                </div>
-                                            </a>
-                                        );
-                                    }
-
                                     return (
-                                        <a key={idx} href={link.href} className="flex items-center gap-3 text-sm font-semibold hover:text-white transition-colors group">
-                                            {link.label}
+                                        <a 
+                                            key={idx} 
+                                            href={link.href} 
+                                            className="group flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all duration-300"
+                                        >
+                                            <div className={cn(
+                                                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors shadow-lg",
+                                                isPhone ? "bg-blue-500/10 text-blue-400 group-hover:bg-blue-500 group-hover:text-white" : 
+                                                isMail ? "bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white" : 
+                                                "bg-slate-500/10 text-slate-400 group-hover:bg-slate-500 group-hover:text-white"
+                                            )}>
+                                                {isPhone ? <Phone className="w-4 h-4" /> : isMail ? <Mail className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 opacity-60">
+                                                    {isPhone ? "Official Line" : isMail ? "Support Desk" : "Location"}
+                                                </p>
+                                                <p className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors truncate max-w-[140px]">
+                                                    {link.label.split(":")[1]?.trim() || link.label}
+                                                </p>
+                                            </div>
                                         </a>
                                     );
-                                }) || (
-                                    <>
-                                        <a href="tel:+919876543210" className="flex items-start gap-4 text-sm font-medium hover:text-white transition-colors group">
-                                            <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-blue-600 group-hover:border-blue-500 group-hover:text-white group-hover:shadow-[0_0_20px_-5px_rgba(59,130,246,0.5)] transition-all shrink-0">
-                                                <Phone className="w-4 h-4" />
-                                            </div>
-                                            <div className="flex flex-col pt-1">
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">Phone Line</span>
-                                                <span className="text-[15px] text-slate-300 group-hover:text-white transition-colors font-semibold tracking-wide">+91 98765 43210</span>
-                                            </div>
-                                        </a>
-                                        <a href="mailto:info@ngit.edu" className="flex items-start gap-4 text-sm font-medium hover:text-white transition-colors group">
-                                            <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-emerald-600 group-hover:border-emerald-500 group-hover:text-white group-hover:shadow-[0_0_20px_-5px_rgba(16,185,129,0.5)] transition-all shrink-0">
-                                                <Mail className="w-4 h-4" />
-                                            </div>
-                                            <div className="flex flex-col pt-1">
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">Email Desk</span>
-                                                <span className="text-[15px] text-slate-300 group-hover:text-white transition-colors font-semibold tracking-wide">info@ngit.edu</span>
-                                            </div>
-                                        </a>
-                                    </>
-                                )}
+                                })}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Bottom Bar */}
-                <div className="pt-8 border-t border-white/5 flex flex-col-reverse md:flex-row justify-between items-center gap-6">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center md:text-left">
-                        {footerData.copyright || `© ${currentYear} NGIT TECHNOLOGY HUB. ARCHITECTED FOR EXCELLENCE.`}
-                    </p>
-                    <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6">
-                        <Link href="/verify" className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/40 hover:text-emerald-300 transition-all duration-300 shadow-[0_0_15px_-5px_theme('colors.emerald.500/50')]">
-                            <ShieldCheck className="w-3 h-3" />
-                            Verify Credential
+                {/* Footer Baseline */}
+                <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
+                    <div className="space-y-2 text-center md:text-left">
+                        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">
+                            {footerData.copyright || `© ${currentYear} NGIT TECHNOLOGY ECOSYSTEM. ALL RIGHTS SECURED.`}
+                        </p>
+                        <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
+                            ISO 9001:2015 CERTIFIED INSTITUTION · SINCE 2009
+                        </p>
+                    </div>
+
+                    <div className="flex flex-wrap justify-center gap-6">
+                        <Link href="/verify" className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all shadow-xl shadow-emerald-500/10">
+                            <ShieldCheck className="w-4 h-4" />
+                            Verify Credentials
                         </Link>
-                        <span className="w-1 h-1 rounded-full bg-white/20 hidden sm:block" />
-                        <Link href="/privacy" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">Privacy Paradigm</Link>
-                        <span className="w-1 h-1 rounded-full bg-white/20" />
-                        <Link href="/terms" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">Operational Terms</Link>
+                        <div className="flex items-center gap-6">
+                            <Link href="/privacy" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">Privacy</Link>
+                            <Link href="/terms" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">Terms</Link>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            {/* Bottom Glow */}
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent blur-sm" />
+            {/* Architectural Accent */}
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
         </footer>
     );
 }
