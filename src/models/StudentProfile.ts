@@ -32,7 +32,7 @@ const StudentProfileSchema = new Schema<IStudentProfile>(
         localAddress: { type: String, required: true },
         localPhone: { type: String, required: true },
         permanentAddress: { type: String, required: true },
-        permanentPhone: { type: String, required: true },
+        permanentPhone: { type: String },
         course: { type: String, required: true },
         photoUrl: { type: String, default: "" },
         status: {

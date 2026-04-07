@@ -392,10 +392,10 @@ export default function RegisterPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Phone No. (Permanent Address)</label>
+                                    <label className="text-sm font-bold text-slate-700">Phone No. (Permanent Address) (Optional)</label>
                                     <Input
                                         type="tel"
-                                        placeholder="10-digit mobile number (optional)"
+                                        placeholder="10-digit mobile number"
                                         maxLength={10}
                                         value={form.permanentPhone}
                                         onChange={(e) => set("permanentPhone", e.target.value.replace(/\D/g, ""))}
