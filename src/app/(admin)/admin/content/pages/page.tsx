@@ -84,11 +84,19 @@ export default function AdvancedCmsPage() {
 
     const loadBlocks = async (sectionId: string) => {
         setLoading(true);
-        const res = await getCmsContentBlocks(sectionId);
-        if (res.success) {
-            setBlocks(res.blocks);
+        try {
+            const res = await getCmsContentBlocks(sectionId);
+            if (res.success) {
+                setBlocks(res.blocks);
+            } else {
+                setBlocks([]);
+            }
+        } catch (error) {
+            console.error("Block sync error:", error);
+            setBlocks([]);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     const handleCreateSection = async () => {
