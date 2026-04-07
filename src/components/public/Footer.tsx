@@ -163,10 +163,10 @@ export default async function Footer() {
                 <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
                     <div className="space-y-2 text-center md:text-left">
                         <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">
-                            {footerData.copyright || `© ${currentYear} NGIT TECHNOLOGY ECOSYSTEM. ALL RIGHTS SECURED.`}
+                            {footerData.copyright || `© ${currentYear} All rights reserved to NGIT.`}
                         </p>
-                        <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
-                            ISO 9001:2015 CERTIFIED INSTITUTION · SINCE 2009
+                        <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                            Designed & Developed by <a href="https://devrajsinghtomar.com/" target="_blank" className="text-primary hover:text-white transition-colors">Devraj Singh Tomar</a>
                         </p>
                     </div>
 
