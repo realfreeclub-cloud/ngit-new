@@ -51,10 +51,10 @@ export default async function Footer() {
                     <div className="lg:col-span-4 xl:col-span-5 space-y-8">
                         <div className="flex items-center gap-4">
                             {footerData.logoImage ? (
-                                <img src={footerData.logoImage} alt={footerData.logoText || "Logo"} className="h-12 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
+                                <img src={footerData.logoImage} alt={footerData.logoText || "Logo"} className="h-20 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
                             ) : (
                                 <>
-                                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-blue-600 rounded-2xl flex items-center justify-center font-black text-white text-2xl shadow-[0_0_20px_rgba(59,130,246,0.4)]">
+                                    <div className="w-20 h-20 bg-gradient-to-br from-primary to-blue-600 rounded-2xl flex items-center justify-center font-black text-white text-4xl shadow-[0_0_20px_rgba(59,130,246,0.4)]">
                                         N
                                     </div>
                                     <div>
