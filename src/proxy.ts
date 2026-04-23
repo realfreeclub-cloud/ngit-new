@@ -11,13 +11,11 @@ const securityHeaders = {
         `img-src 'self' data: blob: https://*; ` +
         `font-src 'self' https://fonts.gstatic.com; ` +
         `frame-src 'self' https://api.razorpay.com https://*.razorpay.com https://www.youtube-nocookie.com https://www.youtube.com https://player.vimeo.com; ` +
-        `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com; ` +
-        `upgrade-insecure-requests;`,
+        `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com;`,
     "X-Frame-Options": "DENY",
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "Permissions-Policy": "camera=(self), microphone=(), geolocation=(self), interest-cohort=()",
-    "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
 };
 
 export async function proxy(request: NextRequest) {
