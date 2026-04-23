@@ -54,6 +54,7 @@ export default function PublicNavbar() {
         { label: "Courses", href: "/courses" },
         { label: "Blog", href: "/blog" },
         { label: "Mock Tests", href: "/exams" },
+        { label: "Typing", href: "/typing" },
         { label: "Results", href: "/results" },
         { label: "Gallery", href: "/gallery" },
         { label: "Faculty", href: "/faculty" },
