@@ -8,6 +8,6 @@ services:
     ports:
       - "3002:3000"
     env_file:
-      - .env.production
+      - .env.local
     # volumes:
     #   - ./public/uploads:/app/public/uploads # Only if using local file storage
