@@ -26,7 +26,15 @@ export async function POST(req: Request) {
     await connectDB();
     const data = await req.json();
     
-    const exam = await TypingExam.create(data);
+    // Auto-fill missing required fields
+    const examData = {
+      ...data,
+      startTime: data.startTime || new Date(),
+      endTime: data.endTime || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+      status: data.status || "Active",
+    };
+
+    const exam = await TypingExam.create(examData);
     return NextResponse.json({ success: true, exam: exam.toObject() }, { status: 201 });
   } catch (error: any) {
     console.error("Exam Creation Error:", error);
