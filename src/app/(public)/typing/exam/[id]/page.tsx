@@ -267,21 +267,12 @@ export default function TypingExamPage({ params }: { params: { id: string } }) {
           </div>
         )}
 
-        <div className="mb-10 text-center">
-          <h1 className="text-4xl font-black text-slate-900 mb-4">{exam.title}</h1>
-          <div className="flex items-center justify-center gap-6">
-            <span className="px-4 py-1 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-600 shadow-sm">
-              Category: {exam.category}
-            </span>
-            <span className="px-4 py-1 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-600 shadow-sm">
-              Language: {exam.language}
-            </span>
-          </div>
-        </div>
-
         <TypingEngine 
           passage={exam.passageId?.content || ""} 
           duration={exam.duration} 
+          examTitle={exam.title}
+          passageId={exam.passageId?._id || "31415"}
+          language={exam.language}
           onComplete={handleComplete}
         />
       </div>
