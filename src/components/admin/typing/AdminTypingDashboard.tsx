@@ -3,15 +3,22 @@
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, BookOpen, Keyboard, Clock, ChevronRight } from "lucide-react";
+import { Plus, BookOpen, Keyboard, Clock, ChevronRight, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function AdminTypingDashboard() {
   const [passages, setPassages] = useState<any[]>([]);
   const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showExamForm, setShowExamForm] = useState(false);
 
   useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = () => {
     Promise.all([
       fetch("/api/admin/typing/passages").then(res => res.json()),
       fetch("/api/admin/typing/exams").then(res => res.json())
@@ -20,7 +27,7 @@ export default function AdminTypingDashboard() {
       setExams(examsData);
       setLoading(false);
     });
-  }, []);
+  };
 
   const handleAddPassage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -34,96 +41,220 @@ export default function AdminTypingDashboard() {
         body: JSON.stringify(data)
       });
       if (res.ok) {
-        toast.success("Passage added!");
-        window.location.reload();
+        toast.success("Passage added successfully!");
+        e.currentTarget.reset();
+        fetchData();
+      } else {
+        toast.error("Failed to add passage");
       }
     } catch (error) {
-      toast.error("Failed to add passage");
+      toast.error("An error occurred");
     }
   };
 
-  if (loading) return <div className="p-10">Loading...</div>;
+  const handleAddExam = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const res = await fetch("/api/admin/typing/exams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        toast.success("Exam scheduled successfully!");
+        setShowExamForm(false);
+        fetchData();
+      } else {
+        toast.error("Failed to schedule exam");
+      }
+    } catch (error) {
+      toast.error("An error occurred");
+    }
+  };
+
+  if (loading) return (
+    <div className="flex h-[60vh] items-center justify-center">
+      <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
 
   return (
-    <div className="p-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-black text-slate-900">Typing Exam Manager</h1>
-        <p className="text-slate-500">Manage your passages and schedule typing exams.</p>
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto pb-20 p-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+        <div>
+          <h1 className="text-4xl font-black tracking-tight text-slate-900 leading-none">
+            Typing <span className="text-gradient">Manager</span>
+          </h1>
+          <p className="text-slate-500 font-bold mt-3 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            Manage passages and schedule government-standard exams.
+          </p>
+        </div>
       </div>
 
       <Tabs defaultValue="exams" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md mb-8">
-          <TabsTrigger value="exams">Active Exams</TabsTrigger>
-          <TabsTrigger value="passages">Passage Library</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 max-w-md mb-8 h-14 bg-slate-100 rounded-2xl p-1.5">
+          <TabsTrigger value="exams" className="rounded-xl font-bold text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">Active Exams</TabsTrigger>
+          <TabsTrigger value="passages" className="rounded-xl font-bold text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">Passage Library</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="exams" className="space-y-6">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="p-6 border-dashed flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 transition-colors h-full min-h-[200px]">
-              <div className="p-3 bg-blue-100 text-blue-600 rounded-full mb-4">
-                <Plus className="w-8 h-8" />
+        <TabsContent value="exams" className="space-y-8">
+          {showExamForm ? (
+            <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl max-w-3xl mx-auto">
+              <div className="flex justify-between items-center mb-8">
+                <h3 className="text-2xl font-black text-slate-900">Schedule New Exam</h3>
+                <Button variant="ghost" onClick={() => setShowExamForm(false)}>Cancel</Button>
               </div>
-              <h3 className="font-bold text-slate-900">Schedule New Exam</h3>
-              <p className="text-sm text-slate-500">Create a new government typing test</p>
-            </Card>
+              <form onSubmit={handleAddExam} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Exam Title</label>
+                  <input name="title" placeholder="e.g. SSC CHSL Tier II Typing Test" className="w-full p-4 bg-slate-50 border-transparent rounded-2xl focus:border-indigo-500 focus:ring-indigo-500 transition-all font-medium" required />
+                </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">Category</label>
+                    <select name="category" className="w-full p-4 bg-slate-50 border-transparent rounded-2xl font-medium" required>
+                      <option value="SSC">SSC</option>
+                      <option value="UP Police">UP Police</option>
+                      <option value="KVS">KVS</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">Duration (Minutes)</label>
+                    <input type="number" name="duration" defaultValue={10} min={1} className="w-full p-4 bg-slate-50 border-transparent rounded-2xl font-medium" required />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Select Passage</label>
+                  <select name="passageId" className="w-full p-4 bg-slate-50 border-transparent rounded-2xl font-medium" required>
+                    <option value="">-- Choose a passage --</option>
+                    {passages.map(p => (
+                      <option key={p._id} value={p._id}>{p.title} ({p.language} - {p.wordCount} words)</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="pt-4">
+                  <Button type="submit" className="w-full h-14 rounded-xl text-lg font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-200">
+                    Publish Exam
+                  </Button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div 
+                onClick={() => setShowExamForm(true)}
+                className="p-8 rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 transition-all min-h-[250px] group"
+              >
+                <div className="p-4 bg-white shadow-sm text-slate-400 group-hover:text-indigo-600 rounded-2xl mb-5 transition-all group-hover:scale-110">
+                  <Plus className="w-8 h-8" />
+                </div>
+                <h3 className="font-black tracking-tight text-xl mb-1">Schedule New</h3>
+                <p className="text-sm font-medium opacity-80">Launch a new typing test</p>
+              </div>
 
-            {exams.map((exam) => (
-              <Card key={exam._id} className="p-6 flex flex-col h-full hover:shadow-lg transition-all">
-                <div className="flex justify-between items-start mb-4">
-                  <span className="px-2 py-1 bg-slate-100 rounded text-xs font-bold uppercase">{exam.category}</span>
-                  <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${exam.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                    {exam.status}
-                  </span>
+              {exams.map((exam) => (
+                <div key={exam._id} className="p-8 rounded-[2.5rem] border bg-white relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-slate-200/50 group flex flex-col min-h-[250px]">
+                  <div className="flex justify-between items-start mb-6 relative z-10">
+                    <span className="px-3 py-1.5 bg-slate-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-600">{exam.category}</span>
+                    <span className={cn(
+                      "px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5",
+                      exam.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                    )}>
+                      {exam.status === 'Active' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                      {exam.status}
+                    </span>
+                  </div>
+                  <h3 className="text-2xl font-black text-slate-900 leading-tight mb-3 relative z-10">{exam.title}</h3>
+                  <div className="flex items-center gap-3 text-sm font-bold text-slate-500 mb-6 relative z-10">
+                    <div className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {exam.duration} Min</div>
+                    <div className="w-1 h-1 rounded-full bg-slate-300" />
+                    <div className="flex items-center gap-1.5"><Keyboard className="w-4 h-4" /> {exam.language}</div>
+                  </div>
+                  <Button variant="outline" className="mt-auto w-full h-12 rounded-xl font-bold border-2 hover:bg-slate-900 hover:text-white transition-colors relative z-10">
+                    Manage Results
+                  </Button>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">{exam.title}</h3>
-                <div className="flex items-center gap-2 text-sm text-slate-500 mb-4">
-                  <Clock className="w-4 h-4" />
-                  {exam.duration} Minutes
-                </div>
-                <button className="mt-auto w-full py-2 bg-slate-900 text-white rounded-lg font-bold text-sm hover:bg-slate-800">
-                  Manage Results
-                </button>
-              </Card>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
-        <TabsContent value="passages" className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold">Passage Library ({passages.length})</h2>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="p-8">
-              <h3 className="text-lg font-bold mb-4">Add New Passage</h3>
-              <form onSubmit={handleAddPassage} className="space-y-4">
-                <input name="title" placeholder="Passage Title" className="w-full p-2 border rounded" required />
-                <textarea name="content" placeholder="Content..." className="w-full p-2 border rounded h-40" required />
-                <select name="difficulty" className="w-full p-2 border rounded">
-                  <option value="Easy">Easy</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Hard">Hard</option>
-                </select>
-                <select name="language" className="w-full p-2 border rounded">
-                  <option value="English">English</option>
-                  <option value="Hindi">Hindi</option>
-                </select>
-                <button type="submit" className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700">
-                  Save Passage
-                </button>
-              </form>
-            </Card>
-
-            <div className="space-y-4">
-              {passages.map((passage) => (
-                <Card key={passage._id} className="p-4 flex items-center justify-between">
-                  <div>
-                    <h4 className="font-bold text-slate-900">{passage.title}</h4>
-                    <p className="text-xs text-slate-500 uppercase font-bold">{passage.language} • {passage.wordCount} Words</p>
+        <TabsContent value="passages" className="space-y-8">
+          <div className="grid lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-1">
+              <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl text-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full -mr-32 -mt-32 blur-[80px]" />
+                <h3 className="text-2xl font-black tracking-tight mb-2 relative z-10">Add Passage</h3>
+                <p className="text-slate-400 font-medium text-sm mb-8 relative z-10">Input text for future typing exams.</p>
+                
+                <form onSubmit={handleAddPassage} className="space-y-5 relative z-10">
+                  <input name="title" placeholder="Passage Title" className="w-full p-4 bg-white/10 border-transparent rounded-2xl text-white placeholder:text-slate-400 focus:bg-white/20 transition-colors font-medium" required />
+                  <div className="grid grid-cols-2 gap-4">
+                    <select name="difficulty" className="w-full p-4 bg-white/10 border-transparent rounded-2xl text-white [&>option]:text-slate-900 font-medium appearance-none" required>
+                      <option value="Easy">Easy</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Hard">Hard</option>
+                    </select>
+                    <select name="language" className="w-full p-4 bg-white/10 border-transparent rounded-2xl text-white [&>option]:text-slate-900 font-medium appearance-none" required>
+                      <option value="English">English</option>
+                      <option value="Hindi">Hindi</option>
+                    </select>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-slate-300" />
-                </Card>
-              ))}
+                  <textarea name="content" placeholder="Paste the exact text here..." className="w-full p-4 bg-white/10 border-transparent rounded-2xl h-48 text-white placeholder:text-slate-400 focus:bg-white/20 transition-colors font-medium resize-none" required />
+                  
+                  <Button type="submit" className="w-full h-14 rounded-xl text-lg font-bold bg-white text-slate-900 hover:bg-slate-100">
+                    Save to Library
+                  </Button>
+                </form>
+              </div>
+            </div>
+
+            <div className="lg:col-span-2 space-y-6">
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-2xl font-black tracking-tight text-slate-900">Passage Library</h2>
+                <span className="px-4 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-sm font-black">{passages.length} Total</span>
+              </div>
+              
+              <div className="space-y-4">
+                {passages.map((passage) => (
+                  <div key={passage._id} className="p-6 rounded-3xl border bg-white hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition-all group flex items-center justify-between cursor-pointer">
+                    <div className="flex items-center gap-5">
+                      <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                        <BookOpen className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-black text-lg text-slate-900">{passage.title}</h4>
+                        <div className="flex items-center gap-3 mt-1 text-[11px] font-black uppercase tracking-widest text-slate-400">
+                          <span className={cn(
+                            passage.difficulty === 'Easy' ? 'text-emerald-500' :
+                            passage.difficulty === 'Medium' ? 'text-amber-500' : 'text-rose-500'
+                          )}>{passage.difficulty}</span>
+                          <span className="w-1 h-1 rounded-full bg-slate-300" />
+                          <span>{passage.language}</span>
+                          <span className="w-1 h-1 rounded-full bg-slate-300" />
+                          <span>{passage.wordCount} Words</span>
+                        </div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-600 transition-colors" />
+                  </div>
+                ))}
+                
+                {passages.length === 0 && (
+                  <div className="p-12 border-2 border-dashed rounded-3xl text-center">
+                    <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <AlertCircle className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-xl font-black text-slate-900 mb-2">No passages found</h3>
+                    <p className="text-slate-500 font-medium">Add your first typing passage using the form.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </TabsContent>

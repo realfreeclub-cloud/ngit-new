@@ -5,9 +5,5 @@ export const metadata = {
 };
 
 export default function AdminTypingPage() {
-  return (
-    <div className="bg-white min-h-screen">
-      <AdminTypingDashboard />
-    </div>
-  );
+  return <AdminTypingDashboard />;
 }
