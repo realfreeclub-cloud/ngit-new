@@ -1,33 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Zap, 
-  Target, 
-  Timer, 
-  AlertCircle, 
-  Trophy, 
-  ArrowLeft,
-  CheckCircle2,
-  XCircle
-} from "lucide-react";
+import { format } from "date-fns";
+import { Keyboard, XCircle, Scissors, AlertCircle, Timer, Download, Target } from "lucide-react";
 import Link from "next/link";
-import { 
-  ResponsiveContainer, 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip 
-} from "recharts";
 
 export default function TypingResultDetails({ params }: { params: { id: string } }) {
   const [result, setResult] = useState<any>(null);
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorFormulaOn, setErrorFormulaOn] = useState(true);
+  const [detailedComparison, setDetailedComparison] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,12 +17,6 @@ export default function TypingResultDetails({ params }: { params: { id: string }
         const res = await fetch(`/api/typing/results/details/${params.id}`);
         const data = await res.json();
         setResult(data);
-
-        if (data.examId?._id) {
-          const lbRes = await fetch(`/api/typing/exams/leaderboard/${data.examId._id}`);
-          const lbData = await lbRes.json();
-          setLeaderboard(lbData);
-        }
       } catch (error) {
         console.error("Failed to fetch data");
       } finally {
@@ -56,171 +32,220 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const originalWords = result.examId.passageId.content.trim().split(/\s+/);
   const submittedWords = result.submittedText.trim().split(/\s+/);
 
-  // Mock data for the performance chart (normally you'd track this per second during the test)
-  const chartData = [
-    { time: "0:00", wpm: 0 },
-    { time: "1:00", wpm: Math.round(result.wpm * 0.7) },
-    { time: "2:00", wpm: Math.round(result.wpm * 0.9) },
-    { time: "3:00", wpm: result.wpm },
-    { time: "4:00", wpm: Math.round(result.wpm * 1.1) },
-    { time: "Final", wpm: result.wpm },
-  ];
+  const totalKeystrokesGiven = result.examId.passageId.content.length;
+  const keystrokesTyped = result.submittedText.length;
+  const wordsTyped = submittedWords.length > 0 && submittedWords[0] !== "" ? submittedWords.length : 0;
+
+  // Calculate detailed mistakes
+  let fullMistakes = 0;
+  let halfMistakes = 0;
+  
+  submittedWords.forEach((word: string, idx: number) => {
+    const originalWord = originalWords[idx];
+    if (word !== originalWord) {
+      if (!originalWord || Math.abs(word.length - originalWord.length) > 2) {
+        fullMistakes++;
+      } else {
+        halfMistakes++;
+      }
+    }
+  });
+
+  const totalWrongWords = fullMistakes + halfMistakes;
+  const netWrongWords = fullMistakes + (halfMistakes / 2);
+  const netCorrectWords = Math.max(0, wordsTyped - netWrongWords);
+  const timeDurationMins = result.examId.duration || 10;
+  const timeTakenMins = result.timeTaken / 60;
+  const netWpm = timeTakenMins > 0 ? (netCorrectWords / timeTakenMins).toFixed(2) : "0.00";
+  
+  const minKeystrokes = Math.round((timeDurationMins * 30 * 5) / 2); // Example minimum threshold
+  const isQualified = parseFloat(netWpm) >= 30;
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins < 10 ? "0" : ""}${mins}:${secs < 10 ? "0" : ""}${secs} min.`;
+  };
+
+  const getFontFamily = () => {
+    const lang = result.examId.language?.toLowerCase() || "";
+    if (lang.includes("kruti") || lang.includes("kurti")) return "'Kruti Dev 010', Arial, sans-serif";
+    if (lang.includes("mangal") || lang.includes("hindi")) return "Mangal, Arial, sans-serif";
+    return "Inter, Arial, sans-serif";
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12">
-      <div className="max-w-7xl mx-auto px-4">
+    <div className="min-h-screen bg-slate-50 py-12 print:py-0 print:bg-white font-sans">
+      <div className="max-w-6xl mx-auto px-4 print:px-0">
         
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <Link href="/typing" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors font-bold">
-            <ArrowLeft className="w-5 h-5" /> Back to Exams
+        {/* Print Header */}
+        <div className="flex justify-between items-center mb-8 print:hidden">
+          <Link href="/student/typing" className="text-slate-500 hover:text-black font-bold">
+            ← Back to Dashboard
           </Link>
-          <div className="text-right">
-            <h1 className="text-3xl font-black text-slate-900">{result.examId.title}</h1>
-            <p className="text-slate-500 font-medium">Completed on {new Date(result.createdAt).toLocaleDateString()}</p>
-          </div>
+          <button 
+            onClick={() => window.print()}
+            className="flex items-center gap-2 bg-[#2a9d8f] text-white px-4 py-2 rounded font-bold shadow hover:bg-[#21867a]"
+          >
+            <Download className="w-4 h-4" /> Save as PDF
+          </button>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="bg-white p-8 border border-slate-200 rounded shadow-sm print:border-none print:shadow-none print:p-0">
           
-          {/* Main Stats Column */}
-          <div className="lg:col-span-2 space-y-8">
-            
-            {/* Primary Metrics */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card className="p-6 bg-primary text-white border-none shadow-xl shadow-primary/20">
-                <Zap className="w-6 h-6 mb-4 opacity-80" />
-                <p className="text-sm font-bold uppercase tracking-wider opacity-80">Net WPM</p>
-                <h2 className="text-4xl font-black">{result.wpm}</h2>
-              </Card>
-
-              <Card className="p-6 bg-white border-slate-100 shadow-lg">
-                <Target className="w-6 h-6 mb-4 text-emerald-500" />
-                <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">Accuracy</p>
-                <h2 className="text-4xl font-black text-slate-900">{result.accuracy}%</h2>
-              </Card>
-
-              <Card className="p-6 bg-white border-slate-100 shadow-lg">
-                <AlertCircle className="w-6 h-6 mb-4 text-red-500" />
-                <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">Errors</p>
-                <h2 className="text-4xl font-black text-slate-900">{result.errors}</h2>
-              </Card>
-
-              <Card className="p-6 bg-white border-slate-100 shadow-lg">
-                <Timer className="w-6 h-6 mb-4 text-blue-500" />
-                <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">Time</p>
-                <h2 className="text-4xl font-black text-slate-900">{Math.floor(result.timeTaken / 60)}m {result.timeTaken % 60}s</h2>
-              </Card>
+          {/* Header Info */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 text-sm font-medium border-b pb-6 print:border-b-2">
+            <div className="space-y-4">
+              <p><span className="font-bold">Exam Title:</span> {result.examId.title}</p>
+              <p><span className="font-bold">Passage Title:</span> {result.examId.passageId.title || `Id- ${result.examId.passageId._id.substring(0,5)}`}</p>
             </div>
-
-            {/* Performance Chart */}
-            <Card className="p-8 shadow-lg border-slate-100 bg-white">
-              <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
-                Speed Analytics <Badge variant="secondary">Live Tracker</Badge>
-              </h3>
-              <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData}>
-                    <defs>
-                      <linearGradient id="colorWpm" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1}/>
-                        <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                    <Tooltip 
-                      contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="wpm" 
-                      stroke="#2563eb" 
-                      strokeWidth={4}
-                      fillOpacity={1} 
-                      fill="url(#colorWpm)" 
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
-
-            {/* Word Breakdown */}
-            <Card className="p-8 shadow-lg border-slate-100 bg-white">
-              <h3 className="text-xl font-black text-slate-900 mb-6">Mistake Analysis</h3>
-              <div className="flex flex-wrap gap-x-2 gap-y-3 font-mono text-lg leading-relaxed">
-                {originalWords.map((word, idx) => {
-                  const submittedWord = submittedWords[idx];
-                  const isCorrect = submittedWord === word;
-                  const isTyped = idx < submittedWords.length;
-
-                  if (!isTyped) return <span key={idx} className="text-slate-300">{word}</span>;
-
-                  return (
-                    <div key={idx} className="group relative">
-                      <span className={`${isCorrect ? 'text-emerald-600' : 'text-red-500 bg-red-50 rounded px-1 decoration-wavy underline font-bold'}`}>
-                        {submittedWord}
-                      </span>
-                      {!isCorrect && (
-                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                          Should be: {word}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </Card>
+            <div className="space-y-4">
+              <p><span className="font-bold">Total Key Strokes Given:</span> {totalKeystrokesGiven}</p>
+              <p><span className="font-bold">Time Duration:</span> {timeDurationMins.toString().padStart(2, '0')}:00 min.</p>
+            </div>
+            <div className="space-y-4">
+              <p><span className="font-bold">Typing Date:</span> {format(new Date(result.createdAt), "dd/MM/yyyy")}</p>
+              <p><span className="font-bold">Time Taken:</span> {formatTime(result.timeTaken)}</p>
+            </div>
           </div>
 
-          {/* Sidebar / Leaderboard */}
-          <div className="space-y-8">
-            <Card className="p-8 border-none bg-slate-900 text-white shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-bl-full -z-0" />
-              <div className="relative z-10">
-                <div className="bg-primary w-12 h-12 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-primary/50">
-                  <Trophy className="w-6 h-6" />
-                </div>
-                <h3 className="text-2xl font-black mb-2">Hall of Fame</h3>
-                <p className="text-slate-400 text-sm mb-8">Top performers for this exam</p>
+          {/* Toggle Formula */}
+          <div className="flex items-center gap-3 mb-6 print:hidden">
+            <span className="font-bold text-sm text-slate-800">Key Stroke Based Error Formula</span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" className="sr-only peer" checked={errorFormulaOn} onChange={() => setErrorFormulaOn(!errorFormulaOn)} />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#e63946]"></div>
+            </label>
+          </div>
 
-                <div className="space-y-4">
-                  {leaderboard.map((entry, idx) => (
-                    <div key={entry._id} className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-black ${idx === 0 ? 'bg-yellow-500 text-yellow-950' : 'bg-slate-700 text-slate-300'}`}>
-                          {idx + 1}
+          {/* Stat Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="border border-slate-300 rounded-md p-4 flex flex-col justify-between h-24">
+              <p className="text-xs font-bold text-slate-700">Total Keystrokes / Words Typed</p>
+              <div className="flex justify-between items-end">
+                <span className="text-2xl font-black">{keystrokesTyped} / {wordsTyped}</span>
+                <Keyboard className="w-5 h-5 text-slate-400" />
+              </div>
+            </div>
+            <div className="border border-slate-300 rounded-md p-4 flex flex-col justify-between h-24">
+              <p className="text-xs font-bold text-slate-700">Full Mistake (Words)</p>
+              <div className="flex justify-between items-end">
+                <span className="text-2xl font-black">{fullMistakes}</span>
+                <XCircle className="w-5 h-5 text-slate-400" />
+              </div>
+            </div>
+            <div className="border border-slate-300 rounded-md p-4 flex flex-col justify-between h-24">
+              <p className="text-xs font-bold text-slate-700">Half Mistake (Words)</p>
+              <div className="flex justify-between items-end">
+                <span className="text-2xl font-black">{halfMistakes}</span>
+                <Scissors className="w-5 h-5 text-slate-400" />
+              </div>
+            </div>
+            <div className="border border-slate-300 rounded-md p-4 flex flex-col justify-between h-24">
+              <p className="text-xs font-bold text-slate-700">Total Wrong Words</p>
+              <div className="flex justify-between items-end">
+                <span className="text-2xl font-black">{totalWrongWords}</span>
+                <XCircle className="w-5 h-5 text-slate-400" />
+              </div>
+            </div>
+            <div className="border border-slate-300 rounded-md p-4 flex flex-col justify-between h-24">
+              <p className="text-xs font-bold text-slate-700">Net Wrong Words</p>
+              <div className="flex justify-between items-end">
+                <span className="text-2xl font-black">{netWrongWords.toFixed(2)}</span>
+                <Scissors className="w-5 h-5 text-slate-400" />
+              </div>
+            </div>
+            <div className="border border-slate-300 rounded-md p-4 flex flex-col justify-between h-24">
+              <p className="text-xs font-bold text-slate-700">Net Typing Speed (wpm)</p>
+              <div className="flex justify-between items-end">
+                <span className="text-2xl font-black">{netWpm}</span>
+                <Timer className="w-5 h-5 text-slate-400" />
+              </div>
+            </div>
+            <div className="border border-slate-300 rounded-md p-4 flex flex-col justify-between h-24">
+              <p className="text-xs font-bold text-slate-700">Backspace Count</p>
+              <div className="flex justify-between items-end">
+                <span className="text-2xl font-black">{result.backspaces || 0}</span>
+                <XCircle className="w-5 h-5 text-slate-400" />
+              </div>
+            </div>
+            <div className="border border-slate-300 rounded-md p-4 flex flex-col justify-between h-24">
+              <p className="text-xs font-bold text-slate-700">Result</p>
+              <div className="flex justify-between items-end">
+                <span className={`text-xl font-black ${isQualified ? "text-emerald-600" : "text-slate-800"}`}>
+                  {isQualified ? "Qualified" : "Not Qualified"}
+                </span>
+                <Target className="w-5 h-5 text-slate-400" />
+              </div>
+            </div>
+          </div>
+
+          {/* Alert Box */}
+          <div className="bg-[#f0f4f8] border border-[#d6e4f0] rounded p-4 mb-8 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 shrink-0" />
+            <p className="text-sm font-medium text-[#2d4a66]">
+              {keystrokesTyped < minKeystrokes 
+                ? `Key Strokes typed is less than minimum ${minKeystrokes} key strokes. Calculation of Net Correct Words = ${wordsTyped} - (( ${fullMistakes} ) + ( ${halfMistakes} ) * 0.5 )`
+                : `Calculation of Net Correct Words = ${wordsTyped} - (( ${fullMistakes} ) + ( ${halfMistakes} ) * 0.5 )`
+              }
+            </p>
+          </div>
+
+          {/* Detailed Comparison Toggle */}
+          <div className="flex items-center gap-3 mb-6 print:hidden">
+            <span className="font-bold text-sm text-slate-800">Detailed Comparision</span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" className="sr-only peer" checked={detailedComparison} onChange={() => setDetailedComparison(!detailedComparison)} />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#007bff]"></div>
+            </label>
+          </div>
+
+          {/* Split View */}
+          {detailedComparison && (
+            <div className="grid grid-cols-2 gap-0 border border-slate-200">
+              {/* Original */}
+              <div className="border-r border-slate-200">
+                <div className="bg-slate-50 py-2 px-4 border-b border-slate-200">
+                  <p className="text-xs font-bold text-slate-600">Original Passage</p>
+                </div>
+                <div className="p-4 bg-[#ffebee] min-h-[300px]">
+                  <p 
+                    className="text-sm leading-loose text-slate-800"
+                    style={{ fontFamily: getFontFamily() }}
+                  >
+                    {originalWords.map((word, i) => (
+                      <span key={i}>{word} </span>
+                    ))}
+                  </p>
+                </div>
+              </div>
+
+              {/* Typed */}
+              <div>
+                <div className="bg-slate-50 py-2 px-4 border-b border-slate-200">
+                  <p className="text-xs font-bold text-slate-600">Typed Passage</p>
+                </div>
+                <div className="p-4 bg-white min-h-[300px]">
+                  <p 
+                    className="text-sm leading-loose text-slate-800"
+                    style={{ fontFamily: getFontFamily() }}
+                  >
+                    {submittedWords.map((word: string, i: number) => {
+                      const isCorrect = word === originalWords[i];
+                      return (
+                        <span 
+                          key={i} 
+                          className={isCorrect ? "" : "text-red-600 font-bold decoration-red-500 underline decoration-wavy"}
+                        >
+                          {word}{' '}
                         </span>
-                        <div>
-                          <p className="text-sm font-bold truncate max-w-[120px]">{entry.userId?.name || "Candidate"}</p>
-                          <p className="text-[10px] text-slate-500 uppercase font-black">{entry.accuracy}% Accuracy</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-black text-primary">{entry.wpm}</p>
-                        <p className="text-[10px] text-slate-500 uppercase font-black">WPM</p>
-                      </div>
-                    </div>
-                  ))}
-
-                  {leaderboard.length === 0 && (
-                    <p className="text-center py-10 text-slate-500 font-bold italic">No rankings yet.</p>
-                  )}
+                      );
+                    })}
+                  </p>
                 </div>
               </div>
-            </Card>
-
-            <Card className="p-8 bg-white border-slate-100 shadow-lg text-center">
-              <h4 className="font-bold text-slate-900 mb-4">Improve your score?</h4>
-              <button 
-                onClick={() => window.location.reload()} 
-                className="w-full py-3 bg-slate-100 text-slate-900 rounded-xl font-bold hover:bg-slate-200 transition-all"
-              >
-                Retake Practice
-              </button>
-            </Card>
-          </div>
+            </div>
+          )}
 
         </div>
       </div>
