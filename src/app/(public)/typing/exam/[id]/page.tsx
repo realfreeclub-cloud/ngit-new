@@ -164,6 +164,99 @@ export default function TypingExamPage({ params }: { params: { id: string } }) {
     );
   }
 
+  if (step === 2) {
+    return (
+      <div className="min-h-screen bg-[#f5f4ef] py-10 text-slate-900">
+        <div className="max-w-6xl mx-auto px-4">
+          
+          {/* Top Info Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div className="bg-[#f5f4ef] border border-slate-900 p-6 rounded-md shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]">
+              <p className="text-xs text-slate-500 mb-1">Personal Information</p>
+              <h3 className="text-xl font-bold text-slate-900">Student Profile</h3>
+            </div>
+            <div className="bg-[#f5f4ef] border border-slate-900 p-6 rounded-md shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]">
+              <p className="text-xs text-slate-500 mb-1">Exam Description</p>
+              <h3 className="text-xl font-bold text-slate-900">{exam.title}</h3>
+            </div>
+            <div className="bg-[#f5f4ef] border border-slate-900 p-6 rounded-md shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]">
+              <p className="text-xs text-slate-500 mb-1">Passage Detail</p>
+              <h3 className="text-xl font-bold text-slate-900">
+                Id- {exam.passageId?._id?.substring(0, 5)} - {exam.passageId?.title || "Exam Passage"}
+              </h3>
+            </div>
+          </div>
+
+          <h2 className="text-4xl font-black mb-6">Instructions:</h2>
+          <hr className="border-t border-slate-900 mb-8" />
+
+          {/* Instructions Box */}
+          <div className="bg-white p-8 md:p-12 border border-slate-200 mb-10 text-sm font-medium text-slate-800 leading-relaxed space-y-5">
+            <p>1. The candidates will be provided with the master text passage of about <span className="font-bold">{exam.passageId?.wordCount || 500} words</span> in <span className="font-bold">{exam.language}</span>.</p>
+            <p>2. The typing can be of either word based typing or key strokes based typing.</p>
+            <p>3. For example, 35 w.p.m. is about 10500 key depressions per hour and 30 w.p.m. corresponds to about 9000 key depression per hour.</p>
+            <p>4. Time duration of <span className="font-bold">{exam.language}</span> typing test is <span className="font-bold">{(exam.duration || 10).toString().padStart(2, '0')}:00 minute</span>.</p>
+            <p>5. The countdown timer in the top right corner of screen will display the remaining time available for you to complete the examination. When the timer reaches zero, the examination will end by itself with typed passage, you are not required to end or submit your test.</p>
+            <p>6. <span className="font-bold">Candidates are not required to repeat the passage</span>, if he/she has completed the passage once and has time in his/her disposal, however they are allowed to revise and correct their mistakes and inaccuracies, if any, during the prescribed time</p>
+            <p>7. After every Punctuation mark, only One space is to be inserted, e.g. after comma, full stop, mark of interrogation etc. However, candidates are advised to follow the Question paper scrupulously in this regard.</p>
+            <p>8. The combination of alphanumeric keys followed by one space is termed as one "Word".</p>
+            <p>9. Once you have completed typing of the given passage and you do not find any errors or mistakes in it, you may submit it by pressing the submit button. After submission no editing or change in the typed passage is possible.</p>
+            <p>10. If your computer is locked/switched off or for any type of technical help, please inform a nearby invigilator immediately.</p>
+            <p>11. In any case of auto restart of the computer, you will be again provided with the full time to type the given passage.</p>
+            <p>12. After typing given number of words in the master text passage the space bar will not allow further typing of additional words. For example, if there are 500 words in the master text passage, candidates can type only 500 words and after that space bar will not allow the candidates to type any additional word, however, keyboard will allow the candidate to continue typing without using the space bar.</p>
+          </div>
+
+          {/* Keyboard Selection */}
+          <div className="space-y-4 mb-8">
+            <p className="text-sm font-medium">Select <span className="font-bold">{exam.language}</span> Keyboard Input Method:</p>
+            
+            <div className="flex items-start gap-2">
+              <input type="radio" name="keyboard" id="kb-builtin" className="mt-1" defaultChecked />
+              <label htmlFor="kb-builtin" className="text-sm">
+                <span className="font-bold">Use Built-in Keyboard Engine</span> — <span className="text-emerald-600">✓ No external software required.</span> Works directly in the browser. Recommended for mobile & tablet. <span className="text-slate-400">(Beta — if you notice any incorrect character, message us & switch to External Keyboard)</span>
+              </label>
+            </div>
+            
+            <div className="flex items-start gap-2">
+              <input type="radio" name="keyboard" id="kb-external" className="mt-1" />
+              <label htmlFor="kb-external" className="text-sm">
+                <span className="font-bold">Use External InScript Keyboard</span> — Enable InScript layout via Windows Language Settings or third-party software.
+              </label>
+            </div>
+          </div>
+
+          {/* Confirmation */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                id="confirm" 
+                className="w-4 h-4 cursor-pointer"
+                onChange={(e) => {
+                  const btn = document.getElementById('start-typing-btn') as HTMLButtonElement;
+                  if (btn) btn.disabled = !e.target.checked;
+                }}
+              />
+              <label htmlFor="confirm" className="text-sm font-bold cursor-pointer select-none">
+                I have enabled {exam.language} Keyboard on my system. <Link href="#" className="text-blue-600 hover:underline">How to install?</Link>
+              </label>
+            </div>
+
+            <button 
+              id="start-typing-btn"
+              disabled
+              onClick={() => setStep(3)}
+              className="bg-[#cfcfcf] text-white font-bold py-3 px-8 rounded disabled:opacity-50 disabled:cursor-not-allowed enabled:bg-[#2a9d8f] enabled:hover:bg-[#21867a] transition-colors"
+            >
+              Start Typing
+            </button>
+          </div>
+          
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 py-12">
       <div className="max-w-5xl mx-auto px-4">
