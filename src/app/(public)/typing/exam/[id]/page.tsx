@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from "react";
 import TypingEngine from "@/components/typing/TypingEngine";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronDown, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 
-export default function TypingExamPage({ params }: { params: { id: string } }) {
+export default function TypingExamPage() {
+  const params = useParams();
+  const id = params?.id as string;
   const [exam, setExam] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -16,14 +18,15 @@ export default function TypingExamPage({ params }: { params: { id: string } }) {
   const router = useRouter();
 
   useEffect(() => {
+    if (!id) return;
     fetch(`/api/typing/exams`)
       .then(res => res.json())
       .then(data => {
-        const found = data.find((e: any) => e._id === params.id);
+        const found = data.find((e: any) => e._id === id);
         setExam(found);
         setLoading(false);
       });
-  }, [params.id]);
+  }, [id]);
 
   const handleComplete = async (results: any) => {
     setIsSubmitting(true);
@@ -32,7 +35,7 @@ export default function TypingExamPage({ params }: { params: { id: string } }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          examId: params.id,
+          examId: id,
           ...results
         })
       });
