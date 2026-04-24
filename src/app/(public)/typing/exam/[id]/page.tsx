@@ -16,6 +16,7 @@ export default function TypingExamPage() {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(1);
+  const [isAgreed, setIsAgreed] = useState(false);
   const router = useRouter();
   const { data: session, status } = useSession();
 
@@ -245,11 +246,9 @@ export default function TypingExamPage() {
               <input 
                 type="checkbox" 
                 id="confirm" 
+                checked={isAgreed}
+                onChange={(e) => setIsAgreed(e.target.checked)}
                 className="w-4 h-4 cursor-pointer"
-                onChange={(e) => {
-                  const btn = document.getElementById('start-typing-btn') as HTMLButtonElement;
-                  if (btn) btn.disabled = !e.target.checked;
-                }}
               />
               <label htmlFor="confirm" className="text-sm font-bold cursor-pointer select-none">
                 I have enabled {exam.language} Keyboard on my system. <Link href="#" className="text-blue-600 hover:underline">How to install?</Link>
@@ -258,7 +257,7 @@ export default function TypingExamPage() {
 
             <button 
               id="start-typing-btn"
-              disabled
+              disabled={!isAgreed}
               onClick={() => setStep(3)}
               className="bg-[#cfcfcf] text-white font-bold py-3 px-8 rounded disabled:opacity-50 disabled:cursor-not-allowed enabled:bg-[#2a9d8f] enabled:hover:bg-[#21867a] transition-colors"
             >
