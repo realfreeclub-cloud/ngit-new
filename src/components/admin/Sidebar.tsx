@@ -18,7 +18,8 @@ import {
     ChevronDown,
     BrainCircuit,
     Bell,
-    Video
+    Video,
+    Keyboard
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -59,6 +60,16 @@ const menuItems = [
     },
     { label: "Attendance", href: "/admin/attendance", icon: ClipboardList },
     { label: "Payments", href: "/admin/payments", icon: CreditCard },
+    {
+        label: "Typing Manager",
+        href: "/admin/typing",
+        icon: Keyboard,
+        subItems: [
+            { label: "Dashboard", href: "/admin/typing" },
+            { label: "Passage Library", href: "/admin/typing" },
+            { label: "Typing Results", href: "/admin/results" }
+        ]
+    },
     { label: "Certificates", href: "/admin/certificates", icon: GraduationCap },
     { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
