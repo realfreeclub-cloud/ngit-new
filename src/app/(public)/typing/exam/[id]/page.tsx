@@ -7,6 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronDown, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
+import { useSession } from "next-auth/react";
 
 export default function TypingExamPage() {
   const params = useParams();
@@ -16,6 +17,7 @@ export default function TypingExamPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(1);
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     if (!id) return;
@@ -55,7 +57,7 @@ export default function TypingExamPage() {
     }
   };
 
-  if (loading) return (
+  if (loading || status === "loading") return (
     <div className="flex justify-center py-20 min-h-screen bg-[#f5f4ef] items-center">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
     </div>
@@ -66,6 +68,15 @@ export default function TypingExamPage() {
       <p className="text-xl font-bold">Exam not found or not active.</p>
     </div>
   );
+
+  const handleNextStep = () => {
+    if (!session) {
+      toast.error("Please login to start the typing exam");
+      router.push("/login");
+      return;
+    }
+    setStep(2);
+  };
 
   if (step === 1) {
     return (
@@ -154,7 +165,7 @@ export default function TypingExamPage() {
 
               <div className="mt-8">
                 <button 
-                  onClick={() => setStep(2)}
+                  onClick={handleNextStep}
                   className="w-24 bg-[#cfcfcf] hover:bg-slate-300 text-slate-700 font-bold py-2 rounded transition-colors"
                 >
                   Next
@@ -176,7 +187,7 @@ export default function TypingExamPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             <div className="bg-[#f5f4ef] border border-slate-900 p-6 rounded-md shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]">
               <p className="text-xs text-slate-500 mb-1">Personal Information</p>
-              <h3 className="text-xl font-bold text-slate-900">Student Profile</h3>
+              <h3 className="text-xl font-bold text-slate-900">{session?.user?.name || "Student"}</h3>
             </div>
             <div className="bg-[#f5f4ef] border border-slate-900 p-6 rounded-md shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]">
               <p className="text-xs text-slate-500 mb-1">Exam Description</p>

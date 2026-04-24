@@ -89,6 +89,13 @@ export default function TypingEngine({
     return `${mins < 10 ? "0" : ""}${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
+  const getFontFamily = () => {
+    const lang = language?.toLowerCase() || "";
+    if (lang.includes("kruti") || lang.includes("kurti")) return "'Kruti Dev 010', Arial, sans-serif";
+    if (lang.includes("mangal") || lang.includes("hindi")) return "Mangal, Arial, sans-serif";
+    return "Inter, Arial, sans-serif";
+  };
+
   const renderMasterText = () => {
     const words = passage.split(" ");
     const typedWords = userInput.split(" ");
@@ -96,7 +103,7 @@ export default function TypingEngine({
     return (
       <div 
         className="w-full h-48 overflow-y-auto p-4 border border-slate-400 bg-white"
-        style={{ fontSize: `${settings.fontSize}px`, fontFamily: "Mangal, Arial, sans-serif" }}
+        style={{ fontSize: `${settings.fontSize}px`, fontFamily: getFontFamily() }}
       >
         {words.map((word, i) => {
           let className = "";
@@ -167,7 +174,7 @@ export default function TypingEngine({
           disabled={isFinished}
           spellCheck={false}
           className="w-full h-48 p-4 border border-slate-400 bg-[#c8e667] focus:outline-none focus:border-blue-500 resize-none"
-          style={{ fontSize: `${settings.fontSize}px`, fontFamily: "Mangal, Arial, sans-serif" }}
+          style={{ fontSize: `${settings.fontSize}px`, fontFamily: getFontFamily() }}
         />
         
         <div className="flex justify-center gap-4 mt-4">

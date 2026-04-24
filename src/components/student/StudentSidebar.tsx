@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
     Home, PlayCircle, BookOpen, Trophy, TrendingUp,
     ClipboardList, Award, UserCircle, CreditCard,
-    GraduationCap, X, Menu
+    GraduationCap, X, Menu, Keyboard
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
@@ -16,6 +16,7 @@ const menuItems = [
     { label: "My Courses", href: "/student/courses", icon: PlayCircle },
     { label: "My Mock Tests", href: "/student/quizzes", icon: Trophy },
     { label: "My Results", href: "/student/results", icon: TrendingUp },
+    { label: "Typing Exams", href: "/student/typing", icon: Keyboard },
     { label: "Study Material", href: "/student/materials", icon: BookOpen },
     { label: "Payments", href: "/student/fees", icon: CreditCard },
     { label: "Attendance", href: "/student/attendance", icon: ClipboardList },
