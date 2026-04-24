@@ -32,8 +32,9 @@ export async function POST(req: Request) {
       wordCount
     });
 
-    return NextResponse.json(passage, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to create passage" }, { status: 500 });
+    return NextResponse.json({ success: true, passage: passage.toObject() }, { status: 201 });
+  } catch (error: any) {
+    console.error("Passage Creation Error:", error);
+    return NextResponse.json({ error: error.message || "Failed to create passage" }, { status: 500 });
   }
 }

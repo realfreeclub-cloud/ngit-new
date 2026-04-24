@@ -27,8 +27,9 @@ export async function POST(req: Request) {
     const data = await req.json();
     
     const exam = await TypingExam.create(data);
-    return NextResponse.json(exam, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to create exam" }, { status: 500 });
+    return NextResponse.json({ success: true, exam: exam.toObject() }, { status: 201 });
+  } catch (error: any) {
+    console.error("Exam Creation Error:", error);
+    return NextResponse.json({ error: error.message || "Failed to create exam" }, { status: 500 });
   }
 }
