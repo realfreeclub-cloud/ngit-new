@@ -4,6 +4,8 @@ import TypingPassage from "@/models/TypingPassage";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     await connectDB();

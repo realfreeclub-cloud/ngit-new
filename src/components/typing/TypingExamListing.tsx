@@ -107,7 +107,7 @@ export default function TypingExamListing() {
                       </div>
                       <div className="bg-black text-white text-xs font-bold inline-flex items-center gap-1.5 px-3 py-1.5 rounded">
                         <User className="w-3 h-3" />
-                        <span>{Math.floor(Math.random() * 500) + 1}</span>
+                        <span>0</span>
                       </div>
                     </div>
                   </Card>
