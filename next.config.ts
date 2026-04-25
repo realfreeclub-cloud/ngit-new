@@ -64,7 +64,6 @@ const nextConfig = {
     experimental: {
         optimizePackageImports: ["lucide-react", "framer-motion", "@radix-ui/react-icons"],
     },
-    output: "standalone",
 } as any;
 
 export default nextConfig as NextConfig;
