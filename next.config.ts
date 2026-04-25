@@ -61,6 +61,9 @@ const nextConfig = {
     typescript: {
         ignoreBuildErrors: true,
     },
+    experimental: {
+        optimizePackageImports: ["lucide-react", "framer-motion", "@radix-ui/react-icons"],
+    },
     output: "standalone",
 } as any;
 
