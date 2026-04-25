@@ -10,7 +10,9 @@ export interface ITypingResult {
   totalCharacters: number;
   timeTaken: number; // in seconds
   submittedText: string;
+  backspaces?: number;
   createdAt: Date;
+  updatedAt: Date;
 }
 
 const TypingResultSchema = new Schema<ITypingResult>(
@@ -24,6 +26,7 @@ const TypingResultSchema = new Schema<ITypingResult>(
     totalCharacters: { type: Number, required: true },
     timeTaken: { type: Number, required: true },
     submittedText: { type: String, required: true },
+    backspaces: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

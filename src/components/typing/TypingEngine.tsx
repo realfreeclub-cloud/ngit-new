@@ -24,6 +24,7 @@ export default function TypingEngine({
   const [userInput, setUserInput] = useState("");
   const [timeLeft, setTimeLeft] = useState(duration * 60);
   const [isFinished, setIsFinished] = useState(false);
+  const [backspaceCount, setBackspaceCount] = useState(0);
   
   // Settings State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -60,13 +61,33 @@ export default function TypingEngine({
     setIsFinished(true);
     if (timerRef.current) clearInterval(timerRef.current);
     
-    // Calculate simple metrics for submission
-    const wordsTyped = userInput.trim().split(/\s+/).length;
+    const timeTakenSeconds = (duration * 60) - timeLeft;
+    const timeTakenMinutes = timeTakenSeconds / 60 || 0.1; // prevent division by zero
+    
+    const originalWords = passage.trim().split(/\s+/);
+    const typedWords = userInput.trim().split(/\s+/);
+    
+    let errors = 0;
+    typedWords.forEach((word, idx) => {
+      if (word !== originalWords[idx]) {
+        errors++;
+      }
+    });
+
+    const totalCharacters = userInput.length;
+    const rawWpm = Math.round((totalCharacters / 5) / (duration)); // standard calculation based on test duration
+    const netWpm = Math.round(((totalCharacters - (errors * 5)) / 5) / (duration));
+    const accuracy = totalCharacters > 0 ? Math.max(0, Math.round(((totalCharacters - errors) / totalCharacters) * 100)) : 100;
+
     onComplete({
       submittedText: userInput,
-      timeTaken: duration * 60 - timeLeft,
-      wpm: Math.round((userInput.length / 5) / (duration)), // simplified
-      accuracy: 100, // simplified for now
+      timeTaken: timeTakenSeconds,
+      wpm: Math.max(0, netWpm),
+      rawWpm: Math.max(0, rawWpm),
+      accuracy: accuracy,
+      errors: errors,
+      totalCharacters: totalCharacters,
+      backspaces: backspaceCount
     });
   };
 
@@ -74,6 +95,11 @@ export default function TypingEngine({
     if (isFinished) return;
     
     const val = e.target.value;
+    
+    // Handle backspace count
+    if (val.length < userInput.length) {
+      setBackspaceCount(prev => prev + 1);
+    }
     
     // Handle backspace setting
     if (!settings.backspace && val.length < userInput.length) {

@@ -5,21 +5,36 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Search, ChevronDown, User } from "lucide-react";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 export default function TypingExamListing() {
   const [exams, setExams] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/typing/exams")
+    fetchExams();
+    fetch("/api/typing/categories")
+      .then(res => res.json())
+      .then(data => setCategories(Array.isArray(data) ? data : []));
+  }, []);
+
+  const fetchExams = (category = "All") => {
+    setLoading(true);
+    const url = category !== "All" ? `/api/typing/exams?category=${encodeURIComponent(category)}` : "/api/typing/exams";
+    fetch(url)
       .then(res => res.json())
       .then(data => {
         setExams(data);
         setLoading(false);
       });
-  }, []);
+  };
 
-  const popularKeywords = ["AHC", "BHU", "BSF", "BSSC", "CHSL", "DHC", "DSSSB", "KVS", "MP Police", "Marathon", "Patna", "UP Police", "UPSSSC"];
+  const handleCategoryClick = (category: string) => {
+    setSelectedCategory(category);
+    fetchExams(category);
+  };
 
   if (loading) return (
     <div className="flex justify-center py-20">
@@ -59,17 +74,30 @@ export default function TypingExamListing() {
           {/* Popular Search Keywords */}
           <div className="mb-12">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 mb-4">
-              <Search className="w-4 h-4 text-blue-600" /> Popular Search Keywords
+              <Search className="w-4 h-4 text-blue-600" /> Filter by Category
             </h3>
             <div className="flex flex-wrap gap-2">
-              {popularKeywords.map(keyword => (
-                <span key={keyword} className="px-3 py-1 border border-blue-600 text-blue-600 text-xs font-bold rounded cursor-pointer hover:bg-blue-50">
-                  {keyword}
+              <span 
+                onClick={() => handleCategoryClick("All")}
+                className={cn(
+                  "px-3 py-1 border border-blue-600 text-xs font-bold rounded cursor-pointer transition-all",
+                  selectedCategory === "All" ? "bg-blue-600 text-white" : "text-blue-600 hover:bg-blue-50"
+                )}
+              >
+                All Exams
+              </span>
+              {categories.map(cat => (
+                <span 
+                  key={cat._id} 
+                  onClick={() => handleCategoryClick(cat.name)}
+                  className={cn(
+                    "px-3 py-1 border border-blue-600 text-xs font-bold rounded cursor-pointer transition-all",
+                    selectedCategory === cat.name ? "bg-blue-600 text-white" : "text-blue-600 hover:bg-blue-50"
+                  )}
+                >
+                  {cat.name}
                 </span>
               ))}
-              <span className="px-3 py-1 bg-[#ffcc00] text-black text-xs font-bold rounded cursor-pointer">
-                View All
-              </span>
             </div>
           </div>
         </div>
@@ -107,7 +135,7 @@ export default function TypingExamListing() {
                       </div>
                       <div className="bg-black text-white text-xs font-bold inline-flex items-center gap-1.5 px-3 py-1.5 rounded">
                         <User className="w-3 h-3" />
-                        <span>0</span>
+                        <span>{exam.participantCount || 0}</span>
                       </div>
                     </div>
                   </Card>
