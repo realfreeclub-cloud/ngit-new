@@ -61,10 +61,10 @@ const nextConfig = {
     typescript: {
         ignoreBuildErrors: true,
     },
-    experimental: {
-        cpus: 1,
-        workerThreads: false,
+    eslint: {
+        ignoreDuringBuilds: true,
     },
+    output: "standalone",
 } as any;
 
 export default nextConfig as NextConfig;
