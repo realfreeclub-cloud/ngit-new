@@ -4,49 +4,75 @@ import TypingResult from "@/models/TypingResult";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+/**
+ * API Route: /api/typing/results
+ * Method: POST
+ * Purpose: Securely save typing test attempts for students
+ */
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session || !session.user) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
+    const data = await req.json();
+    const { 
+      examId, 
+      wpm, 
+      rawWpm, 
+      accuracy, 
+      errorCount, 
+      submittedText, 
+      timeTaken 
+    } = data;
+
+    // Validate required fields
+    if (!examId || wpm === undefined || accuracy === undefined) {
+      return NextResponse.json({ error: "Missing required performance metrics" }, { status: 400 });
     }
 
     await connectDB();
-    const data = await req.json();
 
-    // Prevent duplicate submissions for the same exam by the same user
-    const existingResult = await TypingResult.findOne({
-      userId: session.user.id,
-      examId: data.examId
-    });
-
-    if (existingResult) {
-      return NextResponse.json({ error: "Exam already submitted" }, { status: 400 });
-    }
-
+    // Create the result record
     const result = await TypingResult.create({
       userId: session.user.id,
-      ...data
+      examId,
+      wpm,
+      rawWpm,
+      accuracy,
+      errorCount,
+      submittedText,
+      timeTaken,
+      completedAt: new Date()
     });
 
-    return NextResponse.json(result, { status: 201 });
-  } catch (error) {
+    return NextResponse.json({ 
+      success: true, 
+      message: "Result saved successfully", 
+      resultId: result._id 
+    }, { status: 201 });
+
+  } catch (error: any) {
     console.error("Result Submission Error:", error);
-    return NextResponse.json({ error: "Failed to submit results" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to process results" }, { status: 500 });
   }
 }
 
+/**
+ * Method: GET
+ * Purpose: Fetch recent results for the current student
+ */
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     await connectDB();
     const results = await TypingResult.find({ userId: session.user.id })
-      .populate("examId")
-      .sort({ createdAt: -1 });
+      .populate("examId", "title")
+      .sort({ createdAt: -1 })
+      .limit(10);
 
     return NextResponse.json(results);
   } catch (error) {

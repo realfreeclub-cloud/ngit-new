@@ -26,7 +26,11 @@ export default function TypingExamListing() {
     fetch(url)
       .then(res => res.json())
       .then(data => {
-        setExams(data);
+        setExams(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setExams([]);
         setLoading(false);
       });
   };
@@ -46,8 +50,8 @@ export default function TypingExamListing() {
     <div className="min-h-screen bg-[#f5f4ef]">
       <div className="max-w-7xl mx-auto px-4 py-12">
         {/* Header Section */}
-        <div className="mb-10">
-          <h1 className="text-4xl font-black text-slate-900 mb-6">Select Exams for Typing</h1>
+        <div className="mb-6 sm:mb-10">
+          <h1 className="text-2xl sm:text-4xl font-black text-slate-900 mb-4 sm:mb-6">Select Exams for Typing</h1>
           <hr className="border-t border-slate-900 mb-8" />
           
           {/* Filters Bar */}

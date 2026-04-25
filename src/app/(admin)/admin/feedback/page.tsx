@@ -1,14 +1,15 @@
-"use server";
 
 import { listAllFeedback } from "@/app/actions/feedback";
 import { Video, Star, Eye, EyeOff, TrendingUp } from "lucide-react";
 import FeedbackAdminClient from "./FeedbackAdminClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminFeedbackPage() {
     const res = await listAllFeedback({ page: 1, limit: 50 });
     const { feedbacks, total } = res.success
         ? res.data
-        : { feedbacks: [], total: 0, pages: 1 };
+        : { feedbacks: [], total: 0 };
 
     const active = feedbacks.filter((f: any) => f.isActive).length;
     const hidden = feedbacks.filter((f: any) => !f.isActive).length;

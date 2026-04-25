@@ -6,7 +6,7 @@ export interface ITypingResult {
   wpm: number;
   rawWpm: number;
   accuracy: number;
-  errors: number;
+  errorCount: number;
   totalCharacters: number;
   timeTaken: number; // in seconds
   submittedText: string;
@@ -22,7 +22,7 @@ const TypingResultSchema = new Schema<ITypingResult>(
     wpm: { type: Number, required: true },
     rawWpm: { type: Number, required: true },
     accuracy: { type: Number, required: true },
-    errors: { type: Number, required: true },
+    errorCount: { type: Number, required: true },
     totalCharacters: { type: Number, required: true },
     timeTaken: { type: Number, required: true },
     submittedText: { type: String, required: true },

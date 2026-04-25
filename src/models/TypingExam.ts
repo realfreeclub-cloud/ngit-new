@@ -6,6 +6,12 @@ export interface ITypingExam {
   language: "English" | "Hindi";
   passageId: mongoose.Types.ObjectId;
   duration: number; // in minutes
+  wordLimit: number;
+  backspaceMode: "full" | "word" | "disabled";
+  highlightMode: "word" | "word_error" | "letter" | "none";
+  autoScroll: boolean;
+  showScrollbar: boolean;
+  examMode: "SSC" | "CPCT" | "Court" | "General";
   startTime: Date;
   endTime: Date;
   status: "Draft" | "Active" | "Expired";
@@ -20,7 +26,13 @@ const TypingExamSchema = new Schema<ITypingExam>(
     category: { type: String, required: true },
     language: { type: String, enum: ["English", "Hindi"], default: "English" },
     passageId: { type: Schema.Types.ObjectId, ref: "TypingPassage", required: true },
-    duration: { type: Number, required: true }, // duration in minutes
+    duration: { type: Number, required: true },
+    wordLimit: { type: Number, default: 0 },
+    backspaceMode: { type: String, enum: ["full", "word", "disabled"], default: "full" },
+    highlightMode: { type: String, enum: ["word", "word_error", "letter", "none"], default: "word" },
+    autoScroll: { type: Boolean, default: true },
+    showScrollbar: { type: Boolean, default: true },
+    examMode: { type: String, enum: ["SSC", "CPCT", "Court", "General"], default: "General" },
     startTime: { type: Date, required: true },
     endTime: { type: Date, required: true },
     status: { type: String, enum: ["Draft", "Active", "Expired"], default: "Draft" },

@@ -27,13 +27,21 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   }, [params.id]);
 
   if (loading) return <div className="p-20 text-center animate-pulse font-bold">Generating your report...</div>;
-  if (!result) return <div className="p-20 text-center">Result not found.</div>;
+  if (!result || !result.examId || !result.examId.passageId) {
+    return (
+      <div className="p-20 text-center">
+        <h2 className="text-xl font-bold">Result Data Incomplete</h2>
+        <p className="text-slate-500 mt-2">Some information about this exam or passage is no longer available.</p>
+        <Link href="/student/results" className="text-blue-600 underline mt-4 inline-block">Back to Results</Link>
+      </div>
+    );
+  }
 
-  const originalWords = result.examId.passageId.content.trim().split(/\s+/);
-  const submittedWords = result.submittedText.trim().split(/\s+/);
+  const originalWords = result.examId.passageId.content?.trim().split(/\s+/) || [];
+  const submittedWords = result.submittedText?.trim().split(/\s+/) || [];
 
-  const totalKeystrokesGiven = result.examId.passageId.content.length;
-  const keystrokesTyped = result.submittedText.length;
+  const totalKeystrokesGiven = result.examId.passageId.content?.length || 0;
+  const keystrokesTyped = result.submittedText?.length || 0;
   const wordsTyped = submittedWords.length > 0 && submittedWords[0] !== "" ? submittedWords.length : 0;
 
   // Calculate detailed mistakes
@@ -55,7 +63,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const netWrongWords = fullMistakes + (halfMistakes / 2);
   const netCorrectWords = Math.max(0, wordsTyped - netWrongWords);
   const timeDurationMins = result.examId.duration || 10;
-  const timeTakenMins = result.timeTaken / 60;
+  const timeTakenMins = (result.timeTaken || 0) / 60;
   const netWpm = timeTakenMins > 0 ? (netCorrectWords / timeTakenMins).toFixed(2) : "0.00";
   
   const minKeystrokes = Math.round((timeDurationMins * 30 * 5) / 2); // Example minimum threshold
@@ -68,7 +76,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   };
 
   const getFontFamily = () => {
-    const lang = result.examId.language?.toLowerCase() || "";
+    const lang = result.examId?.language?.toLowerCase() || "";
     if (lang.includes("kruti") || lang.includes("kurti")) return "'Kruti Dev 010', Arial, sans-serif";
     if (lang.includes("mangal") || lang.includes("hindi")) return "Mangal, Arial, sans-serif";
     return "Inter, Arial, sans-serif";
@@ -80,7 +88,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
         
         {/* Print Header */}
         <div className="flex justify-between items-center mb-8 print:hidden">
-          <Link href="/student/typing" className="text-slate-500 hover:text-black font-bold">
+          <Link href="/student/results" className="text-slate-500 hover:text-black font-bold">
             ← Back to Dashboard
           </Link>
           <button 
@@ -96,16 +104,16 @@ export default function TypingResultDetails({ params }: { params: { id: string }
           {/* Header Info */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 text-sm font-medium border-b pb-6 print:border-b-2">
             <div className="space-y-4">
-              <p><span className="font-bold">Exam Title:</span> {result.examId.title}</p>
-              <p><span className="font-bold">Passage Title:</span> {result.examId.passageId.title || `Id- ${result.examId.passageId._id.substring(0,5)}`}</p>
+              <p><span className="font-bold">Exam Title:</span> {result.examId?.title || "N/A"}</p>
+              <p><span className="font-bold">Passage Title:</span> {result.examId?.passageId?.title || `Id- ${result.examId?.passageId?._id?.toString().substring(0,5)}`}</p>
             </div>
             <div className="space-y-4">
               <p><span className="font-bold">Total Key Strokes Given:</span> {totalKeystrokesGiven}</p>
               <p><span className="font-bold">Time Duration:</span> {timeDurationMins.toString().padStart(2, '0')}:00 min.</p>
             </div>
             <div className="space-y-4">
-              <p><span className="font-bold">Typing Date:</span> {format(new Date(result.createdAt), "dd/MM/yyyy")}</p>
-              <p><span className="font-bold">Time Taken:</span> {formatTime(result.timeTaken)}</p>
+              <p><span className="font-bold">Typing Date:</span> {result.createdAt ? format(new Date(result.createdAt), "dd/MM/yyyy") : "N/A"}</p>
+              <p><span className="font-bold">Time Taken:</span> {formatTime(result.timeTaken || 0)}</p>
             </div>
           </div>
 
@@ -202,9 +210,9 @@ export default function TypingResultDetails({ params }: { params: { id: string }
 
           {/* Split View */}
           {detailedComparison && (
-            <div className="grid grid-cols-2 gap-0 border border-slate-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-slate-200">
               {/* Original */}
-              <div className="border-r border-slate-200">
+              <div className="border-b md:border-b-0 md:border-r border-slate-200">
                 <div className="bg-slate-50 py-2 px-4 border-b border-slate-200">
                   <p className="text-xs font-bold text-slate-600">Original Passage</p>
                 </div>
@@ -213,7 +221,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                     className="text-sm leading-loose text-slate-800"
                     style={{ fontFamily: getFontFamily() }}
                   >
-                    {originalWords.map((word, i) => (
+                    {originalWords.map((word: string, i: number) => (
                       <span key={i}>{word} </span>
                     ))}
                   </p>

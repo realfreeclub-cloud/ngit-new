@@ -66,8 +66,7 @@ const menuItems = [
         icon: Keyboard,
         subItems: [
             { label: "Dashboard", href: "/admin/typing" },
-            { label: "Passage Library", href: "/admin/typing" },
-            { label: "Typing Results", href: "/admin/results" }
+            { label: "Typing Results", href: "/admin/typing/results" }
         ]
     },
     { label: "Certificates", href: "/admin/certificates", icon: GraduationCap },
@@ -116,7 +115,7 @@ export default function Sidebar({ className, onClose }: SidebarProps) {
                                 <div className="ml-4 pl-4 mt-1 space-y-1 border-l-2 border-slate-100">
                                     {item.subItems.map((subItem) => (
                                         <Link
-                                            key={subItem.href}
+                                            key={`${item.label}-${subItem.label}-${subItem.href}`}
                                             href={subItem.href}
                                             onClick={onClose}
                                             className={cn(

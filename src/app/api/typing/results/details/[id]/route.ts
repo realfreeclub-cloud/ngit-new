@@ -6,11 +6,12 @@ import { authOptions } from "@/lib/auth";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await connectDB();
-    const result = await TypingResult.findById(params.id)
+    const result = await TypingResult.findById(id)
       .populate({
         path: "examId",
         populate: { path: "passageId" }
