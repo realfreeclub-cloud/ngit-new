@@ -23,6 +23,7 @@ import GalleryGrid from "./GalleryGrid";
 import TestimonialSlider from "./TestimonialSlider";
 import PublicResultsGrid from "./PublicResultsGrid";
 import PublicExamsGrid from "./PublicExamsGrid";
+import TypingTestCTASection from "./TypingTestCTASection";
 
 // Add some placeholder or custom mapping
 export default function DynamicRenderer({ sections, staticFallback, extraData, session }: { sections: any[], staticFallback?: React.ReactNode, extraData?: any, session?: any }) {
@@ -69,6 +70,8 @@ export default function DynamicRenderer({ sections, staticFallback, extraData, s
                         return <AchievementsSection key={sectionKey} data={section} blocks={section.blocks} />;
                     case "CTASection":
                         return <CTASection key={sectionKey} data={section} blocks={section.blocks} />;
+                    case "TypingTestCTASection":
+                        return <TypingTestCTASection key={sectionKey} data={section} />;
                     case "RegistrationCTA":
                         return <RegistrationCTA key={sectionKey} data={section} blocks={section.blocks} />;
                     case "ContactSection":

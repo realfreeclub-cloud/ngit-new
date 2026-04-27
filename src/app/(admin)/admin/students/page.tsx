@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import {
     Check, X, Search, MoreVertical, Mail, Phone,
     UserCheck, UserX, CreditCard, FileText, Eye,
@@ -132,9 +133,16 @@ export default function AdminStudentsPage() {
                             className="w-full h-12 bg-white border rounded-xl pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                         />
                     </div>
-                    <Button variant="outline" className="gap-2 rounded-xl">
-                        <FileText className="w-4 h-4" /> Export Student Data
-                    </Button>
+                    <div className="flex gap-2">
+                        <Link href="/admin/students/register">
+                            <Button className="gap-2 rounded-xl">
+                                <User className="w-4 h-4" /> Add Student
+                            </Button>
+                        </Link>
+                        <Button variant="outline" className="gap-2 rounded-xl">
+                            <FileText className="w-4 h-4" /> Export Student Data
+                        </Button>
+                    </div>
                 </div>
 
                 {loading ? (

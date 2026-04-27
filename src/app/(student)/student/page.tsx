@@ -10,15 +10,15 @@ import {
     ArrowUpRight,
     CheckCircle2,
     QrCode,
-    TrendingUp,
-    CalendarCheck
+    CalendarCheck,
+    Keyboard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { getStudentDashboardData } from "@/app/actions/dashboard";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import StudentQRModal from "@/components/student/StudentQRModal";
-import PerformanceChart from "@/components/student/PerformanceChart";
 
 export default function StudentDashboard() {
     const [data, setData] = useState<any>(null);
@@ -26,14 +26,18 @@ export default function StudentDashboard() {
     const [qrOpen, setQrOpen] = useState(false);
 
     useEffect(() => {
+        let isMounted = true;
         const fetch = async () => {
             const res = await getStudentDashboardData();
-            if (res.success) {
-                setData(res);
+            if (isMounted) {
+                if (res.success) {
+                    setData(res);
+                }
+                setLoading(false);
             }
-            setLoading(false);
         };
         fetch();
+        return () => { isMounted = false; };
     }, []);
 
     if (loading) {
@@ -49,6 +53,8 @@ export default function StudentDashboard() {
     } = data || {
         stats: { avgProgress: 0, activeCourses: 0, attendancePercentage: 0, testsCompleted: 0, avgGrade: '-' },
         enrollments: [],
+        typingResults: [],
+        typingExams: [],
         userName: 'Student',
         userId: '',
         progressTrend: []
@@ -118,31 +124,7 @@ export default function StudentDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 {/* Main Column */}
                 <div className="lg:col-span-2 space-y-12">
-                    {/* Progress Chart */}
-                    <div className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-                            <div>
-                                <h2 className="text-2xl font-black text-slate-900 tracking-tight leading-none flex items-center gap-3">
-                                    <TrendingUp className="w-6 h-6 text-primary" />
-                                    Learning <span className="text-gradient">Momentum</span>
-                                </h2>
-                                <p className="text-sm font-bold text-slate-400 mt-2 uppercase tracking-widest">Weekly Engagement Score</p>
-                            </div>
-                            <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
-                                {['Week', 'Month', 'Year'].map(t => (
-                                    <button key={t} className={cn(
-                                        "px-5 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all",
-                                        t === 'Week' ? "bg-white shadow-md text-primary" : "text-slate-400 hover:text-slate-600"
-                                    )}>{t}</button>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="w-full h-[300px]">
-                            <PerformanceChart data={progressTrend} />
-                        </div>
-                    </div>
-
-                    {/* Continue Learning */}
+                    {/* Active Courses */}
                     <div className="space-y-8">
                         <div className="flex items-center justify-between">
                             <h2 className="text-2xl font-black text-slate-900 tracking-tight">Active Courses</h2>
@@ -206,6 +188,92 @@ export default function StudentDashboard() {
                                     <Link href="/courses">
                                         <Button className="btn-primary h-14 rounded-2xl px-10">Explore Catalog</Button>
                                     </Link>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Typing Exams Section */}
+                    <div className="space-y-8">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-2xl font-black text-slate-900 tracking-tight leading-none flex items-center gap-3">
+                                <Keyboard className="w-6 h-6 text-indigo-500" />
+                                Available <span className="text-gradient">Typing Exams</span>
+                            </h2>
+                            <Link href="/student/typing">
+                                <Button variant="ghost" className="text-primary font-black gap-2 uppercase text-[10px] tracking-widest">Practice More <ChevronRight className="w-4 h-4" /></Button>
+                            </Link>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {data?.typingExams?.length > 0 ? data.typingExams.map((exam: any) => (
+                                <div key={exam._id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-indigo-100 transition-all duration-300 group">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                            <Keyboard className="w-6 h-6" />
+                                        </div>
+                                        <Badge className="bg-slate-100 text-slate-500 border-none font-black text-[9px] uppercase tracking-widest">{exam.language || 'English'}</Badge>
+                                    </div>
+                                    <h3 className="font-black text-slate-900 text-lg mb-2">{exam.title}</h3>
+                                    <div className="flex items-center gap-4 text-xs font-bold text-slate-400 mb-6">
+                                        <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {exam.duration}m</span>
+                                        <span className="flex items-center gap-1.5"><Trophy className="w-3.5 h-3.5" /> {exam.wordLimit || 'Unlimited'} Words</span>
+                                    </div>
+                                    <Link href={`/typing/exam/${exam._id}`}>
+                                        <Button className="w-full rounded-2xl font-black text-xs uppercase tracking-widest h-12 bg-slate-900 hover:bg-indigo-600 transition-colors">Start Exam</Button>
+                                    </Link>
+                                </div>
+                            )) : (
+                                <div className="md:col-span-2 py-10 bg-slate-50 rounded-3xl border-2 border-dashed flex flex-col items-center justify-center text-slate-400">
+                                    <Keyboard className="w-10 h-10 mb-4 opacity-20" />
+                                    <p className="font-bold text-sm">No active typing exams available.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Typing Results Section */}
+                    <div className="space-y-8">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-2xl font-black text-slate-900 tracking-tight leading-none flex items-center gap-3">
+                                <Trophy className="w-6 h-6 text-amber-500" />
+                                Recent <span className="text-gradient">Typing Performance</span>
+                            </h2>
+                            <Link href="/student/results">
+                                <Button variant="ghost" className="text-primary font-black gap-2 uppercase text-[10px] tracking-widest">Full History <ChevronRight className="w-4 h-4" /></Button>
+                            </Link>
+                        </div>
+
+                        <div className="space-y-4">
+                            {data?.typingResults?.length > 0 ? data.typingResults.map((result: any) => (
+                                <div key={result._id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-md transition-all">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 font-black">
+                                            {result.wpm}
+                                        </div>
+                                        <div>
+                                            <h4 className="font-black text-slate-900 leading-none">{result.examId?.title || "Typing Practice"}</h4>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">
+                                                {new Date(result.createdAt).toLocaleDateString()} · {result.accuracy}% Accuracy
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-right">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Net Speed</p>
+                                            <p className="text-xl font-black text-slate-900">{result.wpm} WPM</p>
+                                        </div>
+                                        <Link href={`/typing/results/${result._id}`}>
+                                            <Button variant="outline" className="w-12 h-12 rounded-2xl p-0 hover:bg-slate-900 hover:text-white transition-all">
+                                                <ChevronRight className="w-5 h-5" />
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </div>
+                            )) : (
+                                <div className="py-10 bg-slate-50 rounded-3xl border-2 border-dashed flex flex-col items-center justify-center text-slate-400">
+                                    <Trophy className="w-10 h-10 mb-4 opacity-20" />
+                                    <p className="font-bold text-sm">No typing attempts recorded yet.</p>
                                 </div>
                             )}
                         </div>

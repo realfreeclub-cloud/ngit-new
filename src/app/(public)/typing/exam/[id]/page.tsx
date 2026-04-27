@@ -20,15 +20,27 @@ export default function TypingExamPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
 
+  const engineConfig = React.useMemo(() => ({
+    title: exam?.title || "",
+    duration: exam?.duration || 10,
+    backspaceMode: exam?.backspaceMode || "full",
+    highlightMode: exam?.highlightMode || "word",
+    wordLimit: exam?.wordLimit || 0
+  }), [exam]);
+
   useEffect(() => {
     if (!id) return;
+    let isMounted = true;
     fetch(`/api/typing/exams`)
       .then(res => res.json())
       .then(data => {
-        const found = data.find((e: any) => e._id === id);
-        setExam(found);
-        setLoading(false);
+        if (isMounted) {
+          const found = data.find((e: any) => e._id === id);
+          setExam(found);
+          setLoading(false);
+        }
       });
+    return () => { isMounted = false; };
   }, [id]);
 
   const handleComplete = async (results: any) => {
@@ -73,7 +85,8 @@ export default function TypingExamPage() {
   const handleNextStep = () => {
     if (!session) {
       toast.error("Please login to start the typing exam");
-      router.push("/login");
+      const callbackUrl = encodeURIComponent(window.location.pathname);
+      router.push(`/student/login?callbackUrl=${callbackUrl}`);
       return;
     }
     setStep(2);
@@ -212,14 +225,8 @@ export default function TypingExamPage() {
       )}
 
       <TypingEngineModule 
-        passage={exam.passageId?.content || ""} 
-        config={{
-          title: exam.title,
-          duration: exam.duration,
-          backspaceMode: exam.backspaceMode,
-          highlightMode: exam.highlightMode,
-          wordLimit: exam.wordLimit
-        }}
+        passage={exam.passageId?.content || "Passage not linked properly from admin panel. Please assign a passage to this exam."} 
+        config={engineConfig}
         onComplete={handleComplete}
       />
     </div>

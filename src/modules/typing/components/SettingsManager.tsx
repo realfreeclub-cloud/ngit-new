@@ -62,6 +62,42 @@ export const SettingsManager: React.FC = () => {
           </select>
         </div>
 
+        {/* Text Size Control */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Text Size</label>
+            <span className="text-[10px] font-black text-indigo-600">{settings.fontSize}%</span>
+          </div>
+          <input 
+            type="range"
+            min="70"
+            max="150"
+            step="5"
+            disabled={isActive}
+            value={settings.fontSize}
+            onChange={(e) => handleUpdate('fontSize', parseInt(e.target.value))}
+            className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600 disabled:opacity-50"
+          />
+        </div>
+
+        {/* Passage Height Control */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Passage Box Height</label>
+            <span className="text-[10px] font-black text-indigo-600">{settings.passageHeight}%</span>
+          </div>
+          <input 
+            type="range"
+            min="30"
+            max="70"
+            step="5"
+            disabled={isActive}
+            value={settings.passageHeight}
+            onChange={(e) => handleUpdate('passageHeight', parseInt(e.target.value))}
+            className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600 disabled:opacity-50"
+          />
+        </div>
+
         {/* Text Position */}
         <div className="space-y-2">
           <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Display Layout</label>

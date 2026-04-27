@@ -111,9 +111,9 @@ export default function PublicExamsPage() {
                 ) : (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {filteredExams.map((exam, idx) => {
-                            const startUrl = session?.user?.role === "STUDENT" 
+                            const startUrl = session?.user 
                                 ? `/student/quizzes/${exam._id}` 
-                                : "/student/login";
+                                : `/student/login?callbackUrl=${encodeURIComponent(`/student/quizzes/${exam._id}`)}`;
 
                             return (
                                 <motion.div

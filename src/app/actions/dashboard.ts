@@ -13,6 +13,8 @@ import Attendance from "@/models/Attendance";
 import MockTestResult from "@/models/MockTestResult";
 import Quiz from "@/models/Quiz";
 import Question from "@/models/Question";
+import TypingResult from "@/models/TypingResult";
+import TypingExam from "@/models/TypingExam";
 
 export async function getMockTestStats() {
     try {
@@ -97,10 +99,12 @@ export async function getStudentDashboardData() {
 
         const userId = session.user.id;
 
-        const [enrollments, attempts, attendance] = await Promise.all([
+        const [enrollments, attempts, attendance, typingResults, typingExams] = await Promise.all([
             Enrollment.find({ userId }).populate({ path: "courseId", select: "title thumbnail _id slug" }).lean(),
             Attempt.find({ studentId: userId }).lean(),
-            Attendance.find({ studentId: userId }).lean()
+            Attendance.find({ studentId: userId }).lean(),
+            TypingResult.find({ userId }).populate("examId", "title duration").sort({ createdAt: -1 }).limit(5).lean(),
+            TypingExam.find({ isPublished: true }).limit(5).lean()
         ]);
 
         const activeCourses = enrollments.length;
@@ -136,6 +140,8 @@ export async function getStudentDashboardData() {
             stats,
             upcomingQuiz: JSON.parse(JSON.stringify(upcomingQuiz)),
             enrollments: JSON.parse(JSON.stringify(enrollments)),
+            typingResults: JSON.parse(JSON.stringify(typingResults)),
+            typingExams: JSON.parse(JSON.stringify(typingExams)),
             userName: session.user.name,
             userId: session.user.id,
             progressTrend: [65, 72, 68, 85, 90, 88, 92] // Placeholder for chart until more data exists

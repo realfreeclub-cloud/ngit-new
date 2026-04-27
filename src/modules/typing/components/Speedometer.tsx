@@ -29,21 +29,21 @@ export const Speedometer: React.FC = () => {
   const category = getCategory(wpm);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-[2rem] p-8 flex flex-col items-center justify-center relative overflow-hidden shadow-sm">
+    <div className="bg-white border border-slate-200 rounded-[2rem] p-5 flex flex-col items-center justify-center relative overflow-hidden shadow-sm">
       {/* Decorative Background Glow */}
       <div 
-        className="absolute -bottom-10 w-40 h-40 opacity-[0.03] blur-[50px] rounded-full transition-colors duration-1000" 
+        className="absolute -bottom-10 w-24 h-24 opacity-[0.03] blur-[50px] rounded-full transition-colors duration-1000" 
         style={{ backgroundColor: category.hex }}
       />
       
-      <div className="relative w-48 h-24 mb-10">
+      <div className="relative w-36 h-18 mb-4">
         {/* Gauge Background Path */}
         <svg viewBox="0 0 100 50" className="w-full h-full overflow-visible">
           <path
             d="M 10 50 A 40 40 0 0 1 90 50"
             fill="none"
             stroke="#f1f5f9"
-            strokeWidth="8"
+            strokeWidth="10"
             strokeLinecap="round"
           />
           {/* Active Progress Path */}
@@ -51,7 +51,7 @@ export const Speedometer: React.FC = () => {
             d="M 10 50 A 40 40 0 0 1 90 50"
             fill="none"
             stroke={category.hex}
-            strokeWidth="8"
+            strokeWidth="10"
             strokeLinecap="round"
             strokeDasharray="125.6"
             strokeDashoffset={125.6 - (percentage * 125.6)}
@@ -72,34 +72,32 @@ export const Speedometer: React.FC = () => {
         </svg>
 
         {/* Center Labels */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pt-8">
-          <span className="text-5xl font-black text-slate-900 tracking-tighter">{wpm}</span>
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] -mt-1">WPM</span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center pt-6">
+          <span className="text-3xl font-black text-slate-900 tracking-tighter">{wpm}</span>
+          <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] -mt-1">WPM</span>
         </div>
       </div>
 
       {/* Rank Label */}
       <div 
-        className="px-6 py-2 rounded-full border transition-all duration-500" 
+        className="px-4 py-1.5 rounded-full border transition-all duration-500" 
         style={{ 
           backgroundColor: `${category.hex}15`, 
           borderColor: `${category.hex}30` 
         }}
       >
         <span 
-          className="text-[11px] font-black tracking-[0.15em] uppercase"
+          className="text-[9px] font-black tracking-[0.1em] uppercase"
           style={{ color: category.hex }}
         >
-          RANK: {category.label}
+          {category.label}
         </span>
       </div>
 
       {/* Scale Labels */}
-      <div className="w-full flex justify-between mt-6 px-4 text-[9px] font-black text-slate-300 uppercase tracking-widest">
+      <div className="w-full flex justify-between mt-4 px-2 text-[7px] font-black text-slate-300 uppercase tracking-widest">
         <span>0</span>
-        <span>25</span>
         <span>50</span>
-        <span>75</span>
         <span>100+</span>
       </div>
     </div>

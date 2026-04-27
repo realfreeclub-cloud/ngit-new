@@ -1,14 +1,14 @@
-import TypingExamListing from "@/components/typing/TypingExamListing";
+import TypingSelectionLayer from "@/components/typing/TypingSelectionLayer";
 
 export const metadata = {
-  title: "Typing Exams | National Genius Institute",
-  description: "Practice and excel in government-standard typing tests.",
+  title: "Typing Practice | National Genius Institute",
+  description: "Select your practice module and improve your typing speed.",
 };
 
 export default function TypingPage() {
   return (
     <div className="pt-20">
-      <TypingExamListing />
+      <TypingSelectionLayer />
     </div>
   );
 }

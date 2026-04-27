@@ -1,7 +1,7 @@
 "use client";
 
 import NotificationBell from "../shared/NotificationBell";
-import { Search, LogOut, User, Settings, Shield, Menu, PlayCircle, Trophy } from "lucide-react";
+import { Search, LogOut, User, Settings, Shield, Menu, PlayCircle, Trophy, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut, useSession } from "next-auth/react";
 import {
@@ -24,8 +24,7 @@ interface StudentNavbarProps {
 }
 
 const quickLinks = [
-    { label: "My Courses", href: "/student/courses", icon: PlayCircle, color: "text-indigo-600 bg-indigo-50 hover:bg-indigo-100" },
-    { label: "My Exams", href: "/student/quizzes", icon: Trophy, color: "text-amber-600 bg-amber-50 hover:bg-amber-100" },
+    { label: "Back to Website", href: "/", icon: Home, color: "text-primary bg-primary/5 hover:bg-primary/10 border-primary/20" },
 ];
 
 export default function StudentNavbar({ onMenuToggle }: StudentNavbarProps) {

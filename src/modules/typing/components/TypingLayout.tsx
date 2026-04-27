@@ -50,24 +50,28 @@ export const TypingLayout: React.FC<TypingLayoutProps> = ({
         
         {/* LEFT / CENTER COLUMN - PASSAGE & INPUT */}
         <div className={cn(
-          "lg:col-span-8 flex gap-6",
+          "lg:col-span-9 flex gap-6",
           settings.textPosition === 'side' ? 'flex-row' : 'flex-col',
           isFullScreen && "gap-10 h-full"
         )}>
-          <div className={cn("flex-1 h-full min-h-0 flex flex-col gap-6", isFullScreen && "gap-10")}>
-            <div className={cn("flex-1 min-h-0", !isFullScreen && "min-h-[350px]")}>
-              {passageSlot}
-            </div>
-            <div className={cn("flex-1 min-h-0", !isFullScreen && "min-h-[300px]")}>
-              {typingSlot}
-            </div>
+          <div 
+            className={cn("min-h-0", !isFullScreen && "min-h-[250px]", settings.textPosition === 'side' ? "h-full w-1/2" : "w-full")}
+            style={{ flex: `${settings.passageHeight} 1 0%` }}
+          >
+            {passageSlot}
+          </div>
+          <div 
+            className={cn("min-h-0", !isFullScreen && "min-h-[200px]", settings.textPosition === 'side' ? "h-full w-1/2" : "w-full")}
+            style={{ flex: `${100 - settings.passageHeight} 1 0%` }}
+          >
+            {typingSlot}
           </div>
         </div>
 
         {/* RIGHT COLUMN - STATS & SETTINGS */}
         <aside className={cn(
-          "lg:col-span-4",
-          isFullScreen ? "h-full overflow-y-auto pr-4 scrollbar-hide" : "space-y-8"
+          "lg:col-span-3",
+          isFullScreen ? "h-full overflow-y-auto pr-4 scrollbar-hide" : "space-y-6"
         )}>
           <div className={cn(
             "space-y-8",

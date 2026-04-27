@@ -8,6 +8,8 @@ interface TypingSettings {
   autoScroll: boolean;
   wordLimit: number;
   textPosition: 'top' | 'side';
+  fontSize: number;
+  passageHeight: number;
 }
 
 interface TypingState {
@@ -51,6 +53,8 @@ const initialSettings: TypingSettings = {
   autoScroll: true,
   wordLimit: 0,
   textPosition: 'top',
+  fontSize: 100, // percentage
+  passageHeight: 50, // percentage of total height
 };
 
 export const useTypingStore = create<TypingState>((set) => ({

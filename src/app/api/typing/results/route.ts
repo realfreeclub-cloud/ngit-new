@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import TypingResult from "@/models/TypingResult";
+import "@/models/TypingExam";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -24,7 +25,9 @@ export async function POST(req: Request) {
       accuracy, 
       errorCount, 
       submittedText, 
-      timeTaken 
+      timeTaken,
+      totalCharacters,
+      backspaces
     } = data;
 
     // Validate required fields
@@ -44,6 +47,8 @@ export async function POST(req: Request) {
       errorCount,
       submittedText,
       timeTaken,
+      totalCharacters,
+      backspaces,
       completedAt: new Date()
     });
 

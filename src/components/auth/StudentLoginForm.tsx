@@ -160,10 +160,10 @@ export default function StudentLoginForm() {
                         </div>
 
                         <div className="text-center">
-                            <p className="text-sm text-slate-500 font-bold mb-4">New student seeking enrollment?</p>
+                            <p className="text-sm text-slate-500 font-bold mb-4">Don't have an account?</p>
                             <Link href="/register">
-                                <Button variant="outline" className="h-12 border-2 border-white/5 bg-transparent text-white font-black hover:bg-white/10 px-8 rounded-2xl">
-                                    Submit Application
+                                <Button variant="outline" className="h-12 border-2 border-white/5 bg-transparent text-white font-black hover:bg-white/10 px-8 rounded-2xl w-full">
+                                    Create New Account
                                 </Button>
                             </Link>
                         </div>

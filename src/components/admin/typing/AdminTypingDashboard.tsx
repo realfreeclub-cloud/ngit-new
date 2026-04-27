@@ -14,6 +14,9 @@ export default function AdminTypingDashboard() {
   const [passages, setPassages] = useState<any[]>([]);
   const [exams, setExams] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [wordSets, setWordSets] = useState<any[]>([]);
+  const [essays, setEssays] = useState<any[]>([]);
+  const [currentPassages, setCurrentPassages] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showExamForm, setShowExamForm] = useState(false);
@@ -29,11 +32,17 @@ export default function AdminTypingDashboard() {
     Promise.all([
       fetch("/api/admin/typing/passages").then(res => res.json()),
       fetch("/api/admin/typing/exams").then(res => res.json()),
-      fetch("/api/admin/typing/categories").then(res => res.json())
-    ]).then(([passagesData, examsData, categoriesData]) => {
+      fetch("/api/admin/typing/categories").then(res => res.json()),
+      fetch("/api/admin/typing/words").then(res => res.json()),
+      fetch("/api/admin/typing/essays").then(res => res.json()),
+      fetch("/api/admin/typing/current").then(res => res.json())
+    ]).then(([passagesData, examsData, categoriesData, wordsData, essaysData, currentData]) => {
       setPassages(passagesData);
       setExams(examsData);
       setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      setWordSets(wordsData);
+      setEssays(essaysData);
+      setCurrentPassages(currentData);
       setLoading(false);
     });
   };
@@ -157,6 +166,105 @@ export default function AdminTypingDashboard() {
     }
   };
 
+  const handleAddWordSet = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const words = (formData.get('words') as string).split(',').map(w => w.trim()).filter(w => w.length > 0);
+    const data = {
+        name: formData.get('name'),
+        category: formData.get('category'),
+        value: formData.get('value'),
+        words,
+        language: formData.get('language')
+    };
+
+    try {
+      const res = await fetch("/api/admin/typing/words", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        toast.success("Word set created!");
+        e.currentTarget.reset();
+        fetchData();
+      }
+    } catch (error) {
+      toast.error("Error creating word set");
+    }
+  };
+
+  const handleDeleteWordSet = async (id: string) => {
+    if (!confirm("Delete this word set?")) return;
+    await fetch(`/api/admin/typing/words/${id}`, { method: "DELETE" });
+    fetchData();
+  };
+
+  const handleAddEssay = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const content = formData.get('content') as string;
+    const data = {
+        topic: formData.get('topic'),
+        title: formData.get('title'),
+        content,
+        wordCount: content.split(/\s+/).length,
+        language: formData.get('language')
+    };
+
+    try {
+      const res = await fetch("/api/admin/typing/essays", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        toast.success("Essay added!");
+        e.currentTarget.reset();
+        fetchData();
+      }
+    } catch (error) {
+      toast.error("Error adding essay");
+    }
+  };
+
+  const handleDeleteEssay = async (id: string) => {
+    if (!confirm("Delete this essay?")) return;
+    await fetch(`/api/admin/typing/essays/${id}`, { method: "DELETE" });
+    fetchData();
+  };
+
+  const handleAddCurrent = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data = {
+        title: formData.get('title'),
+        content: formData.get('content'),
+        language: formData.get('language')
+    };
+
+    try {
+      const res = await fetch("/api/admin/typing/current", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        toast.success("Current passage added!");
+        e.currentTarget.reset();
+        fetchData();
+      }
+    } catch (error) {
+      toast.error("Error adding passage");
+    }
+  };
+
+  const handleDeleteCurrent = async (id: string) => {
+    if (!confirm("Delete this passage?")) return;
+    await fetch(`/api/admin/typing/current/${id}`, { method: "DELETE" });
+    fetchData();
+  };
+
   const fetchResults = async (examId: string) => {
     try {
       const res = await fetch(`/api/admin/typing/results?examId=${examId}`);
@@ -194,10 +302,13 @@ export default function AdminTypingDashboard() {
 
       <Tabs defaultValue="exams" className="w-full">
         <div className="overflow-x-auto pb-2 scrollbar-hide">
-          <TabsList className="flex w-max sm:grid sm:w-full sm:grid-cols-3 sm:max-w-xl mb-4 sm:mb-8 h-12 sm:h-14 bg-slate-100 rounded-xl sm:rounded-2xl p-1 sm:p-1.5">
-            <TabsTrigger value="exams" className="rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">Active Exams</TabsTrigger>
-            <TabsTrigger value="categories" className="rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">Categories</TabsTrigger>
-            <TabsTrigger value="passages" className="rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">Passages</TabsTrigger>
+          <TabsList className="flex w-max mb-4 sm:mb-8 h-12 sm:h-14 bg-slate-100 rounded-xl sm:rounded-2xl p-1 sm:p-1.5 overflow-x-auto scrollbar-hide">
+            <TabsTrigger value="exams" className="rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm px-6">Official Exams</TabsTrigger>
+            <TabsTrigger value="categories" className="rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm px-6">Categories</TabsTrigger>
+            <TabsTrigger value="passages" className="rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm px-6">Library</TabsTrigger>
+            <TabsTrigger value="words" className="rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm px-6">Word Practice</TabsTrigger>
+            <TabsTrigger value="essays" className="rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm px-6">Essay Practice</TabsTrigger>
+            <TabsTrigger value="current" className="rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm px-6">Current Affairs</TabsTrigger>
           </TabsList>
         </div>
 
@@ -623,6 +734,131 @@ export default function AdminTypingDashboard() {
               </div>
             </div>
           </div>
+        </TabsContent>
+        <TabsContent value="words" className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-1">
+                    <Card className="p-8 rounded-[2rem] bg-blue-600 text-white border-none shadow-2xl">
+                        <h3 className="text-2xl font-black mb-4">Add Word Set</h3>
+                        <form onSubmit={handleAddWordSet} className="space-y-4">
+                            <input name="name" placeholder="Set Name (e.g. Set A)" className="w-full p-4 bg-white/10 rounded-xl outline-none placeholder:text-blue-200" required />
+                            <select name="category" className="w-full p-4 bg-white/10 rounded-xl outline-none [&>option]:text-slate-900" required>
+                                <option value="A-Z">A to Z</option>
+                                <option value="Length">Word Length</option>
+                            </select>
+                            <input name="value" placeholder="Value (e.g. A or 5)" className="w-full p-4 bg-white/10 rounded-xl outline-none placeholder:text-blue-200" required />
+                            <select name="language" className="w-full p-4 bg-white/10 rounded-xl outline-none [&>option]:text-slate-900">
+                                <option value="English">English</option>
+                                <option value="Hindi">Hindi</option>
+                            </select>
+                            <textarea name="words" placeholder="Words (comma separated)" className="w-full p-4 bg-white/10 rounded-xl outline-none h-32 placeholder:text-blue-200" required />
+                            <Button type="submit" className="w-full h-14 bg-white text-blue-600 hover:bg-blue-50 font-black">Save Word Set</Button>
+                        </form>
+                    </Card>
+                </div>
+                <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {wordSets.map(set => (
+                        <Card key={set._id} className="p-6 rounded-[1.5rem] flex items-center justify-between group">
+                            <div>
+                                <h4 className="font-black text-slate-900">{set.name}</h4>
+                                <p className="text-[10px] font-black uppercase text-slate-400">{set.category} • {set.language}</p>
+                                <p className="text-xs text-slate-500 mt-2 line-clamp-1">{set.words.length} Words</p>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteWordSet(set._id)} className="text-slate-300 hover:text-rose-600">
+                                <Trash2 className="w-4 h-4" />
+                            </Button>
+                        </Card>
+                    ))}
+                </div>
+            </div>
+        </TabsContent>
+
+        <TabsContent value="essays" className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-1">
+                    <Card className="p-8 rounded-[2rem] bg-emerald-600 text-white border-none shadow-2xl">
+                        <h3 className="text-2xl font-black mb-4">Add Essay</h3>
+                        <form onSubmit={handleAddEssay} className="space-y-4">
+                            <select name="topic" className="w-full p-4 bg-white/10 rounded-xl outline-none [&>option]:text-slate-900" required>
+                                <option value="Gandhi">Mahatma Gandhi</option>
+                                <option value="Nehru">Jawaharlal Nehru</option>
+                                <option value="15 Aug">Independence Day</option>
+                                <option value="26 Jan">Republic Day</option>
+                                <option value="Women Empowerment">Women Empowerment</option>
+                            </select>
+                            <div className="grid grid-cols-2 gap-4">
+                                <input name="title" placeholder="Essay Title" className="w-full p-4 bg-white/10 rounded-xl outline-none placeholder:text-emerald-200" required />
+                                <select name="difficulty" className="w-full p-4 bg-white/10 rounded-xl outline-none [&>option]:text-slate-900" required>
+                                    <option value="Easy">Easy</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Hard">Hard</option>
+                                </select>
+                            </div>
+                            <select name="language" className="w-full p-4 bg-white/10 rounded-xl outline-none [&>option]:text-slate-900">
+                                <option value="English">English</option>
+                                <option value="Hindi">Hindi</option>
+                            </select>
+                            <textarea name="content" placeholder="Full Content..." className="w-full p-4 bg-white/10 rounded-xl outline-none h-48 placeholder:text-emerald-200" required />
+                            <Button type="submit" className="w-full h-14 bg-white text-emerald-600 hover:bg-emerald-50 font-black">Save Essay</Button>
+                        </form>
+                    </Card>
+                </div>
+                <div className="lg:col-span-2 space-y-4">
+                    {essays.map(essay => (
+                        <Card key={essay._id} className="p-6 rounded-[1.5rem] flex items-center justify-between group">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 flex items-center justify-center rounded-xl">
+                                    <BookOpen className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h4 className="font-black text-slate-900">{essay.title}</h4>
+                                    <p className="text-[10px] font-black uppercase text-slate-400">{essay.topic} • {essay.difficulty} • {essay.language}</p>
+                                </div>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteEssay(essay._id)} className="text-slate-300 hover:text-rose-600">
+                                <Trash2 className="w-4 h-4" />
+                            </Button>
+                        </Card>
+                    ))}
+                </div>
+            </div>
+        </TabsContent>
+
+        <TabsContent value="current" className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-1">
+                    <Card className="p-8 rounded-[2rem] bg-amber-600 text-white border-none shadow-2xl">
+                        <h3 className="text-2xl font-black mb-4">Post Daily News</h3>
+                        <form onSubmit={handleAddCurrent} className="space-y-4">
+                            <input name="title" placeholder="News Headline" className="w-full p-4 bg-white/10 rounded-xl outline-none placeholder:text-amber-200" required />
+                            <select name="language" className="w-full p-4 bg-white/10 rounded-xl outline-none [&>option]:text-slate-900">
+                                <option value="English">English</option>
+                                <option value="Hindi">Hindi</option>
+                            </select>
+                            <textarea name="content" placeholder="Content..." className="w-full p-4 bg-white/10 rounded-xl outline-none h-48 placeholder:text-amber-200" required />
+                            <Button type="submit" className="w-full h-14 bg-white text-amber-600 hover:bg-amber-50 font-black">Publish News</Button>
+                        </form>
+                    </Card>
+                </div>
+                <div className="lg:col-span-2 space-y-4">
+                    {currentPassages.map(cp => (
+                        <Card key={cp._id} className="p-6 rounded-[1.5rem] flex items-center justify-between group">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-amber-50 text-amber-600 flex items-center justify-center rounded-xl">
+                                    <Clock className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h4 className="font-black text-slate-900">{cp.title}</h4>
+                                    <p className="text-[10px] font-black uppercase text-slate-400">{new Date(cp.date).toLocaleDateString()} • {cp.language}</p>
+                                </div>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteCurrent(cp._id)} className="text-slate-300 hover:text-rose-600">
+                                <Trash2 className="w-4 h-4" />
+                            </Button>
+                        </Card>
+                    ))}
+                </div>
+            </div>
         </TabsContent>
       </Tabs>
     </div>

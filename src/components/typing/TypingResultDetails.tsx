@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Keyboard, XCircle, Scissors, AlertCircle, Timer, Download, Target } from "lucide-react";
+import { Keyboard, XCircle, Scissors, AlertCircle, Timer, Download, Target, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 export default function TypingResultDetails({ params }: { params: { id: string } }) {
   const [result, setResult] = useState<any>(null);
@@ -12,21 +14,32 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const [detailedComparison, setDetailedComparison] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       try {
         const res = await fetch(`/api/typing/results/details/${params.id}`);
+        if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
-        setResult(data);
+        if (isMounted) setResult(data);
       } catch (error) {
-        console.error("Failed to fetch data");
+        console.error("Failed to fetch typing result details:", error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     fetchData();
+    return () => { isMounted = false; };
   }, [params.id]);
 
-  if (loading) return <div className="p-20 text-center animate-pulse font-bold">Generating your report...</div>;
+  if (loading) return (
+    <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="text-center animate-pulse">
+            <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="font-black text-slate-900 uppercase tracking-widest text-sm">Generating Report...</p>
+        </div>
+    </div>
+  );
+
   if (!result || !result.examId || !result.examId.passageId) {
     return (
       <div className="p-20 text-center">
@@ -44,7 +57,6 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const keystrokesTyped = result.submittedText?.length || 0;
   const wordsTyped = submittedWords.length > 0 && submittedWords[0] !== "" ? submittedWords.length : 0;
 
-  // Calculate detailed mistakes
   let fullMistakes = 0;
   let halfMistakes = 0;
   
@@ -66,7 +78,7 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   const timeTakenMins = (result.timeTaken || 0) / 60;
   const netWpm = timeTakenMins > 0 ? (netCorrectWords / timeTakenMins).toFixed(2) : "0.00";
   
-  const minKeystrokes = Math.round((timeDurationMins * 30 * 5) / 2); // Example minimum threshold
+  const minKeystrokes = Math.round((timeDurationMins * 30 * 5) / 2);
   const isQualified = parseFloat(netWpm) >= 30;
 
   const formatTime = (seconds: number) => {
@@ -83,180 +95,209 @@ export default function TypingResultDetails({ params }: { params: { id: string }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 print:py-0 print:bg-white font-sans">
+    <div className="min-h-screen bg-[#f8fafc] py-12 print:py-0 print:bg-white font-sans">
       <div className="max-w-6xl mx-auto px-4 print:px-0">
         
-        {/* Print Header */}
         <div className="flex justify-between items-center mb-8 print:hidden">
-          <Link href="/student/results" className="text-slate-500 hover:text-black font-bold">
-            ← Back to Dashboard
+          <Link href="/student/results" className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 font-bold transition-colors group">
+            <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:-translate-x-1 transition-transform border border-slate-100">
+                <ArrowLeft className="w-4 h-4" />
+            </div>
+            Back to Dashboard
           </Link>
           <button 
-            onClick={() => window.print()}
-            className="flex items-center gap-2 bg-[#2a9d8f] text-white px-4 py-2 rounded font-bold shadow hover:bg-[#21867a]"
+              onClick={() => window.print()}
+              className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-2xl font-black shadow-xl shadow-slate-200 hover:bg-black transition-all active:scale-95"
           >
-            <Download className="w-4 h-4" /> Save as PDF
+              <Download className="w-4 h-4" /> Save as PDF
           </button>
         </div>
 
-        <div className="bg-white p-8 border border-slate-200 rounded shadow-sm print:border-none print:shadow-none print:p-0">
+        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden print:border-none print:shadow-none print:rounded-none">
           
-          {/* Header Info */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 text-sm font-medium border-b pb-6 print:border-b-2">
-            <div className="space-y-4">
-              <p><span className="font-bold">Exam Title:</span> {result.examId?.title || "N/A"}</p>
-              <p><span className="font-bold">Passage Title:</span> {result.examId?.passageId?.title || `Id- ${result.examId?.passageId?._id?.toString().substring(0,5)}`}</p>
-            </div>
-            <div className="space-y-4">
-              <p><span className="font-bold">Total Key Strokes Given:</span> {totalKeystrokesGiven}</p>
-              <p><span className="font-bold">Time Duration:</span> {timeDurationMins.toString().padStart(2, '0')}:00 min.</p>
-            </div>
-            <div className="space-y-4">
-              <p><span className="font-bold">Typing Date:</span> {result.createdAt ? format(new Date(result.createdAt), "dd/MM/yyyy") : "N/A"}</p>
-              <p><span className="font-bold">Time Taken:</span> {formatTime(result.timeTaken || 0)}</p>
-            </div>
-          </div>
-
-          {/* Toggle Formula */}
-          <div className="flex items-center gap-3 mb-6 print:hidden">
-            <span className="font-bold text-sm text-slate-800">Key Stroke Based Error Formula</span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" checked={errorFormulaOn} onChange={() => setErrorFormulaOn(!errorFormulaOn)} />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#e63946]"></div>
-            </label>
-          </div>
-
-          {/* Stat Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="border border-slate-300 rounded-md p-4 flex flex-col justify-between h-24">
-              <p className="text-xs font-bold text-slate-700">Total Keystrokes / Words Typed</p>
-              <div className="flex justify-between items-end">
-                <span className="text-2xl font-black">{keystrokesTyped} / {wordsTyped}</span>
-                <Keyboard className="w-5 h-5 text-slate-400" />
-              </div>
-            </div>
-            <div className="border border-slate-300 rounded-md p-4 flex flex-col justify-between h-24">
-              <p className="text-xs font-bold text-slate-700">Full Mistake (Words)</p>
-              <div className="flex justify-between items-end">
-                <span className="text-2xl font-black">{fullMistakes}</span>
-                <XCircle className="w-5 h-5 text-slate-400" />
-              </div>
-            </div>
-            <div className="border border-slate-300 rounded-md p-4 flex flex-col justify-between h-24">
-              <p className="text-xs font-bold text-slate-700">Half Mistake (Words)</p>
-              <div className="flex justify-between items-end">
-                <span className="text-2xl font-black">{halfMistakes}</span>
-                <Scissors className="w-5 h-5 text-slate-400" />
-              </div>
-            </div>
-            <div className="border border-slate-300 rounded-md p-4 flex flex-col justify-between h-24">
-              <p className="text-xs font-bold text-slate-700">Total Wrong Words</p>
-              <div className="flex justify-between items-end">
-                <span className="text-2xl font-black">{totalWrongWords}</span>
-                <XCircle className="w-5 h-5 text-slate-400" />
-              </div>
-            </div>
-            <div className="border border-slate-300 rounded-md p-4 flex flex-col justify-between h-24">
-              <p className="text-xs font-bold text-slate-700">Net Wrong Words</p>
-              <div className="flex justify-between items-end">
-                <span className="text-2xl font-black">{netWrongWords.toFixed(2)}</span>
-                <Scissors className="w-5 h-5 text-slate-400" />
-              </div>
-            </div>
-            <div className="border border-slate-300 rounded-md p-4 flex flex-col justify-between h-24">
-              <p className="text-xs font-bold text-slate-700">Net Typing Speed (wpm)</p>
-              <div className="flex justify-between items-end">
-                <span className="text-2xl font-black">{netWpm}</span>
-                <Timer className="w-5 h-5 text-slate-400" />
-              </div>
-            </div>
-            <div className="border border-slate-300 rounded-md p-4 flex flex-col justify-between h-24">
-              <p className="text-xs font-bold text-slate-700">Backspace Count</p>
-              <div className="flex justify-between items-end">
-                <span className="text-2xl font-black">{result.backspaces || 0}</span>
-                <XCircle className="w-5 h-5 text-slate-400" />
-              </div>
-            </div>
-            <div className="border border-slate-300 rounded-md p-4 flex flex-col justify-between h-24">
-              <p className="text-xs font-bold text-slate-700">Result</p>
-              <div className="flex justify-between items-end">
-                <span className={`text-xl font-black ${isQualified ? "text-emerald-600" : "text-slate-800"}`}>
-                  {isQualified ? "Qualified" : "Not Qualified"}
-                </span>
-                <Target className="w-5 h-5 text-slate-400" />
-              </div>
-            </div>
-          </div>
-
-          {/* Alert Box */}
-          <div className="bg-[#f0f4f8] border border-[#d6e4f0] rounded p-4 mb-8 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 shrink-0" />
-            <p className="text-sm font-medium text-[#2d4a66]">
-              {keystrokesTyped < minKeystrokes 
-                ? `Key Strokes typed is less than minimum ${minKeystrokes} key strokes. Calculation of Net Correct Words = ${wordsTyped} - (( ${fullMistakes} ) + ( ${halfMistakes} ) * 0.5 )`
-                : `Calculation of Net Correct Words = ${wordsTyped} - (( ${fullMistakes} ) + ( ${halfMistakes} ) * 0.5 )`
-              }
-            </p>
-          </div>
-
-          {/* Detailed Comparison Toggle */}
-          <div className="flex items-center gap-3 mb-6 print:hidden">
-            <span className="font-bold text-sm text-slate-800">Detailed Comparision</span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" checked={detailedComparison} onChange={() => setDetailedComparison(!detailedComparison)} />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#007bff]"></div>
-            </label>
-          </div>
-
-          {/* Split View */}
-          {detailedComparison && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-slate-200">
-              {/* Original */}
-              <div className="border-b md:border-b-0 md:border-r border-slate-200">
-                <div className="bg-slate-50 py-2 px-4 border-b border-slate-200">
-                  <p className="text-xs font-bold text-slate-600">Original Passage</p>
+          <div className={cn(
+            "p-10 text-white relative overflow-hidden",
+            isQualified ? "bg-emerald-600" : "bg-slate-900"
+          )}>
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-48 -mt-48 blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full -ml-32 -mb-32 blur-2xl" />
+            
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+                <div className="text-center md:text-left">
+                    <p className="text-white/70 font-black uppercase tracking-[0.3em] text-[10px] mb-2">Performance Report</p>
+                    <h1 className="text-5xl font-black tracking-tight mb-2">{result.examId?.title || "Exam Result"}</h1>
+                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
+                        <Badge className="bg-white/20 text-white border-none px-4 py-1.5 rounded-full font-bold">
+                            <Timer className="w-3.5 h-3.5 mr-2" /> {format(new Date(result.createdAt), "PPP")}
+                        </Badge>
+                        <Badge className="bg-white/20 text-white border-none px-4 py-1.5 rounded-full font-bold">
+                            <Keyboard className="w-3.5 h-3.5 mr-2" /> {result.examId?.language}
+                        </Badge>
+                    </div>
                 </div>
-                <div className="p-4 bg-[#ffebee] min-h-[300px]">
-                  <p 
-                    className="text-sm leading-loose text-slate-800"
-                    style={{ fontFamily: getFontFamily() }}
-                  >
-                    {originalWords.map((word: string, i: number) => (
-                      <span key={i}>{word} </span>
-                    ))}
-                  </p>
-                </div>
-              </div>
 
-              {/* Typed */}
-              <div>
-                <div className="bg-slate-50 py-2 px-4 border-b border-slate-200">
-                  <p className="text-xs font-bold text-slate-600">Typed Passage</p>
+                <div className="flex flex-col items-center">
+                    <div className="w-32 h-32 rounded-full bg-white/10 backdrop-blur-md flex flex-col items-center justify-center border-4 border-white/20 shadow-2xl">
+                        <span className="text-4xl font-black">{netWpm}</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest opacity-70">WPM</span>
+                    </div>
+                    <div className={cn(
+                        "mt-4 px-6 py-2 rounded-full font-black text-xs uppercase tracking-[0.2em] shadow-lg",
+                        isQualified ? "bg-white text-emerald-600" : "bg-white text-slate-900"
+                    )}>
+                        {isQualified ? "QUALIFIED" : "NOT QUALIFIED"}
+                    </div>
                 </div>
-                <div className="p-4 bg-white min-h-[300px]">
-                  <p 
-                    className="text-sm leading-loose text-slate-800"
-                    style={{ fontFamily: getFontFamily() }}
-                  >
-                    {submittedWords.map((word: string, i: number) => {
-                      const isCorrect = word === originalWords[i];
-                      return (
-                        <span 
-                          key={i} 
-                          className={isCorrect ? "" : "text-red-600 font-bold decoration-red-500 underline decoration-wavy"}
-                        >
-                          {word}{' '}
-                        </span>
-                      );
-                    })}
-                  </p>
-                </div>
-              </div>
             </div>
-          )}
+          </div>
 
+          <div className="p-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 p-8 bg-slate-50 rounded-[2rem] border border-slate-100">
+                <div className="space-y-1">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Passage Title</p>
+                    <p className="font-black text-slate-900 truncate">{result.examId?.passageId?.title || "N/A"}</p>
+                </div>
+                <div className="space-y-1">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Target Duration</p>
+                    <p className="font-black text-slate-900">{timeDurationMins}:00 Min</p>
+                </div>
+                <div className="space-y-1">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Time Consumed</p>
+                    <p className="font-black text-indigo-600">{formatTime(result.timeTaken || 0)}</p>
+                </div>
+                <div className="space-y-1">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Master Keys</p>
+                    <p className="font-black text-slate-900">{totalKeystrokesGiven}</p>
+                </div>
+            </div>
+
+            <div className="space-y-10">
+                <div className="flex flex-wrap gap-6 print:hidden">
+                    <label className="flex items-center gap-3 p-4 bg-white border border-slate-100 rounded-2xl shadow-sm cursor-pointer hover:border-emerald-200 transition-colors">
+                        <input type="checkbox" className="sr-only peer" checked={errorFormulaOn} onChange={() => setErrorFormulaOn(!errorFormulaOn)} />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        <span className="font-black text-xs text-slate-600 uppercase tracking-widest">Keystroke Formula</span>
+                    </label>
+                    <label className="flex items-center gap-3 p-4 bg-white border border-slate-100 rounded-2xl shadow-sm cursor-pointer hover:border-indigo-200 transition-colors">
+                        <input type="checkbox" className="sr-only peer" checked={detailedComparison} onChange={() => setDetailedComparison(!detailedComparison)} />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        <span className="font-black text-xs text-slate-600 uppercase tracking-widest">Detailed Compare</span>
+                    </label>
+                </div>
+
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    <MetricCard title="Gross Progress" value={`${keystrokesTyped} / ${wordsTyped}`} label="Keys / Words" icon={Keyboard} color="blue" />
+                    <MetricCard title="Critical Errors" value={fullMistakes} label="Full Mistakes" icon={XCircle} color="rose" />
+                    <MetricCard title="Minor Slips" value={halfMistakes} label="Half Mistakes" icon={Scissors} color="amber" />
+                    <MetricCard title="Total Errors" value={totalWrongWords} label="Wrong Words" icon={AlertCircle} color="rose" />
+                    <MetricCard title="Weighted Errors" value={netWrongWords.toFixed(2)} label="Formula Result" icon={Scissors} color="indigo" />
+                    <MetricCard title="Net Accuracy" value={`${((netCorrectWords / (wordsTyped || 1)) * 100).toFixed(1)}%`} label="Precision" icon={Target} color="emerald" />
+                    <MetricCard title="Corrections" value={result.backspaces || 0} label="Backspaces Used" icon={ArrowLeft} color="slate" />
+                    <MetricCard title="Final Speed" value={netWpm} label="WPM (Net)" icon={Timer} color="emerald" highlight />
+                </div>
+
+                <div className="bg-indigo-50/50 border border-indigo-100 rounded-[2rem] p-8 flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+                        <AlertCircle className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-1">Calculation Logic</p>
+                        <p className="text-sm font-bold text-indigo-900 leading-relaxed">
+                            {keystrokesTyped < minKeystrokes 
+                                ? `Notice: Low volume attempt (< ${minKeystrokes} keys). Net Correct Words = Total Typed (${wordsTyped}) - Weighted Errors (${netWrongWords.toFixed(1)})`
+                                : `Standard Calculation: Net Correct Words = Total Typed (${wordsTyped}) - [ Full Mistakes (${fullMistakes}) + (Half Mistakes (${halfMistakes}) × 0.5) ]`
+                            }
+                        </p>
+                    </div>
+                </div>
+
+                {detailedComparison && (
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-4">
+                            <h3 className="text-2xl font-black tracking-tight text-slate-900">Transcript Analysis</h3>
+                            <div className="h-[2px] flex-1 bg-slate-100" />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center px-4">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Master Passage</span>
+                                    <Badge variant="outline" className="text-[9px] font-black uppercase">Original</Badge>
+                                </div>
+                                <div className="p-8 bg-slate-900 rounded-[2rem] shadow-xl text-slate-300 min-h-[300px]">
+                                    <p className="text-lg leading-loose opacity-60" style={{ fontFamily: getFontFamily() }}>
+                                        {originalWords.map((word: string, i: number) => (
+                                            <span key={i}>{word} </span>
+                                        ))}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center px-4">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Your Performance</span>
+                                    <Badge variant="outline" className="text-[9px] font-black uppercase border-emerald-200 text-emerald-600">Typed</Badge>
+                                </div>
+                                <div className="p-8 bg-white border border-slate-100 rounded-[2rem] shadow-xl text-slate-800 min-h-[300px]">
+                                    <p className="text-lg leading-loose" style={{ fontFamily: getFontFamily() }}>
+                                        {submittedWords.map((word: string, i: number) => {
+                                            const isCorrect = word === originalWords[i];
+                                            return (
+                                                <span 
+                                                    key={i} 
+                                                    className={cn(
+                                                        "transition-colors",
+                                                        isCorrect ? "text-slate-900" : "text-rose-500 font-bold bg-rose-50 px-1 rounded ring-1 ring-rose-100 decoration-rose-300 underline underline-offset-4"
+                                                    )}
+                                                >
+                                                    {word}{' '}
+                                                </span>
+                                            );
+                                        })}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
+}
+
+interface MetricCardProps {
+    title: string;
+    value: string | number;
+    label: string;
+    icon: any;
+    color: 'blue' | 'rose' | 'amber' | 'indigo' | 'emerald' | 'slate';
+    highlight?: boolean;
+}
+
+function MetricCard({ title, value, label, icon: Icon, color, highlight }: MetricCardProps) {
+    const colors = {
+        blue: "bg-blue-50 text-blue-600 border-blue-100",
+        rose: "bg-rose-50 text-rose-600 border-rose-100",
+        amber: "bg-amber-50 text-amber-600 border-amber-100",
+        indigo: "bg-indigo-50 text-indigo-600 border-indigo-100",
+        emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
+        slate: "bg-slate-50 text-slate-600 border-slate-100",
+    };
+
+    return (
+        <div className={cn(
+            "p-6 rounded-[2rem] border transition-all hover:shadow-xl hover:-translate-y-1 bg-white",
+            highlight ? "border-emerald-200 bg-emerald-50/20 shadow-emerald-100 shadow-xl" : "border-slate-100"
+        )}>
+            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center mb-4 border", colors[color])}>
+                <Icon className="w-5 h-5" />
+            </div>
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{title}</p>
+            <h3 className="text-2xl font-black text-slate-900 tracking-tight">{value}</h3>
+            <p className="text-[10px] font-bold text-slate-500 mt-1">{label}</p>
+        </div>
+    );
 }

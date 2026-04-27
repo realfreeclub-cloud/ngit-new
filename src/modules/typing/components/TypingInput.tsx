@@ -46,12 +46,12 @@ export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke
   };
 
   return (
-    <div className="flex flex-col h-full bg-indigo-50/30 rounded-3xl border-2 border-indigo-100 overflow-hidden transition-all focus-within:border-indigo-400 focus-within:shadow-xl focus-within:shadow-indigo-500/10">
-      <div className="px-6 py-4 border-b border-indigo-100 flex justify-between items-center bg-white/50">
-        <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Type the passage below</span>
+    <div className="flex flex-col h-full bg-[#d9ff66] rounded-3xl border-2 border-black/10 overflow-hidden transition-all focus-within:border-black/30 focus-within:shadow-2xl shadow-lg">
+      <div className="px-6 py-4 border-b border-black/5 flex justify-between items-center bg-black/5">
+        <span className="text-[10px] font-black text-black/60 uppercase tracking-widest">Type the passage below</span>
         <div className="flex items-center gap-4">
           <div className="flex gap-1">
-             <span className="text-[9px] font-bold text-slate-400">Layout: {settings.language}</span>
+             <span className="text-[9px] font-black text-black/40">Layout: {settings.language}</span>
           </div>
         </div>
       </div>
@@ -64,15 +64,15 @@ export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke
         autoFocus
         placeholder="Start typing here to begin the clock..."
         className={cn(
-          "flex-1 p-6 sm:p-8 bg-transparent outline-none resize-none font-medium leading-relaxed transition-all",
+          "flex-1 p-6 sm:p-10 bg-transparent outline-none resize-none font-bold leading-relaxed transition-all text-black placeholder:text-black/20",
           isFinished ? "opacity-50" : "opacity-100"
         )}
-        style={{ fontSize: 'clamp(1rem, 2vw, 1.5rem)' }} // Match passage scaling
+        style={{ fontSize: `calc(${settings.fontSize / 100} * clamp(1.2rem, 2.5vw, 1.8rem))` }} 
       />
 
-      <div className="px-6 py-3 bg-white/50 border-t border-indigo-50 flex justify-between items-center text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+      <div className="px-6 py-3 bg-black/5 border-t border-black/5 flex justify-between items-center text-[9px] font-black text-black/60 uppercase tracking-widest">
         <span>Character Count: {typedText.length}</span>
-        <span>Backspace: {settings.backspaceMode}</span>
+        <span>Backspace Mode: {settings.backspaceMode}</span>
       </div>
     </div>
   );

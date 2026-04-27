@@ -123,3 +123,34 @@ export const rejectStudent = createSafeAction(
         return { success: true };
     }
 );
+
+const SimpleRegistrationSchema = z.object({
+    name: z.string().min(2),
+    email: z.string().email(),
+    password: z.string().min(8),
+});
+
+export const registerUser = createSafeAction(
+    { schema: SimpleRegistrationSchema, requireAuth: false, rateLimit: RATE_LIMIT_CONFIGS.AUTH },
+    async (formData) => {
+        await connectDB();
+
+        const existing = await User.findOne({ email: formData.email }).lean();
+        if (existing) {
+            throw new Error("An account with this email already exists.");
+        }
+
+        const hashedPassword = await bcrypt.hash(formData.password, 12);
+
+        // Simple user registration creates active user directly
+        const user = await User.create({
+            name: formData.name,
+            email: formData.email,
+            password: hashedPassword,
+            role: UserRole.STUDENT,
+            isActive: true, 
+        });
+
+        return { success: true, userId: user._id.toString() };
+    }
+);

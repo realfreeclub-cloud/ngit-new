@@ -36,16 +36,20 @@ export default function PublicNavbar() {
     const [headerData, setHeaderData] = useState<HeaderData | null>(null);
 
     useEffect(() => {
+        let isMounted = true;
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 20);
         };
         window.addEventListener("scroll", handleScroll);
 
         getHeaderFooterData().then(res => {
-            if (res.success) setHeaderData(res.header);
+            if (isMounted && res.success) setHeaderData(res.header);
         });
 
-        return () => window.removeEventListener("scroll", handleScroll);
+        return () => {
+            isMounted = false;
+            window.removeEventListener("scroll", handleScroll);
+        };
     }, []);
 
     const navLinks: NavLink[] = headerData?.navigation || [

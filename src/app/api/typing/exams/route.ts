@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import TypingExam from "@/models/TypingExam";
+import "@/models/TypingPassage";
 import TypingResult from "@/models/TypingResult";
 
 export const dynamic = "force-dynamic";

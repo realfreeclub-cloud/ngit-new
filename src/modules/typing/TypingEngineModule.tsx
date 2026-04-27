@@ -11,6 +11,7 @@ import { LiveDashboard, TimerDisplay } from './components/LiveDashboard';
 import { Speedometer } from './components/Speedometer';
 import { SettingsManager } from './components/SettingsManager';
 import { toast } from 'sonner';
+import { CheckCircle2 } from 'lucide-react';
 
 interface TypingEngineModuleProps {
   passage: string;
@@ -44,8 +45,13 @@ export const TypingEngineModule: React.FC<TypingEngineModuleProps> = ({
     errorCount, 
     typedText,
     settings,
+    rawWpm,
+    backspaceCount,
     resetTest,
-    isFullScreen
+    isFullScreen,
+    endTest,
+    isActive,
+    timeLeft
   } = useTypingStore();
 
   // Initialize Hooks
@@ -97,13 +103,16 @@ export const TypingEngineModule: React.FC<TypingEngineModuleProps> = ({
       toast.success("Examination Completed!");
       onComplete({
         wpm,
+        rawWpm,
         accuracy,
         errorCount,
+        totalCharacters: typedText.length,
+        backspaces: backspaceCount,
         submittedText: typedText,
-        timeTaken: settings.duration * 60,
+        timeTaken: (settings.duration * 60) - timeLeft,
       });
     }
-  }, [isFinished]);
+  }, [isFinished, wpm, rawWpm, accuracy, errorCount, typedText, backspaceCount, settings, timeLeft, onComplete]);
 
   return (
     <div ref={containerRef} className="w-full h-full bg-white">
@@ -121,6 +130,15 @@ export const TypingEngineModule: React.FC<TypingEngineModuleProps> = ({
                   Timer Paused (Idle Detection)
                 </p>
               </div>
+            )}
+            {/* Submit Button */}
+            {isActive && !isFinished && (
+              <button
+                onClick={() => endTest()}
+                className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl flex items-center justify-center gap-2 text-lg shadow-xl shadow-emerald-600/20 transition-all hover:scale-[1.02]"
+              >
+                <CheckCircle2 className="w-5 h-5" /> Submit Exam
+              </button>
             )}
           </div>
         }
