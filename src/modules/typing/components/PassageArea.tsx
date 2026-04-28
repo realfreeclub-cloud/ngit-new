@@ -18,9 +18,15 @@ export const PassageArea: React.FC = () => {
   // Auto-scroll logic: Keeps the current word centered
   useEffect(() => {
     if (settings.autoScroll && scrollRef.current) {
-      const activeElement = scrollRef.current.querySelector('.active-word');
+      const activeElement = scrollRef.current.querySelector('.active-word') as HTMLElement;
       if (activeElement) {
-        activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const container = scrollRef.current;
+        const offsetTop = activeElement.offsetTop;
+        const containerHalfHeight = container.clientHeight / 2;
+        container.scrollTo({
+          top: offsetTop - containerHalfHeight + 20, // slightly offset to keep above center
+          behavior: 'smooth'
+        });
       }
     }
   }, [typedText, settings.autoScroll]);
@@ -41,8 +47,8 @@ export const PassageArea: React.FC = () => {
       <div 
         ref={scrollRef}
         className={cn(
-          "flex-1 p-6 sm:p-10 overflow-y-auto leading-relaxed select-none text-slate-200",
-          !settings.autoScroll && "scrollbar-thin scrollbar-thumb-slate-800"
+          "relative flex-1 p-6 sm:p-10 overflow-y-auto leading-relaxed select-none text-slate-200",
+          settings.showScrollbar ? "scrollbar-thin scrollbar-thumb-slate-800" : "scrollbar-hide"
         )}
         style={{ 
           fontSize: `calc(${settings.fontSize / 100} * clamp(1.1rem, 2.2vw, 1.6rem))`, 

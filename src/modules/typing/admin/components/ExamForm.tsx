@@ -77,7 +77,36 @@ export const ExamForm: React.FC<{ onSuccess: () => void, passages: any[] }> = ({
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Exam Category</label>
+          <select name="category" className="w-full p-4 bg-slate-50 border-transparent rounded-2xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none" required>
+            <option value="SSC">SSC (Staff Selection Commission)</option>
+            <option value="UP Police">UP Police</option>
+            <option value="KVS">KVS / NVS</option>
+            <option value="Court">High Court / District Court</option>
+            <option value="General">General Practice</option>
+          </select>
+        </div>
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Evaluation Mode</label>
+          <select name="examMode" className="w-full p-4 bg-slate-50 border-transparent rounded-2xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none" required>
+            <option value="General">General (Standard WPM)</option>
+            <option value="SSC">SSC Standard (Full/Half Mistakes)</option>
+            <option value="CPCT">CPCT Standard</option>
+            <option value="Court">Judiciary Standard</option>
+          </select>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Exam Language</label>
+          <select name="language" className="w-full p-4 bg-slate-50 border-transparent rounded-2xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none" required>
+            <option value="English">English</option>
+            <option value="Hindi">Hindi (Mangal/Kruti)</option>
+          </select>
+        </div>
         <div className="space-y-2">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Duration (Min)</label>
           <div className="relative">
@@ -98,9 +127,25 @@ export const ExamForm: React.FC<{ onSuccess: () => void, passages: any[] }> = ({
           <select name="highlightMode" className="w-full p-4 bg-slate-50 border-transparent rounded-2xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none">
             <option value="word">Word Highlight</option>
             <option value="word_error">Error Color</option>
-            <option value="none">None</option>
           </select>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+        <label className="flex items-center gap-3 cursor-pointer group">
+          <input type="checkbox" name="autoScroll" defaultChecked className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+          <div>
+            <p className="text-xs font-black text-slate-900 uppercase tracking-widest group-hover:text-indigo-600 transition-colors">Enable Auto-Scroll</p>
+            <p className="text-[10px] font-bold text-slate-400">Keep current line centered during typing</p>
+          </div>
+        </label>
+        <label className="flex items-center gap-3 cursor-pointer group">
+          <input type="checkbox" name="showScrollbar" className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+          <div>
+            <p className="text-xs font-black text-slate-900 uppercase tracking-widest group-hover:text-indigo-600 transition-colors">Show Scrollbar</p>
+            <p className="text-[10px] font-bold text-slate-400">Display manual scrollbar in passage area</p>
+          </div>
+        </label>
       </div>
 
       <Button type="submit" disabled={loading} className="w-full h-16 rounded-2xl text-lg font-black bg-slate-900 hover:bg-black text-white shadow-2xl shadow-slate-200 transition-all transform hover:scale-[1.01]">

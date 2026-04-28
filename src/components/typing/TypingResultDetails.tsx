@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Keyboard, XCircle, Scissors, AlertCircle, Timer, Download, Target, ArrowLeft } from "lucide-react";
+import { Keyboard, XCircle, Scissors, AlertCircle, Timer, Download, Target, ArrowLeft, Calendar, Globe } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -128,10 +128,10 @@ export default function TypingResultDetails({ params }: { params: { id: string }
                     <h1 className="text-5xl font-black tracking-tight mb-2">{result.examId?.title || "Exam Result"}</h1>
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
                         <Badge className="bg-white/20 text-white border-none px-4 py-1.5 rounded-full font-bold">
-                            <Timer className="w-3.5 h-3.5 mr-2" /> {format(new Date(result.createdAt), "PPP")}
+                            <Calendar className="w-3.5 h-3.5 mr-2" /> {format(new Date(result.createdAt), "PPP")}
                         </Badge>
                         <Badge className="bg-white/20 text-white border-none px-4 py-1.5 rounded-full font-bold">
-                            <Keyboard className="w-3.5 h-3.5 mr-2" /> {result.examId?.language}
+                            <Globe className="w-3.5 h-3.5 mr-2" /> {result.examId?.language}
                         </Badge>
                     </div>
                 </div>

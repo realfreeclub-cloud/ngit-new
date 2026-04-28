@@ -10,6 +10,7 @@ interface TypingSettings {
   textPosition: 'top' | 'side';
   fontSize: number;
   passageHeight: number;
+  showScrollbar: boolean;
 }
 
 interface TypingState {
@@ -70,7 +71,11 @@ export const useTypingStore = create<TypingState>((set) => ({
   backspaceCount: 0,
   currentWordIndex: 0,
   isFullScreen: false,
-  settings: initialSettings,
+  settings: {
+    ...initialSettings,
+    showScrollbar: true,
+  },
+  timeLeft: 600,
 
   setPassage: (passage) => set({ passage }),
 

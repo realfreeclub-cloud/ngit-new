@@ -23,28 +23,35 @@ export default function AdminTypingDashboard() {
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [selectedExam, setSelectedExam] = useState<any>(null);
   const [editingPassage, setEditingPassage] = useState<any>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  const fetchData = () => {
-    Promise.all([
-      fetch("/api/admin/typing/passages").then(res => res.json()),
-      fetch("/api/admin/typing/exams").then(res => res.json()),
-      fetch("/api/admin/typing/categories").then(res => res.json()),
-      fetch("/api/admin/typing/words").then(res => res.json()),
-      fetch("/api/admin/typing/essays").then(res => res.json()),
-      fetch("/api/admin/typing/current").then(res => res.json())
-    ]).then(([passagesData, examsData, categoriesData, wordsData, essaysData, currentData]) => {
-      setPassages(passagesData);
-      setExams(examsData);
+  const fetchData = async () => {
+    try {
+      const [passagesData, examsData, categoriesData, wordsData, essaysData, currentData] = await Promise.all([
+        fetch("/api/admin/typing/passages").then(res => res.json()),
+        fetch("/api/admin/typing/exams").then(res => res.json()),
+        fetch("/api/admin/typing/categories").then(res => res.json()),
+        fetch("/api/admin/typing/words").then(res => res.json()),
+        fetch("/api/admin/typing/essays").then(res => res.json()),
+        fetch("/api/admin/typing/current").then(res => res.json())
+      ]);
+
+      setPassages(Array.isArray(passagesData) ? passagesData : []);
+      setExams(Array.isArray(examsData) ? examsData : []);
       setCategories(Array.isArray(categoriesData) ? categoriesData : []);
-      setWordSets(wordsData);
-      setEssays(essaysData);
-      setCurrentPassages(currentData);
+      setWordSets(Array.isArray(wordsData) ? wordsData : []);
+      setEssays(Array.isArray(essaysData) ? essaysData : []);
+      setCurrentPassages(Array.isArray(currentData) ? currentData : []);
       setLoading(false);
-    });
+    } catch (error) {
+      console.error("Fetch Data Error:", error);
+      toast.error("Failed to refresh dashboard data");
+      setLoading(false);
+    }
   };
 
   const handleDeletePassage = async (id: string) => {
@@ -53,7 +60,7 @@ export default function AdminTypingDashboard() {
       const res = await fetch(`/api/admin/typing/passages/${id}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Passage deleted");
-        fetchData();
+        await fetchData();
       }
     } catch (error) {
       toast.error("Failed to delete passage");
@@ -75,18 +82,22 @@ export default function AdminTypingDashboard() {
       if (res.ok) {
         toast.success("Passage updated!");
         setEditingPassage(null);
-        fetchData();
+        await fetchData();
+      } else {
+        toast.error("Update failed");
       }
     } catch (error) {
-      toast.error("Update failed");
+      toast.error("An error occurred");
     }
   };
 
   const handleAddPassage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
 
+    setSubmitting(true);
     try {
       const res = await fetch("/api/admin/typing/passages", {
         method: "POST",
@@ -95,22 +106,25 @@ export default function AdminTypingDashboard() {
       });
       if (res.ok) {
         toast.success("Passage added successfully!");
-        e.currentTarget.reset();
-        fetchData();
+        form.reset();
+        await fetchData();
       } else {
         toast.error("Failed to add passage");
       }
     } catch (error) {
       toast.error("An error occurred");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleAddExam = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const data: any = Object.fromEntries(formData.entries());
-    data.autoScroll = (e.currentTarget.elements.namedItem('autoScroll') as HTMLInputElement)?.checked;
-    data.showScrollbar = (e.currentTarget.elements.namedItem('showScrollbar') as HTMLInputElement)?.checked;
+    data.autoScroll = (form.elements.namedItem('autoScroll') as HTMLInputElement)?.checked;
+    data.showScrollbar = (form.elements.namedItem('showScrollbar') as HTMLInputElement)?.checked;
 
     try {
       const res = await fetch("/api/admin/typing/exams", {
@@ -121,7 +135,7 @@ export default function AdminTypingDashboard() {
       if (res.ok) {
         toast.success("Exam scheduled successfully!");
         setShowExamForm(false);
-        fetchData();
+        await fetchData();
       } else {
         toast.error("Failed to schedule exam");
       }
@@ -132,7 +146,8 @@ export default function AdminTypingDashboard() {
 
   const handleAddCategory = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
 
     try {
@@ -144,7 +159,7 @@ export default function AdminTypingDashboard() {
       if (res.ok) {
         toast.success("Category created successfully!");
         setShowCategoryForm(false);
-        fetchData();
+        await fetchData();
       } else {
         toast.error("Failed to create category");
       }
@@ -159,7 +174,7 @@ export default function AdminTypingDashboard() {
       const res = await fetch(`/api/admin/typing/categories/${id}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Category deleted");
-        fetchData();
+        await fetchData();
       }
     } catch (error) {
       toast.error("Failed to delete");
@@ -168,7 +183,8 @@ export default function AdminTypingDashboard() {
 
   const handleAddWordSet = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const words = (formData.get('words') as string).split(',').map(w => w.trim()).filter(w => w.length > 0);
     const data = {
         name: formData.get('name'),
@@ -186,8 +202,8 @@ export default function AdminTypingDashboard() {
       });
       if (res.ok) {
         toast.success("Word set created!");
-        e.currentTarget.reset();
-        fetchData();
+        form.reset();
+        await fetchData();
       }
     } catch (error) {
       toast.error("Error creating word set");
@@ -195,14 +211,14 @@ export default function AdminTypingDashboard() {
   };
 
   const handleDeleteWordSet = async (id: string) => {
-    if (!confirm("Delete this word set?")) return;
     await fetch(`/api/admin/typing/words/${id}`, { method: "DELETE" });
-    fetchData();
+    await fetchData();
   };
 
   const handleAddEssay = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const content = formData.get('content') as string;
     const data = {
         topic: formData.get('topic'),
@@ -220,8 +236,8 @@ export default function AdminTypingDashboard() {
       });
       if (res.ok) {
         toast.success("Essay added!");
-        e.currentTarget.reset();
-        fetchData();
+        form.reset();
+        await fetchData();
       }
     } catch (error) {
       toast.error("Error adding essay");
@@ -231,12 +247,13 @@ export default function AdminTypingDashboard() {
   const handleDeleteEssay = async (id: string) => {
     if (!confirm("Delete this essay?")) return;
     await fetch(`/api/admin/typing/essays/${id}`, { method: "DELETE" });
-    fetchData();
+    await fetchData();
   };
 
   const handleAddCurrent = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const data = {
         title: formData.get('title'),
         content: formData.get('content'),
@@ -251,8 +268,8 @@ export default function AdminTypingDashboard() {
       });
       if (res.ok) {
         toast.success("Current passage added!");
-        e.currentTarget.reset();
-        fetchData();
+        form.reset();
+        await fetchData();
       }
     } catch (error) {
       toast.error("Error adding passage");
@@ -262,7 +279,7 @@ export default function AdminTypingDashboard() {
   const handleDeleteCurrent = async (id: string) => {
     if (!confirm("Delete this passage?")) return;
     await fetch(`/api/admin/typing/current/${id}`, { method: "DELETE" });
-    fetchData();
+    await fetchData();
   };
 
   const fetchResults = async (examId: string) => {
@@ -665,8 +682,8 @@ export default function AdminTypingDashboard() {
                     key={editingPassage?._id + "-content"}
                   />
                   
-                  <Button type="submit" className="w-full h-14 rounded-xl text-lg font-bold bg-white text-slate-900 hover:bg-slate-100">
-                    {editingPassage ? "Update Library" : "Save to Library"}
+                  <Button type="submit" disabled={submitting} className="w-full h-14 rounded-xl text-lg font-bold bg-white text-slate-900 hover:bg-slate-100 disabled:opacity-50">
+                    {submitting ? "Saving..." : (editingPassage ? "Update Library" : "Save to Library")}
                   </Button>
                 </form>
               </div>

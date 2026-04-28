@@ -4,41 +4,44 @@ import { cn } from "@/lib/utils";
 import { Target, Zap, AlertCircle, BarChart3, Clock, Maximize, Minimize } from 'lucide-react';
 
 /**
+ * StatCard Component (Private)
+ */
+const StatCard = ({ icon: Icon, label, value, hexColor, unit }: any) => (
+  <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center gap-2 mb-2">
+      <div 
+        className="p-1.5 rounded-lg shrink-0" 
+        style={{ backgroundColor: `${hexColor}15` }} 
+      >
+        <Icon className="w-3.5 h-3.5" style={{ color: hexColor }} />
+      </div>
+      <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{label}</span>
+    </div>
+    <div className="flex items-baseline gap-1">
+      <span className="text-2xl font-black text-slate-900">{value}</span>
+      {unit && <span className="text-[9px] font-bold text-slate-400">{unit}</span>}
+    </div>
+  </div>
+);
+
+/**
  * LiveDashboard Component
  * Displays real-time metrics during the typing test.
  * Metrics: WPM, Accuracy, Errors, and DPH (Depressions Per Hour)
  */
 export const LiveDashboard: React.FC = () => {
-  const { wpm, accuracy, errorCount, typedText, timeLeft, settings, isActive } = useTypingStore();
+  const { wpm, accuracy, errorCount, typedText, timeLeft, settings, isActive, isFinished } = useTypingStore();
 
   // Calculate DPH (Depressions Per Hour)
   // Formula: (Total Characters / Elapsed Time in Seconds) * 3600
   const dph = useMemo(() => {
     const elapsedSeconds = (settings.duration * 60) - timeLeft;
-    if (elapsedSeconds <= 0 || !isActive) return 0;
+    if (elapsedSeconds <= 0 || (!isActive && !isFinished)) return 0;
     return Math.round((typedText.length / elapsedSeconds) * 3600);
-  }, [typedText.length, timeLeft, settings.duration, isActive]);
-
-  const StatCard = ({ icon: Icon, label, value, hexColor, unit }: any) => (
-    <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-center gap-3 mb-3">
-        <div 
-          className="p-2 rounded-lg" 
-          style={{ backgroundColor: `${hexColor}15` }} // 15 is ~10% opacity in hex
-        >
-          <Icon className="w-4 h-4" style={{ color: hexColor }} />
-        </div>
-        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
-      </div>
-      <div className="flex items-baseline gap-1">
-        <span className="text-3xl font-black text-slate-900">{value}</span>
-        {unit && <span className="text-[10px] font-bold text-slate-400">{unit}</span>}
-      </div>
-    </div>
-  );
+  }, [typedText.length, timeLeft, settings.duration, isActive, isFinished]);
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2 gap-3">
       {/* Net Speed */}
       <StatCard 
         icon={Zap} 
@@ -91,33 +94,26 @@ export const TimerDisplay: React.FC = () => {
   const isLowTime = timeLeft < 60;
 
   return (
-    <div className={cn(
-      "flex items-center gap-6 w-full px-4 transition-all duration-500",
-      isFullScreen ? "fixed top-4 left-0 right-0 z-[100] justify-center pointer-events-none" : "justify-between"
-    )}>
-      {!isFullScreen && <div className="flex-1" />}
+    <div className="flex flex-col gap-4 w-full transition-all duration-500">
       
       <div className={cn(
-        "flex flex-col items-center",
-        isFullScreen ? "bg-white/90 backdrop-blur-md px-10 py-3 rounded-full shadow-2xl border border-white/50 pointer-events-auto" : "flex-1"
+        "flex flex-col items-center w-full bg-white p-4 rounded-[2rem] border border-slate-200 shadow-sm transition-all",
+        isFullScreen && "border-indigo-200 shadow-indigo-100 shadow-xl scale-105"
       )}>
-        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Time Remaining</span>
-        <div className={`flex items-center gap-3 px-8 py-2 rounded-2xl border-2 transition-colors ${isLowTime ? 'bg-rose-50 border-rose-200 text-rose-600 animate-pulse' : 'bg-slate-50 border-slate-100 text-slate-900'}`}>
-          <Clock className="w-5 h-5 opacity-50" />
-          <span className="text-3xl font-black tabular-nums font-mono tracking-tight">
+        <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Time Remaining</span>
+        <div className={`flex items-center justify-center gap-2 w-full py-2 rounded-2xl border-2 transition-colors ${isLowTime ? 'bg-rose-50 border-rose-200 text-rose-600 animate-pulse' : 'bg-slate-50 border-slate-100 text-slate-900'}`}>
+          <Clock className="w-4 h-4 opacity-50 shrink-0" />
+          <span className="text-2xl font-black tabular-nums font-mono tracking-tight">
             {formatTime(timeLeft)}
           </span>
         </div>
       </div>
 
-      <div className={cn(
-        "flex justify-end",
-        isFullScreen ? "fixed bottom-8 right-8 pointer-events-auto" : "flex-1"
-      )}>
+      <div className="flex justify-end w-full">
         <button 
           onClick={toggleFullScreen}
           className={cn(
-            "flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl",
+            "flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl",
             isFullScreen 
               ? "bg-rose-600 text-white hover:bg-rose-700 hover:scale-110" 
               : "bg-slate-900 text-white hover:bg-black"

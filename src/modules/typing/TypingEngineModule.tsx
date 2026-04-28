@@ -21,6 +21,8 @@ interface TypingEngineModuleProps {
     backspaceMode?: 'full' | 'word' | 'disabled';
     highlightMode?: 'word' | 'word_error' | 'letter' | 'none';
     wordLimit?: number;
+    autoScroll?: boolean;
+    showScrollbar?: boolean;
   };
   onComplete: (results: any) => void;
 }
@@ -93,7 +95,8 @@ export const TypingEngineModule: React.FC<TypingEngineModuleProps> = ({
       duration: config.duration,
       backspaceMode: config.backspaceMode || 'full',
       highlightMode: config.highlightMode || 'word',
-      wordLimit: config.wordLimit || 0,
+      autoScroll: config.autoScroll !== undefined ? config.autoScroll : true,
+      showScrollbar: config.showScrollbar !== undefined ? config.showScrollbar : true,
     });
   }, [passage, config]);
 
@@ -117,11 +120,12 @@ export const TypingEngineModule: React.FC<TypingEngineModuleProps> = ({
   return (
     <div ref={containerRef} className="w-full h-full bg-white">
       <TypingLayout
-        timerSlot={<TimerDisplay />}
+        timerSlot={!isFullScreen && <TimerDisplay />}
         passageSlot={<PassageArea />}
         typingSlot={<TypingInput onKeyStroke={resetIdleTimer} />}
         statsSlot={
           <div className="space-y-6">
+            {isFullScreen && <TimerDisplay />}
             <Speedometer />
             <LiveDashboard />
             {isIdle && (
