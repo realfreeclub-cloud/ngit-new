@@ -76,7 +76,7 @@ export default function AboutSection({ data, blocks }: { data?: any, blocks?: an
                         </div>
                         
                         {/* Floating Badge */}
-                        <div className="absolute -top-10 -right-10 w-40 h-40 bg-secondary rounded-full flex flex-col items-center justify-center text-white shadow-2xl border-4 border-white animate-float hidden md:flex">
+                        <div className="absolute -top-10 -right-10 w-40 h-40 bg-secondary rounded-full flex-col items-center justify-center text-white shadow-2xl border-4 border-white animate-float hidden md:flex">
                             <p className="text-4xl font-black italic">{legacyYears}</p>
                             <p className="text-[10px] font-black uppercase tracking-tighter">Years of Legacy</p>
                         </div>

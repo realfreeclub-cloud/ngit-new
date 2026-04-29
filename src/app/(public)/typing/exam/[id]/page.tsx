@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { TypingEngineModule } from "@/modules/typing/TypingEngineModule";
+import { ClassicTypingEngineModule } from "@/modules/typing/ClassicTypingEngineModule";
 import { toast } from "sonner";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronDown, ArrowRight, Keyboard, FileText } from "lucide-react";
+import { ChevronDown, ArrowRight, Keyboard, FileText, Timer } from "lucide-react";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
+import { cn } from "@/lib/utils";
 
 export default function TypingExamPage() {
   const params = useParams();
@@ -20,24 +21,51 @@ export default function TypingExamPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
 
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const initialLang = searchParams?.get("lang") || "English";
+  const initialLayout = searchParams?.get("layout") || "English";
+
+  const [selectedLanguage, setSelectedLanguage] = useState<'English' | 'Hindi'>(initialLang as any);
+  const [selectedLayout, setSelectedLayout] = useState<'English' | 'Remington Gail' | 'Inscript' | 'Phonetic'>(initialLayout as any);
+
   const engineConfig = React.useMemo(() => ({
     title: exam?.title || "",
     duration: exam?.duration || 10,
     backspaceMode: exam?.backspaceMode || "full",
     highlightMode: exam?.highlightMode || "word",
-    wordLimit: exam?.wordLimit || 0
-  }), [exam]);
+    wordLimit: exam?.wordLimit || 0,
+    language: selectedLanguage,
+    layout: selectedLayout as any
+  }), [exam, selectedLanguage, selectedLayout]);
 
   useEffect(() => {
     if (!id) return;
     let isMounted = true;
     fetch(`/api/typing/exams`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("Server responded with an error");
+        return res.json();
+      })
       .then(data => {
         if (isMounted) {
-          const found = data.find((e: any) => e._id === id);
-          setExam(found);
+          if (Array.isArray(data)) {
+            const found = data.find((e: any) => e._id === id);
+            if (!found) {
+              console.warn(`Exam with ID ${id} not found in active exams list.`);
+            }
+            setExam(found);
+          } else {
+            console.error("Received non-array data from exams API:", data);
+            toast.error("Format error: Could not load exam details");
+          }
           setLoading(false);
+        }
+      })
+      .catch(err => {
+        if (isMounted) {
+          console.error("Fetch error in TypingExamPage:", err);
+          setLoading(false);
+          toast.error("Failed to connect to examination server");
         }
       });
     return () => { isMounted = false; };
@@ -83,12 +111,6 @@ export default function TypingExamPage() {
   );
 
   const handleNextStep = () => {
-    if (!session) {
-      toast.error("Please login to start the typing exam");
-      const callbackUrl = encodeURIComponent(window.location.pathname);
-      router.push(`/student/login?callbackUrl=${callbackUrl}`);
-      return;
-    }
     setStep(2);
   };
 
@@ -98,50 +120,131 @@ export default function TypingExamPage() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-4">
             <div>
-              <p className="text-sm font-bold text-slate-800 mb-2">Select passage for the typing exam</p>
+              <p className="text-sm font-bold text-slate-800 mb-2">Configure your exam settings</p>
               <h1 className="text-4xl md:text-5xl font-black">{exam.title}</h1>
             </div>
-            <Link href="/typing" className="text-sm font-bold mt-4 md:mt-0 flex items-center gap-2 hover:underline">
+            <Link href="/typing/official" className="text-sm font-bold mt-4 md:mt-0 flex items-center gap-2 hover:underline">
               Choose any other exam <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
           
           <hr className="border-t border-slate-900 mb-10" />
 
-          <div className="bg-[#fcf5ec] rounded-lg p-8 md:p-16 relative overflow-hidden flex flex-col md:flex-row items-center gap-10">
+          <div className="bg-[#fcf5ec] rounded-lg p-8 md:p-12 relative overflow-hidden flex flex-col lg:flex-row items-stretch gap-10">
             {/* Decorative Elements */}
             <div className="absolute top-10 right-10 w-24 h-24 bg-[#ffcc00] rounded-full opacity-80" />
             
-            <div className="flex-1 relative z-10">
-              <span className="inline-block px-4 py-1.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-full mb-6">Exam Module Activated</span>
-              <h2 className="text-5xl md:text-6xl font-black leading-none mb-6">Ready to <br/><span className="text-slate-500">Test Your Speed?</span></h2>
-              <div className="flex items-center gap-6 mb-8">
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-slate-400 uppercase">Test Duration</span>
-                  <span className="text-2xl font-black">{exam.duration} Minutes</span>
+            {/* Left Column: Info & Actions */}
+            <div className="flex-1 relative z-10 flex flex-col">
+              <span className="inline-block w-fit px-4 py-1.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-full mb-6">Exam Module Activated</span>
+              <h2 className="text-4xl md:text-5xl font-black leading-tight mb-8">Ready to <br/><span className="text-slate-500">Test Your Speed?</span></h2>
+              
+              <div className="space-y-6 mb-10">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
+                        <Timer className="w-6 h-6 text-slate-900" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase">Test Duration</p>
+                        <p className="text-xl font-black">{exam.duration} Minutes</p>
+                    </div>
                 </div>
-                <div className="w-px h-10 bg-slate-200" />
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-slate-400 uppercase">Language</span>
-                  <span className="text-2xl font-black">{exam.language}</span>
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
+                        <Keyboard className="w-6 h-6 text-slate-900" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase">Selected Layout</p>
+                        <p className="text-xl font-black">{selectedLanguage} - {selectedLayout}</p>
+                    </div>
                 </div>
               </div>
-              <button 
-                onClick={handleNextStep}
-                className="group flex items-center gap-4 bg-slate-900 text-white px-8 py-4 rounded-2xl font-black hover:bg-black transition-all hover:gap-6 shadow-xl shadow-slate-900/20"
-              >
-                Continue to Instructions <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
+
+              {!session ? (
+                <div className="bg-white/50 backdrop-blur-sm border border-slate-200 p-6 rounded-3xl mb-8">
+                    <p className="text-sm font-bold text-slate-600 mb-4">You need to be logged in to save your results and view rankings.</p>
+                    <button 
+                        onClick={() => router.push(`/student/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`)}
+                        className="w-full py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
+                    >
+                        Login as Student
+                    </button>
+                </div>
+              ) : (
+                <button 
+                  onClick={handleNextStep}
+                  className="group w-fit flex items-center gap-4 bg-slate-900 text-white px-10 py-5 rounded-2xl font-black hover:bg-black transition-all hover:gap-6 shadow-xl shadow-slate-900/20 mt-auto"
+                >
+                  Continue to Instructions <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              )}
             </div>
-            <div className="flex-1 hidden md:block">
-              <div className="w-full aspect-square bg-white rounded-[3rem] shadow-2xl border border-slate-100 flex items-center justify-center relative rotate-3 group-hover:rotate-0 transition-transform duration-700">
-                 <div className="text-center p-10">
-                    <div className="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                       <Keyboard className="w-10 h-10 text-indigo-600" />
+
+            {/* Right Column: Configuration Area */}
+            <div className="w-full lg:w-[450px] relative z-10">
+              <div className="h-full bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 p-8 flex flex-col">
+                <h4 className="text-xl font-black mb-6 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm">1</span>
+                    Choose Language
+                </h4>
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                    <button 
+                        onClick={() => { setSelectedLanguage('English'); setSelectedLayout('English'); }}
+                        className={cn(
+                            "p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2",
+                            selectedLanguage === 'English' ? "border-slate-900 bg-slate-50" : "border-slate-100 hover:border-slate-200"
+                        )}
+                    >
+                        <span className="text-xl font-black">EN</span>
+                        <span className="text-[10px] font-black uppercase">English</span>
+                    </button>
+                    <button 
+                        onClick={() => setSelectedLanguage('Hindi')}
+                        className={cn(
+                            "p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2",
+                            selectedLanguage === 'Hindi' ? "border-slate-900 bg-slate-50" : "border-slate-100 hover:border-slate-200"
+                        )}
+                    >
+                        <span className="text-xl font-black">हि</span>
+                        <span className="text-[10px] font-black uppercase">Hindi</span>
+                    </button>
+                </div>
+
+                {selectedLanguage === 'Hindi' && (
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                        <h4 className="text-xl font-black mb-6 flex items-center gap-2">
+                            <span className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm">2</span>
+                            Select Keyboard
+                        </h4>
+                        <div className="grid grid-cols-1 gap-3">
+                            {['Remington Gail', 'Inscript', 'Phonetic'].map((lay) => (
+                                <button 
+                                    key={lay}
+                                    onClick={() => setSelectedLayout(lay as any)}
+                                    className={cn(
+                                        "p-4 rounded-xl border-2 text-left transition-all flex justify-between items-center",
+                                        selectedLayout === lay ? "border-slate-900 bg-slate-50" : "border-slate-100 hover:border-slate-200"
+                                    )}
+                                >
+                                    <div>
+                                        <p className="font-black text-sm">{lay}</p>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase">
+                                            {lay === 'Remington Gail' ? 'Professional' : lay === 'Inscript' ? 'Government' : 'Easy'}
+                                        </p>
+                                    </div>
+                                    {selectedLayout === lay && <div className="w-2 h-2 rounded-full bg-slate-900" />}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                    <h4 className="text-2xl font-black mb-2">High Precision</h4>
-                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Government Standard Engine</p>
-                 </div>
+                )}
+
+                <div className="mt-auto pt-8 flex items-center gap-3 text-slate-400">
+                    <Keyboard className="w-5 h-5" />
+                    <p className="text-[10px] font-black uppercase tracking-widest leading-tight">
+                        Verify your keyboard layout before starting
+                    </p>
+                </div>
               </div>
             </div>
           </div>
@@ -224,10 +327,12 @@ export default function TypingExamPage() {
         </div>
       )}
 
-      <TypingEngineModule 
+      <ClassicTypingEngineModule 
+        exam={exam}
         passage={exam.passageId?.content || "Passage not linked properly from admin panel. Please assign a passage to this exam."} 
         config={engineConfig}
         onComplete={handleComplete}
+        userName={session?.user?.name || "STUDENT"}
       />
     </div>
   );

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import TypingExam from "@/models/TypingExam";
 import "@/models/TypingPassage";
+import "@/models/TypingBook";
+import "@/models/User";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 

@@ -11,7 +11,7 @@ export interface IWordSet {
 const WordSetSchema = new Schema<IWordSet>(
   {
     name: { type: String, required: true },
-    category: { type: String, enum: ["A-Z", "Length"], required: true },
+    category: { type: String, required: true },
     value: { type: String, required: true },
     words: [{ type: String }],
     language: { type: String, enum: ["English", "Hindi"], default: "English" },

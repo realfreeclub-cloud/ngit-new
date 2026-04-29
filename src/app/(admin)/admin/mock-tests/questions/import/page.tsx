@@ -140,7 +140,7 @@ export default function ImportQuestionsPage() {
                 throw new Error("The Excel file seems to be empty or has no data rows.");
             }
 
-            const validExamCodes = ["M1-R5", "M2-R5", "M3-R5", "M4-R5"];
+            const validExamCodes = ["M1-R5.1", "M2-R5.1", "M3-R5.1", "M4-R5.1"];
             
             // Map Excel columns to Question model
             const formattedQuestions = data.map((row, index) => {
@@ -173,6 +173,11 @@ export default function ImportQuestionsPage() {
                         v === cleanedCode.replace(/(\D)(\d)/, '$1-$2')
                     );
                 }
+
+                // Only allow exam codes if the target course is an O Level course
+                const selectedCourse = courses.find(c => c._id === selectedCourseId);
+                const isOLevel = selectedCourse?.title?.toLowerCase().includes("o level");
+                if (!isOLevel) finalExamCode = undefined;
 
                 const questType = mapType(typeRaw?.toString());
 
@@ -247,11 +252,12 @@ export default function ImportQuestionsPage() {
             { header: "Option B", key: "OptionB", width: 20 },
             { header: "Option C", key: "OptionC", width: 20 },
             { header: "Option D", key: "OptionD", width: 20 },
+            { header: "Option E", key: "OptionE", width: 20 },
             { header: "Correct Answer", key: "CorrectAnswer", width: 15 },
             { header: "Explanation", key: "Explanation", width: 40 },
-            { header: "Marks", key: "Marks", width: 10 },
-            { header: "Negative Marks", key: "NegativeMarks", width: 15 },
-            { header: "Course", key: "Course", width: 15 },
+            { header: "Marks (+)", key: "Marks", width: 12 },
+            { header: "Negative Marks (-)", key: "NegativeMarks", width: 18 },
+            { header: "Course ID", key: "Course", width: 15 },
             { header: "Exam Code", key: "ExamCode", width: 15 },
             { header: "Subject", key: "Subject", width: 15 },
             { header: "Topic", key: "Topic", width: 15 },
@@ -271,7 +277,8 @@ export default function ImportQuestionsPage() {
             NegativeMarks: 1,
             Subject: "Physics",
             Topic: "Mechanics",
-            Difficulty: "EASY"
+            Difficulty: "EASY",
+            ExamCode: "M1-R5.1"
         });
 
         // Style the header

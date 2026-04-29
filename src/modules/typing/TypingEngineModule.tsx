@@ -21,6 +21,8 @@ interface TypingEngineModuleProps {
     backspaceMode?: 'full' | 'word' | 'disabled';
     highlightMode?: 'word' | 'word_error' | 'letter' | 'none';
     wordLimit?: number;
+    language?: string;
+    layout?: 'English' | 'Remington Gail' | 'Inscript' | 'Phonetic';
     autoScroll?: boolean;
     showScrollbar?: boolean;
   };
@@ -93,6 +95,8 @@ export const TypingEngineModule: React.FC<TypingEngineModuleProps> = ({
     setPassage(passage);
     updateSettings({
       duration: config.duration,
+      language: config.language || 'English',
+      layout: config.layout || 'English',
       backspaceMode: config.backspaceMode || 'full',
       highlightMode: config.highlightMode || 'word',
       autoScroll: config.autoScroll !== undefined ? config.autoScroll : true,

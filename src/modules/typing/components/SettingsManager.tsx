@@ -46,6 +46,22 @@ export const SettingsManager: React.FC = () => {
           </select>
         </div>
 
+        {/* Keyboard Layout (For Hindi) */}
+        {settings.language === 'Hindi' && (
+          <div className="space-y-2">
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Keyboard Layout</label>
+            <select 
+              disabled={isActive}
+              value={settings.layout}
+              onChange={(e) => handleUpdate('layout', e.target.value)}
+              className="w-full p-3 bg-slate-50 border-transparent rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+            >
+              <option value="Inscript">Mangal Inscript</option>
+              <option value="Remington Gail">Remington Gail</option>
+            </select>
+          </div>
+        )}
+
         {/* Highlight Mode */}
         <div className="space-y-2">
           <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Highlighting Style</label>
@@ -60,42 +76,6 @@ export const SettingsManager: React.FC = () => {
             <option value="letter">Letter-by-Letter</option>
             <option value="none">No Highlighting</option>
           </select>
-        </div>
-
-        {/* Text Size Control */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Text Size</label>
-            <span className="text-[10px] font-black text-indigo-600">{settings.fontSize}%</span>
-          </div>
-          <input 
-            type="range"
-            min="70"
-            max="150"
-            step="5"
-            disabled={isActive}
-            value={settings.fontSize}
-            onChange={(e) => handleUpdate('fontSize', parseInt(e.target.value))}
-            className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600 disabled:opacity-50"
-          />
-        </div>
-
-        {/* Passage Height Control */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Passage Box Height</label>
-            <span className="text-[10px] font-black text-indigo-600">{settings.passageHeight}%</span>
-          </div>
-          <input 
-            type="range"
-            min="30"
-            max="70"
-            step="5"
-            disabled={isActive}
-            value={settings.passageHeight}
-            onChange={(e) => handleUpdate('passageHeight', parseInt(e.target.value))}
-            className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600 disabled:opacity-50"
-          />
         </div>
 
         {/* Text Position */}

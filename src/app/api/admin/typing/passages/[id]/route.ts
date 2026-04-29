@@ -18,6 +18,15 @@ export async function PATCH(
     const data = await req.json();
     await connectDB();
 
+    // Recalculate wordCount if content changed
+    if (data.content) {
+      data.wordCount = data.content.trim().split(/\s+/).length;
+    }
+    // Clear bookId if empty string submitted
+    if (data.bookId === "") {
+      data.bookId = null;
+    }
+
     const passage = await TypingPassage.findByIdAndUpdate(id, data, { new: true });
     
     if (!passage) {

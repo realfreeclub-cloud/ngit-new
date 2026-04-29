@@ -5,7 +5,7 @@ import { useTypingStore } from '@/store/useTypingStore';
  * Custom hook to manage the Typing Exam Timer
  * Features: Countdown, Auto-stop, and 5-second Idle Pause
  */
-export const useTimer = () => {
+export const useTimer = (continuous: boolean = false) => {
   const { 
     isActive, 
     timeLeft, 
@@ -20,8 +20,11 @@ export const useTimer = () => {
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
-    // Start the countdown interval if test is active and not idle
-    if (isActive && !isFinished && !isIdle) {
+    // Start the countdown interval if test is active
+    // In continuous mode, we ignore the isIdle state
+    const shouldTick = isActive && !isFinished && (continuous ? true : !isIdle);
+
+    if (shouldTick) {
       interval = setInterval(() => {
         if (timeLeft <= 1) {
           endTest();
@@ -35,13 +38,15 @@ export const useTimer = () => {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, isFinished, isIdle, timeLeft, tick, endTest]);
+  }, [isActive, isFinished, isIdle, timeLeft, tick, endTest, continuous]);
 
   /**
    * Resets the idle timer. 
    * Should be called on every keystroke in the TypingBox.
    */
   const resetIdleTimer = () => {
+    if (continuous) return; // No idle tracking in continuous mode
+
     setIsIdle(false);
     
     if (idleTimeoutRef.current) {

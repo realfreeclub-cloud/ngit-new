@@ -11,6 +11,7 @@ interface TypingSettings {
   fontSize: number;
   passageHeight: number;
   showScrollbar: boolean;
+  layout: 'English' | 'Remington Gail' | 'Inscript' | 'Phonetic';
 }
 
 interface TypingState {
@@ -56,6 +57,8 @@ const initialSettings: TypingSettings = {
   textPosition: 'top',
   fontSize: 100, // percentage
   passageHeight: 50, // percentage of total height
+  showScrollbar: true,
+  layout: 'English',
 };
 
 export const useTypingStore = create<TypingState>((set) => ({
@@ -75,8 +78,6 @@ export const useTypingStore = create<TypingState>((set) => ({
     ...initialSettings,
     showScrollbar: true,
   },
-  timeLeft: 600,
-
   setPassage: (passage) => set({ passage }),
 
   setTypedText: (typedText) => set({ typedText }),

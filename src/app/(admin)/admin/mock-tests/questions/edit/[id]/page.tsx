@@ -113,10 +113,10 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
     };
 
     const handleSubmit = async () => {
-        if (!formData.courseId || !formData.examCode || !formData.topic || !formData.content.en) {
-            toast.error("Please fill Course, Exam Code, Topic Tag, and Question Content");
-            return;
-        }
+        if (!formData.courseId) return toast.error("Please select a Course");
+        if (!formData.examCode) return toast.error("Please select an Exam Code");
+        if (!formData.topic) return toast.error("Please enter a Topic Tag");
+        if (!formData.content.en) return toast.error("Please enter the Question Content");
 
         setSubmitting(true);
         const res = await updateQuestion(id, formData);
@@ -180,19 +180,22 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
                             {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
                         </select>
                     </div>
-                    <div className="space-y-2">
-                        <Label className="font-bold text-slate-700 ml-1">Exam Code</Label>
-                        <select 
-                            className="w-full h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
-                            value={formData.examCode}
-                            onChange={(e) => setFormData({...formData, examCode: e.target.value})}
-                        >
-                            <option value="M1-R5">M1-R5</option>
-                            <option value="M2-R5">M2-R5</option>
-                            <option value="M3-R5">M3-R5</option>
-                            <option value="M4-R5">M4-R5</option>
-                        </select>
-                    </div>
+                    {courses.find(c => c._id === formData.courseId)?.title?.toLowerCase().includes("o level") && (
+                        <div className="space-y-2">
+                            <Label className="font-bold text-slate-700 ml-1">Exam Code</Label>
+                            <select 
+                                className="w-full h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
+                                value={formData.examCode}
+                                onChange={(e) => setFormData({...formData, examCode: e.target.value})}
+                            >
+                                <option value="">Select Code</option>
+                                <option value="M1-R5.1">M1-R5.1</option>
+                                <option value="M2-R5.1">M2-R5.1</option>
+                                <option value="M3-R5.1">M3-R5.1</option>
+                                <option value="M4-R5.1">M4-R5.1</option>
+                            </select>
+                        </div>
+                    )}
                     <div className="space-y-2">
                         <Label className="font-bold text-slate-700 ml-1">Topic Tag</Label>
                         <Input 

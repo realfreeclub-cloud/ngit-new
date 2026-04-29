@@ -190,20 +190,22 @@ export default function NewPaperSetPage() {
                                 </select>
                             </div>
 
-                            <div className="space-y-2">
-                                <Label className="font-bold text-slate-700">Exam Code Filter</Label>
-                                <select 
-                                    className="w-full h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-slate-900 outline-none"
-                                    value={formData.examCode}
-                                    onChange={(e) => setFormData({...formData, examCode: e.target.value})}
-                                >
-                                    <option value="">Any / Not Applicable</option>
-                                    <option value="M1-R5">M1-R5</option>
-                                    <option value="M2-R5">M2-R5</option>
-                                    <option value="M3-R5">M3-R5</option>
-                                    <option value="M4-R5">M4-R5</option>
-                                </select>
-                            </div>
+                            {courses.find(c => c._id === formData.courseId)?.title?.toLowerCase().includes("o level") && (
+                                <div className="space-y-2">
+                                    <Label className="font-bold text-slate-700 ml-1">Exam Code Filter</Label>
+                                    <select 
+                                        className="w-full h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-slate-900 outline-none"
+                                        value={formData.examCode}
+                                        onChange={(e) => setFormData({...formData, examCode: e.target.value})}
+                                    >
+                                        <option value="">Any / Not Applicable</option>
+                                        <option value="M1-R5.1">M1-R5.1</option>
+                                        <option value="M2-R5.1">M2-R5.1</option>
+                                        <option value="M3-R5.1">M3-R5.1</option>
+                                        <option value="M4-R5.1">M4-R5.1</option>
+                                    </select>
+                                </div>
+                            )}
 
                             <div className="space-y-2">
                                 <Label className="font-bold text-slate-700">Primary Subject</Label>
@@ -221,8 +223,11 @@ export default function NewPaperSetPage() {
                                     <Input 
                                         type="number"
                                         className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold"
-                                        value={formData.duration}
-                                        onChange={(e) => setFormData({...formData, duration: parseInt(e.target.value)})}
+                                        value={isNaN(formData.duration) ? "" : formData.duration}
+                                        onChange={(e) => {
+                                            const val = parseInt(e.target.value);
+                                            setFormData({...formData, duration: isNaN(val) ? 0 : val});
+                                        }}
                                     />
                                 </div>
                                 <div className="space-y-2">

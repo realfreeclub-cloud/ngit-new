@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTypingStore } from '@/store/useTypingStore';
 import { cn } from '@/lib/utils';
+import { mapKeyToHindi } from '../utils/hindiMapping';
 
 /**
  * TypingInput Component
@@ -9,6 +10,7 @@ import { cn } from '@/lib/utils';
  */
 export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke }) => {
   const { 
+    passage,
     typedText, 
     setTypedText, 
     settings, 
@@ -17,14 +19,31 @@ export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke
     startTest 
   } = useTypingStore();
 
+  const words = passage.split(/\s+/);
+  const typedWords = typedText.split(/\s+/);
+  const currentWordIdx = typedWords.length - 1;
+  const currentWord = words[currentWordIdx] || "";
+  const currentTypedWord = typedWords[currentWordIdx] || "";
+  const hasError = currentTypedWord.length > 0 && !currentWord.startsWith(currentTypedWord);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (isFinished) return;
-    if (!isActive && e.target.value.length > 0) {
-      startTest(); // Auto-start on first key
+    
+    let val = e.target.value;
+    const isDeletion = val.length < typedText.length;
+
+    // 0. HINDI MAPPING LOGIC
+    if (settings.language === 'Hindi' && !isDeletion && val.length > typedText.length) {
+        const lastChar = val.slice(-1);
+        if (/[\x00-\x7F]/.test(lastChar) && lastChar !== ' ' && lastChar !== '\n') {
+            const mapped = mapKeyToHindi(lastChar, settings.layout);
+            val = val.slice(0, -1) + mapped;
+        }
     }
 
-    const val = e.target.value;
-    const isDeletion = val.length < typedText.length;
+    if (!isActive && val.length > 0) {
+      startTest(); // Auto-start on first key
+    }
 
     // 1. BACKSPACE RESTRICTION LOGIC
     if (isDeletion) {
@@ -46,7 +65,10 @@ export const TypingInput: React.FC<{ onKeyStroke: () => void }> = ({ onKeyStroke
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#d9ff66] rounded-3xl border-2 border-black/10 overflow-hidden transition-all focus-within:border-black/30 focus-within:shadow-2xl shadow-lg">
+    <div className={cn(
+        "flex flex-col h-full bg-[#d9ff66] rounded-3xl border-2 transition-all duration-300 shadow-lg overflow-hidden",
+        hasError ? "border-rose-500 shadow-rose-200 animate-shake" : "border-black/10 focus-within:border-black/30 focus-within:shadow-2xl"
+    )}>
       <div className="px-6 py-4 border-b border-black/5 flex justify-between items-center bg-black/5">
         <span className="text-[10px] font-black text-black/60 uppercase tracking-widest">Type the passage below</span>
         <div className="flex items-center gap-4">

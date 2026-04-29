@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, models } from "mongoose";
+import mongoose, { Schema, model, models, connection } from "mongoose";
 
 export interface ITypingExam {
   title: string;
@@ -12,6 +12,7 @@ export interface ITypingExam {
   autoScroll: boolean;
   showScrollbar: boolean;
   examMode: "SSC" | "CPCT" | "Court" | "General";
+  bookId?: mongoose.Types.ObjectId;
   startTime: Date;
   endTime: Date;
   status: "Draft" | "Active" | "Expired";
@@ -33,6 +34,7 @@ const TypingExamSchema = new Schema<ITypingExam>(
     autoScroll: { type: Boolean, default: true },
     showScrollbar: { type: Boolean, default: true },
     examMode: { type: String, enum: ["SSC", "CPCT", "Court", "General"], default: "General" },
+    bookId: { type: Schema.Types.ObjectId, ref: "TypingBook" },
     startTime: { type: Date, required: true },
     endTime: { type: Date, required: true },
     status: { type: String, enum: ["Draft", "Active", "Expired"], default: "Draft" },
@@ -41,5 +43,9 @@ const TypingExamSchema = new Schema<ITypingExam>(
   { timestamps: true }
 );
 
+// Force schema re-registration in dev to pick up schema changes (e.g. bookId added)
+if (process.env.NODE_ENV !== "production" && models.TypingExam) {
+  delete (models as any).TypingExam;
+}
 const TypingExam = models.TypingExam || model("TypingExam", TypingExamSchema);
 export default TypingExam;

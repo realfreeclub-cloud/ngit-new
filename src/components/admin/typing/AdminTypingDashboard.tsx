@@ -3,12 +3,13 @@
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, BookOpen, Keyboard, Clock, ChevronRight, CheckCircle2, AlertCircle, Pencil, Trash2 } from "lucide-react";
+import { Plus, BookOpen, Keyboard, Clock, ChevronRight, CheckCircle2, AlertCircle, Pencil, Trash2, FileText, Newspaper } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { mapKeyToHindi } from "@/modules/typing/utils/hindiMapping";
 
 export default function AdminTypingDashboard() {
   const [passages, setPassages] = useState<any[]>([]);
@@ -18,12 +19,25 @@ export default function AdminTypingDashboard() {
   const [essays, setEssays] = useState<any[]>([]);
   const [currentPassages, setCurrentPassages] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
+  const [books, setBooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showExamForm, setShowExamForm] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [showBookForm, setShowBookForm] = useState(false);
   const [selectedExam, setSelectedExam] = useState<any>(null);
   const [editingPassage, setEditingPassage] = useState<any>(null);
+  
+  useEffect(() => {
+    if (editingPassage) {
+      setAdminLanguage(editingPassage.language || "English");
+    } else {
+      setAdminLanguage("English");
+      setAdminLayout("Inscript");
+    }
+  }, [editingPassage]);
   const [submitting, setSubmitting] = useState(false);
+  const [adminLanguage, setAdminLanguage] = useState("English");
+  const [adminLayout, setAdminLayout] = useState("Inscript");
 
   useEffect(() => {
     fetchData();
@@ -31,21 +45,19 @@ export default function AdminTypingDashboard() {
 
   const fetchData = async () => {
     try {
-      const [passagesData, examsData, categoriesData, wordsData, essaysData, currentData] = await Promise.all([
-        fetch("/api/admin/typing/passages").then(res => res.json()),
-        fetch("/api/admin/typing/exams").then(res => res.json()),
-        fetch("/api/admin/typing/categories").then(res => res.json()),
-        fetch("/api/admin/typing/words").then(res => res.json()),
-        fetch("/api/admin/typing/essays").then(res => res.json()),
-        fetch("/api/admin/typing/current").then(res => res.json())
-      ]);
+      const res = await fetch("/api/admin/typing/dashboard");
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error || "Fetch failed");
 
-      setPassages(Array.isArray(passagesData) ? passagesData : []);
-      setExams(Array.isArray(examsData) ? examsData : []);
-      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
-      setWordSets(Array.isArray(wordsData) ? wordsData : []);
-      setEssays(Array.isArray(essaysData) ? essaysData : []);
-      setCurrentPassages(Array.isArray(currentData) ? currentData : []);
+      setPassages(data.passages || []);
+      setExams(data.exams || []);
+      setCategories(data.categories || []);
+      setWordSets(data.wordSets || []);
+      setEssays(data.essays || []);
+      setCurrentPassages(data.current || []);
+      setResults(data.results || []);
+      setBooks(data.books || []);
       setLoading(false);
     } catch (error) {
       console.error("Fetch Data Error:", error);
@@ -126,6 +138,7 @@ export default function AdminTypingDashboard() {
     data.autoScroll = (form.elements.namedItem('autoScroll') as HTMLInputElement)?.checked;
     data.showScrollbar = (form.elements.namedItem('showScrollbar') as HTMLInputElement)?.checked;
 
+    setSubmitting(true);
     try {
       const res = await fetch("/api/admin/typing/exams", {
         method: "POST",
@@ -137,10 +150,78 @@ export default function AdminTypingDashboard() {
         setShowExamForm(false);
         await fetchData();
       } else {
-        toast.error("Failed to schedule exam");
+        const err = await res.json();
+        toast.error(err.error || "Failed to schedule exam");
       }
     } catch (error) {
       toast.error("An error occurred");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteExam = async (id: string) => {
+    if (!confirm("Are you sure? This will remove all associated results.")) return;
+    
+    // Optimistic UI update
+    const previousExams = [...exams];
+    setExams(exams.filter(e => e._id !== id));
+
+    try {
+      const res = await fetch(`/api/admin/typing/exams/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Exam deleted");
+        // No need to fetch all data again, we already updated locally
+      } else {
+        setExams(previousExams); // Rollback
+        const err = await res.json();
+        toast.error(err.error || "Delete failed");
+      }
+    } catch (error) {
+      setExams(previousExams); // Rollback
+      toast.error("An error occurred");
+    }
+  };
+
+  const handleAddBook = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/admin/typing/books", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        toast.success("Book added successfully!");
+        form.reset();
+        setShowBookForm(false);
+        await fetchData();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Failed to add book");
+      }
+    } catch (error) {
+      toast.error("An error occurred");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteBook = async (id: string) => {
+    if (!confirm("Are you sure? All exams linked to this book will lose their book association.")) return;
+    try {
+      const res = await fetch(`/api/admin/typing/books/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Book deleted");
+        await fetchData();
+      }
+    } catch (error) {
+      toast.error("Failed to delete book");
     }
   };
 
@@ -170,15 +251,18 @@ export default function AdminTypingDashboard() {
 
   const handleDeleteCategory = async (id: string) => {
     if (!confirm("Are you sure? This will not delete exams in this category but will remove the category listing.")) return;
-    try {
+    
+    toast.promise(async () => {
       const res = await fetch(`/api/admin/typing/categories/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        toast.success("Category deleted");
-        await fetchData();
-      }
-    } catch (error) {
-      toast.error("Failed to delete");
-    }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete");
+      await fetchData();
+      return "Category deleted";
+    }, {
+      loading: "Deleting category...",
+      success: (msg) => msg,
+      error: (err) => err.message
+    });
   };
 
   const handleAddWordSet = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -322,6 +406,7 @@ export default function AdminTypingDashboard() {
           <TabsList className="flex w-max mb-4 sm:mb-8 h-12 sm:h-14 bg-slate-100 rounded-xl sm:rounded-2xl p-1 sm:p-1.5 overflow-x-auto scrollbar-hide">
             <TabsTrigger value="exams" className="rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm px-6">Official Exams</TabsTrigger>
             <TabsTrigger value="categories" className="rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm px-6">Categories</TabsTrigger>
+            <TabsTrigger value="books" className="rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm px-6">Books</TabsTrigger>
             <TabsTrigger value="passages" className="rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm px-6">Library</TabsTrigger>
             <TabsTrigger value="words" className="rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm px-6">Word Practice</TabsTrigger>
             <TabsTrigger value="essays" className="rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm px-6">Essay Practice</TabsTrigger>
@@ -374,7 +459,7 @@ export default function AdminTypingDashboard() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Category</label>
                     <select name="category" className="w-full p-4 bg-slate-50 border-transparent rounded-2xl font-bold text-slate-900 outline-none" required>
@@ -434,17 +519,37 @@ export default function AdminTypingDashboard() {
 
                 <div className="space-y-2">
                   <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Select Passage</label>
-                  <select name="passageId" className="w-full p-4 bg-slate-50 border-transparent rounded-2xl font-bold text-slate-900 outline-none" required>
+                  <select 
+                    name="passageId" 
+                    className="w-full p-4 bg-slate-50 border-transparent rounded-2xl font-bold text-slate-900 outline-none" 
+                    required
+                    onChange={(e) => {
+                        const pid = e.target.value;
+                        const passage = passages.find(p => p._id === pid);
+                        if (passage && e.currentTarget.form) {
+                            const langSelect = e.currentTarget.form.elements.namedItem('language') as HTMLSelectElement;
+                            if (langSelect) langSelect.value = passage.language;
+                        }
+                    }}
+                  >
                     <option value="">-- Choose a passage from Library --</option>
                     {passages.map(p => (
                       <option key={p._id} value={p._id}>{p.title} ({p.language} - {p.wordCount} words)</option>
                     ))}
                   </select>
                 </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Exam Language</label>
+                  <select name="language" className="w-full p-4 bg-slate-50 border-transparent rounded-2xl font-bold text-slate-900 outline-none">
+                    <option value="English">English</option>
+                    <option value="Hindi">Hindi</option>
+                  </select>
+                </div>
                 
                 <div className="pt-4">
-                  <Button type="submit" className="w-full h-16 rounded-[1.5rem] text-lg font-black bg-slate-900 hover:bg-black text-white shadow-2xl shadow-slate-200">
-                    Launch Official Exam
+                  <Button type="submit" disabled={submitting} className="w-full h-16 rounded-[1.5rem] text-lg font-black bg-slate-900 hover:bg-black text-white shadow-2xl shadow-slate-200">
+                    {submitting ? 'Launching...' : 'Launch Official Exam'}
                   </Button>
                 </div>
               </form>
@@ -473,13 +578,32 @@ export default function AdminTypingDashboard() {
                       {exam.status === 'Active' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
                       {exam.status}
                     </span>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteExam(exam._id);
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                   <h3 className="text-2xl font-black text-slate-900 leading-tight mb-3 relative z-10">{exam.title}</h3>
+                  
                   <div className="flex items-center gap-3 text-sm font-bold text-slate-500 mb-2 relative z-10">
                     <div className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {exam.duration} Min</div>
                     <div className="w-1 h-1 rounded-full bg-slate-300" />
                     <div className="flex items-center gap-1.5"><Keyboard className="w-4 h-4" /> {exam.language}</div>
+                    <div className="w-1 h-1 rounded-full bg-slate-300" />
+                    <div className="flex items-center gap-1.5 truncate max-w-[150px]"><FileText className="w-4 h-4" /> {exam.passageId?.title || 'No Passage'}</div>
                   </div>
+
+                  {exam.bookId && (
+                    <div className="flex items-center gap-1.5 mb-4 text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full w-max relative z-10">
+                      <BookOpen className="w-3.5 h-3.5" />
+                      {exam.bookId.name}
+                    </div>
+                  )}
 
                   <div className="flex flex-wrap gap-1.5 mb-6 relative z-10">
                     <Badge variant="secondary" className="bg-slate-50 text-[9px] px-2 py-0 font-bold border-slate-200">Mode: {exam.examMode || 'Gen'}</Badge>
@@ -606,8 +730,9 @@ export default function AdminTypingDashboard() {
                     <button 
                       onClick={() => handleDeleteCategory(cat._id)}
                       className="p-2 text-slate-300 hover:text-rose-500 transition-colors"
+                      title="Delete Category"
                     >
-                      <Plus className="w-5 h-5 rotate-45" />
+                      <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
                 ))}
@@ -619,6 +744,177 @@ export default function AdminTypingDashboard() {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="books" className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left: Create Book Form */}
+            <div className="lg:col-span-1">
+              <div className="bg-amber-600 rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-8 shadow-2xl text-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-[80px]" />
+                <h3 className="text-xl sm:text-2xl font-black tracking-tight mb-2 relative z-10">Create Book</h3>
+                <p className="text-amber-100 font-medium text-sm mb-8 relative z-10">
+                  Books group passages as chapters for structured student practice.
+                </p>
+                <form onSubmit={handleAddBook} className="space-y-4 relative z-10">
+                  <input name="name" placeholder="Book Title (e.g. Speed Master Vol.1)" className="w-full p-4 bg-white/10 border-transparent rounded-2xl text-white placeholder:text-amber-200 focus:bg-white/20 transition-colors font-medium outline-none" required />
+                  <textarea name="description" placeholder="Short description (optional)..." className="w-full p-4 bg-white/10 border-transparent rounded-2xl h-24 text-white placeholder:text-amber-200 focus:bg-white/20 transition-colors font-medium resize-none outline-none" />
+                  <Button type="submit" disabled={submitting} className="w-full h-14 rounded-xl text-lg font-bold bg-white text-amber-700 hover:bg-amber-50 disabled:opacity-50">
+                    {submitting ? "Creating..." : "Create Book"}
+                  </Button>
+                </form>
+              </div>
+
+              {/* Assign Passage to Book */}
+              {books.length > 0 && (
+                <div className="mt-6 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+                  <h4 className="font-black text-slate-900 mb-4">Assign Chapter to Book</h4>
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    const form = e.currentTarget;
+                    const fd = new FormData(form);
+                    const passageId = fd.get("passageId") as string;
+                    const bookId = fd.get("targetBookId") as string;
+                    const duration = Number(fd.get("chapterDuration")) || 10;
+                    if (!passageId || !bookId) return;
+                    setSubmitting(true);
+                    try {
+                      const res = await fetch(`/api/admin/typing/passages/${passageId}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ bookId, duration })
+                      });
+                      if (res.ok) {
+                        toast.success("Chapter assigned to book!");
+                        form.reset();
+                        await fetchData();
+                      } else {
+                        toast.error("Failed to assign chapter");
+                      }
+                    } finally {
+                      setSubmitting(false);
+                    }
+                  }} className="space-y-3">
+                    <select name="targetBookId" className="w-full p-3 bg-slate-50 rounded-xl font-bold text-slate-900 outline-none border border-slate-200" required>
+                      <option value="">-- Select Book --</option>
+                      {books.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
+                    </select>
+                    <select name="passageId" className="w-full p-3 bg-slate-50 rounded-xl font-bold text-slate-900 outline-none border border-slate-200" required>
+                      <option value="">-- Select Passage to Add --</option>
+                      {passages.map(p => (
+                        <option key={p._id} value={p._id}>
+                          {p.title} ({p.language}, {p.wordCount}w){p.bookId ? " ✓" : ""}
+                        </option>
+                      ))}
+                    </select>
+                    <div>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Chapter Duration (Minutes)</label>
+                      <input
+                        type="number"
+                        name="chapterDuration"
+                        defaultValue={10}
+                        min={1}
+                        max={60}
+                        className="w-full p-3 bg-slate-50 rounded-xl font-bold text-slate-900 outline-none border border-slate-200"
+                      />
+                    </div>
+                    <Button type="submit" disabled={submitting} className="w-full h-11 rounded-xl font-black bg-slate-900 text-white hover:bg-black">
+                      Assign as Chapter
+                    </Button>
+                  </form>
+                </div>
+              )}
+            </div>
+
+            {/* Right: Books with chapters */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-2xl font-black tracking-tight text-slate-900">Book Library</h2>
+                <span className="px-4 py-1.5 bg-amber-50 text-amber-700 rounded-full text-sm font-black">{books.length} Books</span>
+              </div>
+
+              {books.length === 0 ? (
+                <div className="p-16 border-2 border-dashed rounded-3xl text-center">
+                  <BookOpen className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                  <h3 className="text-xl font-black text-slate-900 mb-2">No books yet</h3>
+                  <p className="text-slate-500 font-medium">Create your first typing book using the form on the left.</p>
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  {books.map((book) => {
+                    const bookChapters = passages.filter(p => p.bookId && p.bookId.toString() === book._id.toString());
+                    return (
+                      <div key={book._id} className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+                        {/* Book Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-slate-50 bg-gradient-to-r from-amber-50 to-white">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-amber-200">
+                              <BookOpen className="w-6 h-6" />
+                            </div>
+                            <div>
+                              <h4 className="font-black text-slate-900 text-lg">{book.name}</h4>
+                              <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">
+                                {bookChapters.length} Chapter{bookChapters.length !== 1 ? "s" : ""}
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteBook(book._id)}
+                            className="text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        {/* Chapters */}
+                        {bookChapters.length === 0 ? (
+                          <div className="p-6 text-center text-sm text-slate-400 font-medium">
+                            No chapters assigned yet. Use the form to add passages as chapters.
+                          </div>
+                        ) : (
+                          <div className="divide-y divide-slate-50">
+                            {bookChapters.map((chapter, idx) => (
+                              <div key={chapter._id} className="flex items-center justify-between px-6 py-4 hover:bg-slate-50/50 group">
+                                <div className="flex items-center gap-4">
+                                  <span className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 font-black text-xs flex items-center justify-center">
+                                    {String(idx + 1).padStart(2, "0")}
+                                  </span>
+                                  <div>
+                                    <p className="font-bold text-slate-900 text-sm">{chapter.title}</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                      {chapter.language} · {chapter.wordCount} words · {chapter.difficulty} · <span className="text-amber-600">{chapter.duration || 10} min</span>
+                                    </p>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={async () => {
+                                    if (!confirm(`Remove "${chapter.title}" from this book?`)) return;
+                                    await fetch(`/api/admin/typing/passages/${chapter._id}`, {
+                                      method: "PATCH",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ bookId: null })
+                                    });
+                                    toast.success("Chapter removed from book");
+                                    await fetchData();
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-slate-300 hover:text-rose-500"
+                                  title="Remove from book"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </TabsContent>
@@ -664,14 +960,28 @@ export default function AdminTypingDashboard() {
                     </select>
                     <select 
                       name="language" 
-                      defaultValue={editingPassage?.language || "English"} 
+                      value={adminLanguage}
+                      onChange={(e) => setAdminLanguage(e.target.value)}
                       className="w-full p-4 bg-white/10 border-transparent rounded-2xl text-white [&>option]:text-slate-900 font-medium appearance-none outline-none" 
                       required
-                      key={editingPassage?._id + "-lang"}
                     >
                       <option value="English">English</option>
                       <option value="Hindi">Hindi</option>
                     </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    {adminLanguage === "Hindi" && (
+                      <select 
+                        name="layout"
+                        value={adminLayout}
+                        onChange={(e) => setAdminLayout(e.target.value)}
+                        className="w-full p-4 bg-white/10 border-transparent rounded-2xl text-white [&>option]:text-slate-900 font-medium appearance-none outline-none"
+                      >
+                        <option value="Inscript">Mangal Inscript</option>
+                        <option value="Remington Gail">Remington Gail</option>
+                      </select>
+                    )}
                   </div>
                   <textarea 
                     name="content" 
@@ -680,6 +990,18 @@ export default function AdminTypingDashboard() {
                     className="w-full p-4 bg-white/10 border-transparent rounded-2xl h-48 text-white placeholder:text-slate-400 focus:bg-white/20 transition-colors font-medium resize-none outline-none" 
                     required 
                     key={editingPassage?._id + "-content"}
+                    onChange={(e) => {
+                      if (adminLanguage === "Hindi") {
+                        const val = e.target.value;
+                        const lastChar = val.slice(-1);
+                        if (/[\x00-\x7F]/.test(lastChar) && lastChar !== ' ' && lastChar !== '\n' && lastChar !== '') {
+                          const mapped = mapKeyToHindi(lastChar, adminLayout);
+                          if (mapped !== lastChar) {
+                            e.target.value = val.slice(0, -1) + mapped;
+                          }
+                        }
+                      }
+                    }}
                   />
                   
                   <Button type="submit" disabled={submitting} className="w-full h-14 rounded-xl text-lg font-bold bg-white text-slate-900 hover:bg-slate-100 disabled:opacity-50">
@@ -755,37 +1077,58 @@ export default function AdminTypingDashboard() {
         <TabsContent value="words" className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-1">
-                    <Card className="p-8 rounded-[2rem] bg-blue-600 text-white border-none shadow-2xl">
-                        <h3 className="text-2xl font-black mb-4">Add Word Set</h3>
-                        <form onSubmit={handleAddWordSet} className="space-y-4">
-                            <input name="name" placeholder="Set Name (e.g. Set A)" className="w-full p-4 bg-white/10 rounded-xl outline-none placeholder:text-blue-200" required />
-                            <select name="category" className="w-full p-4 bg-white/10 rounded-xl outline-none [&>option]:text-slate-900" required>
+                    <Card className="p-8 rounded-[2.5rem] bg-indigo-600 text-white border-none shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+                        <h3 className="text-2xl font-black mb-2 relative z-10">Add Word Set</h3>
+                        <p className="text-indigo-100 font-medium text-sm mb-6 relative z-10">Drills for letters/lengths.</p>
+                        <form onSubmit={handleAddWordSet} className="space-y-4 relative z-10">
+                            <input name="name" placeholder="Set Name (e.g. Set A)" className="w-full p-4 bg-white/10 rounded-2xl outline-none placeholder:text-indigo-200 focus:bg-white/20 transition-all" required />
+                            <select name="category" className="w-full p-4 bg-white/10 rounded-2xl outline-none [&>option]:text-slate-900 font-medium" required>
                                 <option value="A-Z">A to Z</option>
                                 <option value="Length">Word Length</option>
                             </select>
-                            <input name="value" placeholder="Value (e.g. A or 5)" className="w-full p-4 bg-white/10 rounded-xl outline-none placeholder:text-blue-200" required />
-                            <select name="language" className="w-full p-4 bg-white/10 rounded-xl outline-none [&>option]:text-slate-900">
+                            <input name="value" placeholder="Value (e.g. A or 5)" className="w-full p-4 bg-white/10 rounded-2xl outline-none placeholder:text-indigo-200 focus:bg-white/20 transition-all" required />
+                            <select name="language" className="w-full p-4 bg-white/10 rounded-2xl outline-none [&>option]:text-slate-900 font-medium">
                                 <option value="English">English</option>
                                 <option value="Hindi">Hindi</option>
                             </select>
-                            <textarea name="words" placeholder="Words (comma separated)" className="w-full p-4 bg-white/10 rounded-xl outline-none h-32 placeholder:text-blue-200" required />
-                            <Button type="submit" className="w-full h-14 bg-white text-blue-600 hover:bg-blue-50 font-black">Save Word Set</Button>
+                            <textarea name="words" placeholder="Words (comma separated)" className="w-full p-4 bg-white/10 rounded-2xl outline-none h-32 placeholder:text-indigo-200 focus:bg-white/20 transition-all resize-none" required />
+                            <Button type="submit" className="w-full h-14 bg-white text-indigo-600 hover:bg-indigo-50 font-black rounded-xl">Save Word Set</Button>
                         </form>
                     </Card>
                 </div>
-                <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {wordSets.map(set => (
-                        <Card key={set._id} className="p-6 rounded-[1.5rem] flex items-center justify-between group">
-                            <div>
-                                <h4 className="font-black text-slate-900">{set.name}</h4>
-                                <p className="text-[10px] font-black uppercase text-slate-400">{set.category} • {set.language}</p>
-                                <p className="text-xs text-slate-500 mt-2 line-clamp-1">{set.words.length} Words</p>
-                            </div>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteWordSet(set._id)} className="text-slate-300 hover:text-rose-600">
-                                <Trash2 className="w-4 h-4" />
-                            </Button>
-                        </Card>
-                    ))}
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-2xl font-black text-slate-900">Active Drills</h2>
+                        <Badge className="bg-indigo-50 text-indigo-700">{wordSets.length} Sets</Badge>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {wordSets.map(set => (
+                            <Card key={set._id} className="p-6 rounded-[2rem] flex flex-col justify-between group hover:shadow-xl transition-all border-slate-100">
+                                <div>
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center font-black text-xs uppercase text-slate-400">
+                                            {set.value}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Badge variant="outline" className="text-[9px] uppercase tracking-widest">{set.language}</Badge>
+                                            <Button variant="ghost" size="icon" onClick={() => handleDeleteWordSet(set._id)} className="w-8 h-8 text-slate-300 hover:text-rose-600 transition-colors">
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <h4 className="font-black text-slate-900 text-lg mb-1">{set.name}</h4>
+                                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{set.category} Drills</p>
+                                </div>
+                                <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
+                                    <span className="text-xs font-bold text-slate-400">{set.words?.length || 0} Words</span>
+                                    <div className="flex -space-x-2">
+                                        {[1,2,3].map(i => <div key={i} className="w-5 h-5 rounded-full border-2 border-white bg-slate-100" />)}
+                                    </div>
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
                 </div>
             </div>
         </TabsContent>
@@ -793,50 +1136,64 @@ export default function AdminTypingDashboard() {
         <TabsContent value="essays" className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-1">
-                    <Card className="p-8 rounded-[2rem] bg-emerald-600 text-white border-none shadow-2xl">
-                        <h3 className="text-2xl font-black mb-4">Add Essay</h3>
-                        <form onSubmit={handleAddEssay} className="space-y-4">
-                            <select name="topic" className="w-full p-4 bg-white/10 rounded-xl outline-none [&>option]:text-slate-900" required>
-                                <option value="Gandhi">Mahatma Gandhi</option>
-                                <option value="Nehru">Jawaharlal Nehru</option>
-                                <option value="15 Aug">Independence Day</option>
-                                <option value="26 Jan">Republic Day</option>
-                                <option value="Women Empowerment">Women Empowerment</option>
-                            </select>
+                    <Card className="p-8 rounded-[2.5rem] bg-emerald-600 text-white border-none shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+                        <h3 className="text-2xl font-black mb-2 relative z-10">Add Essay</h3>
+                        <p className="text-emerald-100 font-medium text-sm mb-6 relative z-10">Long-form practice.</p>
+                        <form onSubmit={handleAddEssay} className="space-y-4 relative z-10">
+                            <input name="topic" placeholder="Topic (e.g. History)" className="w-full p-4 bg-white/10 rounded-2xl outline-none placeholder:text-emerald-200 focus:bg-white/20 transition-all" required />
                             <div className="grid grid-cols-2 gap-4">
-                                <input name="title" placeholder="Essay Title" className="w-full p-4 bg-white/10 rounded-xl outline-none placeholder:text-emerald-200" required />
-                                <select name="difficulty" className="w-full p-4 bg-white/10 rounded-xl outline-none [&>option]:text-slate-900" required>
+                                <input name="title" placeholder="Essay Title" className="w-full p-4 bg-white/10 rounded-2xl outline-none placeholder:text-emerald-200 focus:bg-white/20 transition-all" required />
+                                <select name="difficulty" className="w-full p-4 bg-white/10 rounded-2xl outline-none [&>option]:text-slate-900 font-medium" required>
                                     <option value="Easy">Easy</option>
                                     <option value="Medium">Medium</option>
                                     <option value="Hard">Hard</option>
                                 </select>
                             </div>
-                            <select name="language" className="w-full p-4 bg-white/10 rounded-xl outline-none [&>option]:text-slate-900">
+                            <select name="language" className="w-full p-4 bg-white/10 rounded-2xl outline-none [&>option]:text-slate-900 font-medium">
                                 <option value="English">English</option>
                                 <option value="Hindi">Hindi</option>
                             </select>
-                            <textarea name="content" placeholder="Full Content..." className="w-full p-4 bg-white/10 rounded-xl outline-none h-48 placeholder:text-emerald-200" required />
-                            <Button type="submit" className="w-full h-14 bg-white text-emerald-600 hover:bg-emerald-50 font-black">Save Essay</Button>
+                            <textarea name="content" placeholder="Full Content..." className="w-full p-4 bg-white/10 rounded-2xl outline-none h-48 placeholder:text-emerald-200 focus:bg-white/20 transition-all resize-none" required />
+                            <Button type="submit" className="w-full h-14 bg-white text-emerald-600 hover:bg-emerald-50 font-black rounded-xl">Save Essay</Button>
                         </form>
                     </Card>
                 </div>
-                <div className="lg:col-span-2 space-y-4">
-                    {essays.map(essay => (
-                        <Card key={essay._id} className="p-6 rounded-[1.5rem] flex items-center justify-between group">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 flex items-center justify-center rounded-xl">
-                                    <BookOpen className="w-5 h-5" />
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-2xl font-black text-slate-900">Essay Library</h2>
+                        <Badge className="bg-emerald-50 text-emerald-700">{essays.length} Essays</Badge>
+                    </div>
+                    <div className="space-y-4">
+                        {essays.map(essay => (
+                            <Card key={essay._id} className="p-6 rounded-[2rem] flex items-center justify-between group hover:shadow-xl transition-all border-slate-100">
+                                <div className="flex items-center gap-5">
+                                    <div className="w-14 h-14 bg-emerald-50 text-emerald-600 flex items-center justify-center rounded-[1.2rem]">
+                                        <BookOpen className="w-7 h-7" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-black text-xl text-slate-900 leading-tight">{essay.title}</h4>
+                                        <div className="flex items-center gap-3 mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                            <span className="text-emerald-500">{essay.topic}</span>
+                                            <span className="w-1 h-1 rounded-full bg-slate-200" />
+                                            <span>{essay.difficulty}</span>
+                                            <span className="w-1 h-1 rounded-full bg-slate-200" />
+                                            <span>{essay.language}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 className="font-black text-slate-900">{essay.title}</h4>
-                                    <p className="text-[10px] font-black uppercase text-slate-400">{essay.topic} • {essay.difficulty} • {essay.language}</p>
+                                <div className="flex items-center gap-4">
+                                    <div className="text-right hidden sm:block">
+                                        <div className="text-xs font-black text-slate-900">{essay.wordCount || 0}</div>
+                                        <div className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Words</div>
+                                    </div>
+                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteEssay(essay._id)} className="w-10 h-10 rounded-xl text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-all">
+                                        <Trash2 className="w-5 h-5" />
+                                    </Button>
                                 </div>
-                            </div>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteEssay(essay._id)} className="text-slate-300 hover:text-rose-600">
-                                <Trash2 className="w-4 h-4" />
-                            </Button>
-                        </Card>
-                    ))}
+                            </Card>
+                        ))}
+                    </div>
                 </div>
             </div>
         </TabsContent>
@@ -844,36 +1201,54 @@ export default function AdminTypingDashboard() {
         <TabsContent value="current" className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-1">
-                    <Card className="p-8 rounded-[2rem] bg-amber-600 text-white border-none shadow-2xl">
-                        <h3 className="text-2xl font-black mb-4">Post Daily News</h3>
-                        <form onSubmit={handleAddCurrent} className="space-y-4">
-                            <input name="title" placeholder="News Headline" className="w-full p-4 bg-white/10 rounded-xl outline-none placeholder:text-amber-200" required />
-                            <select name="language" className="w-full p-4 bg-white/10 rounded-xl outline-none [&>option]:text-slate-900">
+                    <Card className="p-8 rounded-[2.5rem] bg-amber-600 text-white border-none shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+                        <h3 className="text-2xl font-black mb-2 relative z-10">Post Daily News</h3>
+                        <p className="text-amber-100 font-medium text-sm mb-6 relative z-10">Fresh daily content.</p>
+                        <form onSubmit={handleAddCurrent} className="space-y-4 relative z-10">
+                            <input name="title" placeholder="News Headline" className="w-full p-4 bg-white/10 rounded-2xl outline-none placeholder:text-amber-200 focus:bg-white/20 transition-all" required />
+                            <select name="language" className="w-full p-4 bg-white/10 rounded-2xl outline-none [&>option]:text-slate-900 font-medium">
                                 <option value="English">English</option>
                                 <option value="Hindi">Hindi</option>
                             </select>
-                            <textarea name="content" placeholder="Content..." className="w-full p-4 bg-white/10 rounded-xl outline-none h-48 placeholder:text-amber-200" required />
-                            <Button type="submit" className="w-full h-14 bg-white text-amber-600 hover:bg-amber-50 font-black">Publish News</Button>
+                            <textarea name="content" placeholder="Paste news passage..." className="w-full p-4 bg-white/10 rounded-2xl outline-none h-48 placeholder:text-amber-200 focus:bg-white/20 transition-all resize-none" required />
+                            <Button type="submit" className="w-full h-14 bg-white text-amber-600 hover:bg-amber-50 font-black rounded-xl">Publish News</Button>
                         </form>
                     </Card>
                 </div>
-                <div className="lg:col-span-2 space-y-4">
-                    {currentPassages.map(cp => (
-                        <Card key={cp._id} className="p-6 rounded-[1.5rem] flex items-center justify-between group">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-amber-50 text-amber-600 flex items-center justify-center rounded-xl">
-                                    <Clock className="w-5 h-5" />
+                <div className="lg:col-span-2 space-y-6">
+                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">Recent Archives</h2>
+                    <div className="space-y-4">
+                        {currentPassages.map(cp => (
+                            <Card key={cp._id} className="p-8 rounded-[2.5rem] border-slate-100 hover:shadow-xl transition-all group">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className="flex items-center gap-5">
+                                        <div className="w-14 h-14 bg-amber-50 text-amber-600 flex items-center justify-center rounded-[1.2rem]">
+                                            <Newspaper className="w-7 h-7" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-black text-xl text-slate-900 leading-tight">{cp.title}</h4>
+                                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mt-1">
+                                                {new Date(cp.date || cp.createdAt).toLocaleDateString()} • {cp.language}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteCurrent(cp._id)} className="w-10 h-10 rounded-xl text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-all">
+                                        <Trash2 className="w-5 h-5" />
+                                    </Button>
                                 </div>
-                                <div>
-                                    <h4 className="font-black text-slate-900">{cp.title}</h4>
-                                    <p className="text-[10px] font-black uppercase text-slate-400">{new Date(cp.date).toLocaleDateString()} • {cp.language}</p>
+                                <p className="text-slate-500 text-sm font-medium line-clamp-3 leading-relaxed mb-6">
+                                    {cp.content}
+                                </p>
+                                <div className="flex items-center gap-3">
+                                    <Badge className="bg-slate-900 text-white font-black px-4 py-1.5 rounded-full text-[9px] uppercase tracking-wider">{cp.language}</Badge>
+                                    <Badge variant="secondary" className="bg-slate-50 text-slate-400 font-bold px-4 py-1.5 rounded-full text-[9px] uppercase tracking-wider">
+                                        {cp.content.split(/\s+/).length} Words
+                                    </Badge>
                                 </div>
-                            </div>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteCurrent(cp._id)} className="text-slate-300 hover:text-rose-600">
-                                <Trash2 className="w-4 h-4" />
-                            </Button>
-                        </Card>
-                    ))}
+                            </Card>
+                        ))}
+                    </div>
                 </div>
             </div>
         </TabsContent>
