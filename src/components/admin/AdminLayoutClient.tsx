@@ -29,7 +29,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
 
             {/* Sidebar Container */}
             <div className={cn(
-                "fixed inset-y-0 left-0 z-[70] w-72 bg-white shadow-2xl md:shadow-none transform transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] md:relative md:w-64 flex-shrink-0",
+                "fixed inset-y-0 left-0 z-[70] w-72 bg-white shadow-2xl md:shadow-none transform transition-all duration-500 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] md:relative md:w-64 flex-shrink-0",
                 sidebarOpen ? 'translate-x-0' : '-translate-x-full',
                 desktopSidebarCollapsed ? 'md:-ml-64 md:-translate-x-full' : 'md:translate-x-0 md:ml-0'
             )}>

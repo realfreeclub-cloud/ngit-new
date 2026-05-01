@@ -35,7 +35,7 @@ export default function DirectorMessageSection({ data, director }: { data?: any,
                                         src={director.image} 
                                         alt={director.name}
                                         fill
-                                        className="object-cover group-hover:scale-105 transition-transform duration-[2000ms]"
+                                        className="object-cover group-hover:scale-105 transition-transform [transition-duration:2000ms]"
                                     />
                                 ) : (
                                     <div className="w-full h-full bg-slate-900 flex items-center justify-center text-white/10 text-6xl font-black italic">
@@ -71,7 +71,7 @@ export default function DirectorMessageSection({ data, director }: { data?: any,
                                 {director.name}
                             </h2>
                             <div className="h-2 w-32 bg-gradient-to-r from-primary to-transparent rounded-full" />
-                            <h3 className="text-xl md:text-2xl text-primary font-black uppercase tracking-[0.2em] font-serif tracking-widest leading-none">
+                            <h3 className="text-xl md:text-2xl text-primary font-black uppercase font-serif tracking-widest leading-none">
                                 {director.position || "Head of Institution"}
                             </h3>
                         </div>

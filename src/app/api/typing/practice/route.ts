@@ -40,16 +40,17 @@ export async function GET(req: Request) {
     }
 
     if (type === 'TAXONOMY') {
-        const words = await WordSet.find().select('category value name language').lean();
-        const essays = await PracticeEssay.find().select('topic title language').lean();
-        return NextResponse.json({ words, essays });
+        const words = await WordSet.find().select('_id category value name language').lean();
+        const essays = await PracticeEssay.find().select('_id topic title language').lean();
+        const current = await CurrentPassage.find().select('_id title language createdAt').sort({ createdAt: -1 }).lean();
+        return NextResponse.json({ words, essays, current });
     }
 
     if (type === 'WORD') {
-        const set = await WordSet.findOne({ category: cat, value: val }).lean() as IWordSet | null;
+        const set = await WordSet.findById(val).lean() as IWordSet | null;
         if (!set) return NextResponse.json({ error: "Content not found" }, { status: 404 });
         return NextResponse.json({
-            title: `${cat} Practice: ${val}`,
+            title: set.name || `${set.category} Practice`,
             content: set.words.join(' '),
             duration: 5,
             backspaceMode: 'full',
@@ -58,7 +59,7 @@ export async function GET(req: Request) {
     }
 
     if (type === 'ESSAY') {
-        const essay = await PracticeEssay.findOne({ topic: cat, title: val }).lean() as IPracticeEssay | null;
+        const essay = await PracticeEssay.findById(val).lean() as IPracticeEssay | null;
         if (!essay) return NextResponse.json({ error: "Content not found" }, { status: 404 });
         return NextResponse.json({
             title: essay.title,
@@ -70,7 +71,7 @@ export async function GET(req: Request) {
     }
 
     if (type === 'CURRENT') {
-        const passage = await CurrentPassage.findOne().sort({ date: -1 }).lean() as ICurrentPassage | null;
+        const passage = await CurrentPassage.findById(val).lean() as ICurrentPassage | null;
         if (!passage) return NextResponse.json({ error: "Content not found" }, { status: 404 });
         return NextResponse.json({
             title: passage.title,

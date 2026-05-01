@@ -38,7 +38,7 @@ export default function DynamicRenderer({ sections, staticFallback, extraData, s
 
                 switch (section.section_type) {
                     case "HeroSection":
-                        return <HeroSection key={sectionKey} blocks={section.blocks} />;
+                        return <HeroSection key={sectionKey} blocks={extraData?.heroSlides || section.blocks} />;
                     case "AboutSection":
                         return <AboutSection key={sectionKey} data={section} blocks={section.blocks} />;
                     case "WhyChooseSection":

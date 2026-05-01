@@ -4,7 +4,18 @@ import connectDB from "@/lib/db";
 import CmsPage from "@/models/CmsPage";
 import CmsSection from "@/models/CmsSection";
 import CmsContentBlock from "@/models/CmsContentBlock";
+import HeroSlide from "@/models/HeroSlide";
 import { revalidatePath } from "next/cache";
+
+export async function getHeroSlides() {
+    try {
+        await connectDB();
+        const slides = await HeroSlide.find({ isActive: true }).sort({ order: 1 }).lean();
+        return { success: true, slides: JSON.parse(JSON.stringify(slides)) };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
 
 export async function getCmsPages() {
     try {

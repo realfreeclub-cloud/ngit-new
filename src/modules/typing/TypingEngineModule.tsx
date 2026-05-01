@@ -59,7 +59,7 @@ export const TypingEngineModule: React.FC<TypingEngineModuleProps> = ({
   } = useTypingStore();
 
   // Initialize Hooks
-  const { resetIdleTimer, isIdle } = useTimer();
+  const { resetIdleTimer } = useTimer();
   useTypingEngine();
 
   // Handle Native Fullscreen API on the container itself
@@ -132,13 +132,6 @@ export const TypingEngineModule: React.FC<TypingEngineModuleProps> = ({
             {isFullScreen && <TimerDisplay />}
             <Speedometer />
             <LiveDashboard />
-            {isIdle && (
-              <div className="bg-amber-100 border border-amber-200 p-4 rounded-2xl animate-bounce">
-                <p className="text-amber-800 text-xs font-black text-center uppercase tracking-widest">
-                  Timer Paused (Idle Detection)
-                </p>
-              </div>
-            )}
             {/* Submit Button */}
             {isActive && !isFinished && (
               <button

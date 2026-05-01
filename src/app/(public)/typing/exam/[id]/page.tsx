@@ -112,6 +112,7 @@ export default function TypingExamPage() {
 
   const handleNextStep = () => {
     setStep(2);
+    window.scrollTo(0, 0);
   };
 
   if (step === 1) {
@@ -306,7 +307,7 @@ export default function TypingExamPage() {
             <button 
               id="start-typing-btn"
               disabled={!isAgreed}
-              onClick={() => setStep(3)}
+              onClick={() => { setStep(3); window.scrollTo(0, 0); }}
               className="bg-[#cfcfcf] text-white font-black py-4 px-12 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed enabled:bg-slate-900 enabled:hover:bg-black transition-all shadow-xl shadow-slate-900/10"
             >
               Start Official Exam

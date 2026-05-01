@@ -106,9 +106,11 @@ export default function LoginForm({ title, description, role }: LoginFormProps) 
                 </Button>
             </form>
 
-            <p className="text-center mt-10 text-slate-500 text-sm">
-                Don't have an account? <Link href="/register" className="text-primary font-bold hover:underline">Register Today</Link>
-            </p>
+            {role !== "ADMIN" && (
+                <p className="text-center mt-10 text-slate-500 text-sm">
+                    Don't have an account? <Link href="/register" className="text-primary font-bold hover:underline">Register Today</Link>
+                </p>
+            )}
         </div>
     );
 }

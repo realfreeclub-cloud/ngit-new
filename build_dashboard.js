@@ -1,9 +1,11 @@
+const fs = require('fs');
 
+const code = `
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, BookOpen, Keyboard, Clock, Trash2, FileText, Newspaper, Search, BarChart3, Users, LayoutGrid, List, Table as TableIcon, Edit2, Play, Eye, CheckCircle2, X } from "lucide-react";
+import { Plus, BookOpen, Keyboard, Clock, Trash2, FileText, Newspaper, Search, BarChart3, Users, LayoutGrid, List, Table as TableIcon, Edit2, Play, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -68,7 +70,7 @@ export default function AdminTypingDashboard() {
 
   const handleDeletePassage = async (id: string) => {
     if (!confirm("Delete passage?")) return;
-    await fetch(`/api/admin/typing/passages/${id}`, { method: "DELETE" });
+    await fetch(\`/api/admin/typing/passages/\${id}\`, { method: "DELETE" });
     fetchData();
   };
 
@@ -79,7 +81,7 @@ export default function AdminTypingDashboard() {
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
     try {
-      await fetch(`/api/admin/typing/passages/${editingPassage._id}`, {
+      await fetch(\`/api/admin/typing/passages/\${editingPassage._id}\`, {
         method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
       });
       toast.success("Updated!");
@@ -126,7 +128,7 @@ export default function AdminTypingDashboard() {
 
   const handleDeleteExam = async (id: string) => {
     if (!confirm("Delete exam?")) return;
-    await fetch(`/api/admin/typing/exams/${id}`, { method: "DELETE" });
+    await fetch(\`/api/admin/typing/exams/\${id}\`, { method: "DELETE" });
     fetchData();
   };
 
@@ -145,7 +147,7 @@ export default function AdminTypingDashboard() {
 
   const handleDeleteBook = async (id: string) => {
     if (!confirm("Delete book?")) return;
-    await fetch(`/api/admin/typing/books/${id}`, { method: "DELETE" });
+    await fetch(\`/api/admin/typing/books/\${id}\`, { method: "DELETE" });
     fetchData();
   };
 
@@ -161,7 +163,7 @@ export default function AdminTypingDashboard() {
 
   const handleDeleteCategory = async (id: string) => {
     if (!confirm("Delete?")) return;
-    await fetch(`/api/admin/typing/categories/${id}`, { method: "DELETE" });
+    await fetch(\`/api/admin/typing/categories/\${id}\`, { method: "DELETE" });
     fetchData();
   };
 
@@ -180,7 +182,7 @@ export default function AdminTypingDashboard() {
   };
 
   const handleDeleteWordSet = async (id: string) => {
-    await fetch(`/api/admin/typing/words/${id}`, { method: "DELETE" });
+    await fetch(\`/api/admin/typing/words/\${id}\`, { method: "DELETE" });
     fetchData();
   };
 
@@ -190,7 +192,7 @@ export default function AdminTypingDashboard() {
     const content = fd.get('content') as string;
     const data = {
         topic: fd.get('topic'), title: fd.get('title'), content, language: fd.get('language'),
-        wordCount: content.split(/\s+/).length,
+        wordCount: content.split(/\\s+/).length,
     };
     await fetch("/api/admin/typing/essays", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
@@ -200,7 +202,7 @@ export default function AdminTypingDashboard() {
   };
 
   const handleDeleteEssay = async (id: string) => {
-    await fetch(`/api/admin/typing/essays/${id}`, { method: "DELETE" });
+    await fetch(\`/api/admin/typing/essays/\${id}\`, { method: "DELETE" });
     fetchData();
   };
 
@@ -215,12 +217,12 @@ export default function AdminTypingDashboard() {
   };
 
   const handleDeleteCurrent = async (id: string) => {
-    await fetch(`/api/admin/typing/current/${id}`, { method: "DELETE" });
+    await fetch(\`/api/admin/typing/current/\${id}\`, { method: "DELETE" });
     fetchData();
   };
 
   const fetchResults = async (examId: string) => {
-    const res = await fetch(`/api/admin/typing/results?examId=${examId}`);
+    const res = await fetch(\`/api/admin/typing/results?examId=\${examId}\`);
     setResults(await res.json());
   };
 
@@ -418,61 +420,6 @@ export default function AdminTypingDashboard() {
              </div>
           </TabsContent>
 
-          <TabsContent value="words" className="mt-0">
-             <div className="mb-4 flex justify-end">
-                <Button onClick={() => setShowWordSetModal(true)} className="bg-slate-900 hover:bg-black text-white h-9 px-4 rounded-lg text-sm font-semibold shadow-sm"><Plus className="w-4 h-4 mr-2"/> Add Word Set</Button>
-             </div>
-             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {wordSets.map(set => (
-                   <div key={set._id} className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col justify-between group">
-                      <div className="flex justify-between items-start mb-3">
-                         <span className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center font-bold text-xs uppercase">{set.value}</span>
-                         <button onClick={() => handleDeleteWordSet(set._id)} className="text-slate-300 group-hover:text-rose-500"><Trash2 className="w-4 h-4"/></button>
-                      </div>
-                      <h3 className="font-bold text-slate-900 text-lg">{set.name}</h3>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{set.category} • {set.language} • {set.words?.length || 0} Words</p>
-                   </div>
-                ))}
-             </div>
-          </TabsContent>
-
-          <TabsContent value="essays" className="mt-0">
-             <div className="mb-4 flex justify-end">
-                <Button onClick={() => setShowEssayModal(true)} className="bg-slate-900 hover:bg-black text-white h-9 px-4 rounded-lg text-sm font-semibold shadow-sm"><Plus className="w-4 h-4 mr-2"/> Add Essay</Button>
-             </div>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {essays.map(essay => (
-                   <div key={essay._id} className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm group">
-                      <div className="flex justify-between items-start mb-2">
-                         <h3 className="font-bold text-slate-900 text-lg leading-tight">{essay.title}</h3>
-                         <button onClick={() => handleDeleteEssay(essay._id)} className="text-slate-300 group-hover:text-rose-500"><Trash2 className="w-4 h-4"/></button>
-                      </div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{essay.topic} • {essay.language} • {essay.wordCount} Words</p>
-                   </div>
-                ))}
-             </div>
-          </TabsContent>
-
-          <TabsContent value="current" className="mt-0">
-             <div className="mb-4 flex justify-end">
-                <Button onClick={() => setShowCurrentModal(true)} className="bg-slate-900 hover:bg-black text-white h-9 px-4 rounded-lg text-sm font-semibold shadow-sm"><Plus className="w-4 h-4 mr-2"/> Post News</Button>
-             </div>
-             <div className="space-y-4">
-                {currentPassages.map(cp => (
-                   <div key={cp._id} className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm group">
-                      <div className="flex justify-between items-start mb-3">
-                         <div>
-                            <h3 className="font-bold text-slate-900 text-lg leading-tight">{cp.title}</h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{new Date(cp.createdAt).toLocaleDateString()} • {cp.language}</p>
-                         </div>
-                         <button onClick={() => handleDeleteCurrent(cp._id)} className="text-slate-300 group-hover:text-rose-500"><Trash2 className="w-4 h-4"/></button>
-                      </div>
-                      <p className="text-sm text-slate-600 line-clamp-2">{cp.content}</p>
-                   </div>
-                ))}
-             </div>
-          </TabsContent>
-
         </Tabs>
       </div>
 
@@ -587,209 +534,10 @@ export default function AdminTypingDashboard() {
           </div>
         </div>
       )}
-      {/* PASSAGE MODAL */}
-      {showPassageModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-             <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
-                <h2 className="text-xl font-bold text-slate-900">{editingPassage ? "Edit Passage" : "Add Passage"}</h2>
-                <button onClick={() => setShowPassageModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
-             </div>
-             <form onSubmit={editingPassage ? handleUpdatePassage : handleAddPassage} className="p-6 space-y-4">
-                <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase">Title</label>
-                   <input name="title" defaultValue={editingPassage?.title} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Language</label>
-                     <select name="language" defaultValue={editingPassage?.language || "English"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                        <option value="English">English</option><option value="Hindi">Hindi</option>
-                     </select>
-                   </div>
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Difficulty</label>
-                     <select name="difficulty" defaultValue={editingPassage?.difficulty || "Medium"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                        <option value="Easy">Easy</option><option value="Medium">Medium</option><option value="Hard">Hard</option>
-                     </select>
-                   </div>
-                </div>
-                <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase">Passage Content</label>
-                   <textarea name="content" defaultValue={editingPassage?.content} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none h-40 resize-none" />
-                </div>
-                <div className="pt-4 flex justify-end gap-3">
-                   <Button type="button" variant="outline" onClick={() => setShowPassageModal(false)}>Cancel</Button>
-                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Save</Button>
-                </div>
-             </form>
-          </div>
-        </div>
-      )}
-
-      {/* BOOK MODAL */}
-      {showBookModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-slate-900">Create Book</h2>
-                <button onClick={() => setShowBookModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
-             </div>
-             <form onSubmit={handleAddBook} className="p-6 space-y-4">
-                <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase">Book Name</label>
-                   <input name="name" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                </div>
-                <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase">Description (Optional)</label>
-                   <textarea name="description" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none h-24 resize-none" />
-                </div>
-                <div className="pt-4 flex justify-end gap-3">
-                   <Button type="button" variant="outline" onClick={() => setShowBookModal(false)}>Cancel</Button>
-                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Create Book</Button>
-                </div>
-             </form>
-          </div>
-        </div>
-      )}
-
-      {/* CATEGORY MODAL */}
-      {showCategoryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-slate-900">Add Category</h2>
-                <button onClick={() => setShowCategoryModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
-             </div>
-             <form onSubmit={handleAddCategory} className="p-6 space-y-4">
-                <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase">Category Name</label>
-                   <input name="name" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                </div>
-                <div className="pt-4 flex justify-end gap-3">
-                   <Button type="button" variant="outline" onClick={() => setShowCategoryModal(false)}>Cancel</Button>
-                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Create Category</Button>
-                </div>
-             </form>
-          </div>
-        </div>
-      )}
-
-      {/* WORD SET MODAL */}
-      {showWordSetModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-             <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
-                <h2 className="text-xl font-bold text-slate-900">Add Word Set</h2>
-                <button onClick={() => setShowWordSetModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
-             </div>
-             <form onSubmit={handleAddWordSet} className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Set Name</label>
-                     <input name="name" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                   </div>
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Category</label>
-                     <select name="category" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                        <option value="A-Z">A to Z</option>
-                        <option value="Length">Word Length</option>
-                     </select>
-                   </div>
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Value</label>
-                     <input name="value" required placeholder="e.g. A or 5" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                   </div>
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Language</label>
-                     <select name="language" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                        <option value="English">English</option><option value="Hindi">Hindi</option>
-                     </select>
-                   </div>
-                </div>
-                <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase">Words (Comma separated)</label>
-                   <textarea name="words" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none h-32 resize-none" />
-                </div>
-                <div className="pt-4 flex justify-end gap-3">
-                   <Button type="button" variant="outline" onClick={() => setShowWordSetModal(false)}>Cancel</Button>
-                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Save Set</Button>
-                </div>
-             </form>
-          </div>
-        </div>
-      )}
-
-      {/* ESSAY MODAL */}
-      {showEssayModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-             <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
-                <h2 className="text-xl font-bold text-slate-900">Add Essay</h2>
-                <button onClick={() => setShowEssayModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
-             </div>
-             <form onSubmit={handleAddEssay} className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Topic</label>
-                     <input name="topic" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                   </div>
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Title</label>
-                     <input name="title" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                   </div>
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Language</label>
-                     <select name="language" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                        <option value="English">English</option><option value="Hindi">Hindi</option>
-                     </select>
-                   </div>
-                </div>
-                <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase">Content</label>
-                   <textarea name="content" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none h-48 resize-none" />
-                </div>
-                <div className="pt-4 flex justify-end gap-3">
-                   <Button type="button" variant="outline" onClick={() => setShowEssayModal(false)}>Cancel</Button>
-                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Save Essay</Button>
-                </div>
-             </form>
-          </div>
-        </div>
-      )}
-
-      {/* CURRENT AFFAIRS MODAL */}
-      {showCurrentModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-             <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
-                <h2 className="text-xl font-bold text-slate-900">Post Current Affairs</h2>
-                <button onClick={() => setShowCurrentModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
-             </div>
-             <form onSubmit={handleAddCurrent} className="p-6 space-y-4">
-                <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase">Headline</label>
-                   <input name="title" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                </div>
-                <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase">Language</label>
-                   <select name="language" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                      <option value="English">English</option><option value="Hindi">Hindi</option>
-                   </select>
-                </div>
-                <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase">News Content</label>
-                   <textarea name="content" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none h-48 resize-none" />
-                </div>
-                <div className="pt-4 flex justify-end gap-3">
-                   <Button type="button" variant="outline" onClick={() => setShowCurrentModal(false)}>Cancel</Button>
-                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Post News</Button>
-                </div>
-             </form>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
+`;
+
+fs.writeFileSync('e:\\Ngit\\src\\components\\admin\\typing\\AdminTypingDashboard.tsx', code);
+console.log('Done!');

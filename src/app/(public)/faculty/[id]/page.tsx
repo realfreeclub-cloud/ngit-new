@@ -61,7 +61,7 @@ export default async function FacultyDetailPage({ params }: { params: Promise<{ 
                                         alt={faculty.name} 
                                         fill
                                         priority
-                                        className="object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                                        className="object-cover group-hover:scale-105 transition-transform [transition-duration:2s]"
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-slate-200">

@@ -24,6 +24,10 @@ interface ClassicTypingEngineModuleProps {
   };
   onComplete: (results: any) => void;
   userName?: string;
+  /** When true (default), shows the Duration & Exercise switcher bar.
+   *  Set to false for practice sessions (Word/Special/Current) where
+   *  the passage is already pre-selected from the selection screen. */
+  showExerciseSwitcher?: boolean;
 }
 
 export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps> = ({ 
@@ -31,7 +35,8 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   passage, 
   config,
   onComplete,
-  userName = "STUDENT"
+  userName = "STUDENT",
+  showExerciseSwitcher = true
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -58,10 +63,39 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     toggleFullScreen
   } = useTypingStore();
 
-  const { resetIdleTimer } = useTimer(!!exam);
+  const { resetIdleTimer } = useTimer();
   useTypingEngine();
 
   const passageContainerRef = useRef<HTMLDivElement>(null);
+
+  const [passagesList, setPassagesList] = useState<any[]>([]);
+  const [currentPassageIndex, setCurrentPassageIndex] = useState(0);
+  const [internalPassage, setInternalPassage] = useState(passage);
+  const [internalDuration, setInternalDuration] = useState(config.duration);
+
+  // Load available passages – only when the switcher is shown (official exam mode)
+  useEffect(() => {
+    if (!showExerciseSwitcher) return;
+    fetch('/api/admin/typing/passages')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+           const sorted = data.sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+           setPassagesList(sorted);
+           const foundIdx = sorted.findIndex(p => p.content === passage);
+           if (foundIdx !== -1) {
+             setCurrentPassageIndex(foundIdx);
+           }
+        }
+      })
+      .catch(e => console.error("Failed to load passages", e));
+  }, [showExerciseSwitcher]);
+
+  // Sync internal state with props if they change
+  useEffect(() => {
+    setInternalPassage(passage);
+    setInternalDuration(config.duration);
+  }, [passage, config.duration]);
   
   // Handle Fullscreen natively
   useEffect(() => {
@@ -123,9 +157,9 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   // Initialize
   useEffect(() => {
     resetTest();
-    setPassage(passage);
+    setPassage(internalPassage);
     updateSettings({
-      duration: config.duration,
+      duration: internalDuration,
       language: config.language || 'English',
       layout: config.layout || 'English',
       backspaceMode: config.backspaceMode || 'full',
@@ -133,9 +167,11 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
       autoScroll: config.autoScroll !== undefined ? config.autoScroll : true,
       showScrollbar: config.showScrollbar !== undefined ? config.showScrollbar : true,
     });
-    // Start the timer immediately when the page opens
+    // Start the timer immediately when the page opens or settings change
     startTest();
-  }, [passage, config]);
+    // Scroll window to top so the exam starts from the top area
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [internalPassage, internalDuration, config]);
 
   // Handle Completion
   useEffect(() => {
@@ -150,6 +186,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
         backspaces: backspaceCount,
         submittedText: typedText,
         timeTaken: (settings.duration * 60) - timeLeft,
+        passageId: passagesList[currentPassageIndex]?._id
       });
     }
   }, [isFinished]);
@@ -209,8 +246,9 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   };
 
   const [fontSize, setFontSize] = useState(16);
+  const [bgColor, setBgColor] = useState('#a1c984');
 
-  const passageWords = passage.split(' ');
+  const passageWords = internalPassage.split(' ');
 
   return (
     <div ref={containerRef} className={`flex flex-col bg-[#f0f0f0] font-sans ${isFullScreen ? 'h-screen' : 'min-h-screen'}`}>
@@ -238,6 +276,20 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
             <span className="text-xs font-bold w-6 text-center text-gray-800">{fontSize}px</span>
             <button onClick={() => setFontSize(f => Math.min(32, f + 2))} className="w-5 h-5 flex items-center justify-center bg-white border border-gray-300 hover:bg-gray-100 rounded text-xs font-bold text-gray-700 shadow-sm">+</button>
           </div>
+          <div className="hidden sm:flex items-center gap-2 border border-gray-300 rounded px-2 py-1 bg-gray-50">
+            <span className="text-xs font-bold text-gray-600 mr-1">Bg Color:</span>
+            <div className="flex gap-1">
+              {['#a1c984', '#e2e8f0', '#ffffff', '#fef3c7', '#dbeafe', '#ffebcd'].map(color => (
+                <button 
+                  key={color}
+                  onClick={() => setBgColor(color)}
+                  className={`w-5 h-5 rounded border shadow-sm transition-transform hover:scale-110 ${bgColor === color ? 'ring-2 ring-blue-500 border-transparent' : 'border-gray-300'}`}
+                  style={{ backgroundColor: color }}
+                  title="Change typing area color"
+                />
+              ))}
+            </div>
+          </div>
         </div>
         
         <div className="flex items-center gap-6">
@@ -259,12 +311,78 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
         <span>Language: {settings.language} - Mangal Font</span>
       </div>
 
+      {/* Exercise and Duration Controls – only in official exam mode */}
+      {showExerciseSwitcher && (
+        <div className="bg-[#e0e0e0] border-b border-gray-400 p-2 flex flex-wrap items-center gap-6 text-sm font-bold text-gray-800 shadow-sm relative z-10 px-6">
+          <div className="flex items-center gap-2">
+              <span className="text-gray-700">Duration:</span>
+              <select 
+                value={internalDuration} 
+                onChange={(e) => setInternalDuration(Number(e.target.value))}
+                className="border border-gray-400 px-2 py-1 bg-white outline-none min-w-[120px] focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                disabled={isActive && !isFinished && typedText.length > 0}
+              >
+                {[1, 2, 3, 4, 5, 10, 15, 20].map(min => (
+                  <option key={min} value={min}>{min} Minutes</option>
+                ))}
+              </select>
+          </div>
+          <div className="flex items-center gap-2 flex-1 max-w-[400px]">
+              <span className="text-gray-700">Exercise:</span>
+              <div className="flex items-center gap-1 w-full">
+                 <button 
+                    onClick={() => {
+                       if (currentPassageIndex > 0) {
+                          const newIdx = currentPassageIndex - 1;
+                          setCurrentPassageIndex(newIdx);
+                          setInternalPassage(passagesList[newIdx].content);
+                       }
+                    }}
+                    disabled={currentPassageIndex <= 0 || (isActive && !isFinished && typedText.length > 0)}
+                    className="border border-gray-400 bg-gray-100 hover:bg-gray-200 px-3 py-1 disabled:opacity-50 transition-colors cursor-pointer"
+                 >&lt;&lt;</button>
+                 <select 
+                    value={currentPassageIndex}
+                    onChange={(e) => {
+                       const newIdx = Number(e.target.value);
+                       setCurrentPassageIndex(newIdx);
+                       setInternalPassage(passagesList[newIdx].content);
+                    }}
+                    disabled={isActive && !isFinished && typedText.length > 0}
+                    className="border border-gray-400 px-2 py-1 bg-white outline-none flex-1 focus:ring-2 focus:ring-blue-500 min-w-0 truncate cursor-pointer"
+                 >
+                    {passagesList.length > 0 ? (
+                      passagesList.map((p, i) => (
+                        <option key={p._id || i} value={i}>
+                          Exercise: {i + 1}/{passagesList.length} - {p.title?.substring(0, 30)}
+                        </option>
+                      ))
+                    ) : (
+                      <option value={0}>Loading Exercises...</option>
+                    )}
+                 </select>
+                 <button 
+                    onClick={() => {
+                       if (currentPassageIndex < passagesList.length - 1) {
+                          const newIdx = currentPassageIndex + 1;
+                          setCurrentPassageIndex(newIdx);
+                          setInternalPassage(passagesList[newIdx].content);
+                       }
+                    }}
+                    disabled={currentPassageIndex >= passagesList.length - 1 || (isActive && !isFinished && typedText.length > 0)}
+                    className="border border-gray-400 bg-gray-100 hover:bg-gray-200 px-3 py-1 disabled:opacity-50 transition-colors cursor-pointer"
+                 >&gt;&gt;</button>
+              </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Typing Area */}
       <div className="flex-1 p-4 md:p-6 flex flex-col gap-4 max-w-[1400px] mx-auto w-full min-h-0">
         {/* Passage Box */}
         <div 
             ref={passageContainerRef}
-            className="flex-1 bg-white border border-gray-400 p-4 overflow-y-auto text-gray-800 leading-relaxed break-words"
+            className="flex-1 relative bg-white border border-gray-400 p-4 overflow-y-auto text-gray-800 leading-relaxed break-words scroll-smooth"
             style={{ fontSize: `${fontSize}px`, minHeight: '200px' }}
             onCopy={(e) => e.preventDefault()}
         >
@@ -333,7 +451,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
               );
             })
           ) : (
-            passage
+            internalPassage
           )}
         </div>
 
@@ -347,8 +465,8 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
             disabled={isFinished}
             spellCheck={false}
             autoComplete="off"
-            className="flex-1 bg-[#cce8b5] border border-gray-400 p-4 overflow-y-auto outline-none focus:border-blue-500 text-gray-900 leading-relaxed resize-none"
-            style={{ fontSize: `${fontSize}px`, minHeight: '200px' }}
+            className="flex-1 border-2 border-gray-400 p-4 overflow-y-auto outline-none focus:border-blue-600 text-black font-semibold leading-relaxed resize-none shadow-inner transition-colors duration-300"
+            style={{ fontSize: `${fontSize + 2}px`, minHeight: '200px', backgroundColor: bgColor }}
         />
       </div>
 
@@ -356,10 +474,10 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
       <div className="bg-[#f0f0f0] p-4 border-t border-gray-300 flex justify-center items-center relative h-16">
         <div className="flex items-center gap-4 max-w-[1400px] mx-auto w-full justify-center relative">
           <button 
-            onClick={() => router.push('/typing')}
+            onClick={() => router.back()}
             className="absolute left-0 bg-[#dc3545] text-white px-8 py-2 rounded text-sm font-bold hover:bg-[#c82333] transition-colors"
           >
-            Cancel
+            Back
           </button>
           
           <button 

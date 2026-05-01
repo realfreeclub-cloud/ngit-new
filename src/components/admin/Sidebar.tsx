@@ -77,6 +77,7 @@ const menuGroups = [
                 icon: Users,
                 subItems: [
                     { label: "Registrations", href: "/admin/students" },
+                    { label: "Website Users", href: "/admin/students/website-users" },
                     { label: "Fee Management", href: "/admin/students/fees" },
                     { label: "Enrollments", href: "/admin/students/enrollments" }
                 ]
@@ -88,7 +89,19 @@ const menuGroups = [
     {
         groupLabel: "Website Builder (CMS)",
         items: [
-            { label: "Site Architecture", href: "/admin/content", icon: Layout },
+            {
+                label: "Website CMS",
+                href: "/admin/content",
+                icon: Layout,
+                subItems: [
+                    { label: "Website Overview", href: "/admin/content" },
+                    { label: "Homepage Builder", href: "/admin/content/homepage" },
+                    { label: "All Pages", href: "/admin/content/pages" },
+                    { label: "About Us", href: "/admin/content/about" },
+                    { label: "SEO Settings", href: "/admin/content/seo" },
+                    { label: "Forms & Leads", href: "/admin/content/forms" },
+                ]
+            },
             { label: "Blog & Articles", href: "/admin/blogs", icon: FileText },
             { label: "Media Gallery", href: "/admin/gallery", icon: ImageIcon },
             { label: "Notices & Updates", href: "/admin/notices", icon: Bell },

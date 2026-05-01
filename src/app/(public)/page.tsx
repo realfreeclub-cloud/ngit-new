@@ -18,7 +18,7 @@ import DynamicRenderer from "@/components/public/DynamicRenderer";
 import CertificateVerificationSection from "@/components/public/CertificateVerificationSection";
 
 import { getCMSContent } from "@/services/CMSService";
-import { getDynamicPageData } from "@/app/actions/cms";
+import { getDynamicPageData, getHeroSlides } from "@/app/actions/cms";
 import { getFaculty } from "@/app/actions/faculty";
 import { getPublicCourses } from "@/app/actions/courses";
 import { getEvents } from "@/app/actions/events";
@@ -42,8 +42,8 @@ export default async function PublicHomePage() {
     } catch (e) {
         console.warn("Home page session fetch suppressed:", e);
     }
-    const [slides, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, noticesRes, dynamicData, resultsRes, examsRes, blogRes, feedbackRes] = await Promise.all([
-        getCMSContent("HOME_SLIDER"),
+    const [slidesRes, stats, about, facultyRes, coursesRes, eventsRes, galleryRes, noticesRes, dynamicData, resultsRes, examsRes, blogRes, feedbackRes] = await Promise.all([
+        getHeroSlides(),
         getCMSContent("HOME_STATS"),
         getCMSContent("HOME_ABOUT"),
         getFaculty(),
@@ -58,6 +58,7 @@ export default async function PublicHomePage() {
         getPublicFeedback({ limit: 6 }),
     ]);
 
+    const heroSlides = slidesRes.success ? slidesRes.slides : [];
     const facultyMembers = (facultyRes.success ? facultyRes.faculty : []).slice(0, 6);
     const publicCourses = (coursesRes.success ? coursesRes.courses : []).slice(0, 6);
     const publicEvents = (eventsRes.success ? eventsRes.events : []).slice(0, 6);
@@ -93,13 +94,14 @@ export default async function PublicHomePage() {
                     blogs: publicBlogs,
                     feedback: publicFeedback,
                     notices: noticesRes.success ? noticesRes.notices : [],
+                    heroSlides: heroSlides,
                     session: session
                 }}
                 session={session}
                 staticFallback={
                     <>
                         {/* Hero Section */}
-                        <HeroSection blocks={slides || []} />
+                        <HeroSection blocks={heroSlides} />
 
                         {/* Notification Scroller */}
                         {scrollingNotices.length > 0 && (

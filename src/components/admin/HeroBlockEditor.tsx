@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { 
@@ -8,7 +8,7 @@ import {
     updateCmsContentBlock, deleteCmsContentBlock 
 } from "@/app/actions/cms";
 import { 
-    Plus, LayoutTemplate, Eye, List, Sparkles, UserPlus, Download
+    Plus, LayoutTemplate, Eye, List, Sparkles, UserPlus, Download, Loader2
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -34,8 +34,23 @@ interface HeroBlockEditorProps {
     initialBlocks: any[];
 }
 
-export function HeroBlockEditor({ sectionId, sectionType, initialBlocks }: HeroBlockEditorProps) {
-    const [blocks, setBlocks] = useState(initialBlocks);
+export function HeroBlockEditor({ sectionId, sectionType }: HeroBlockEditorProps) {
+    const [blocks, setBlocks] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Self-fetch blocks whenever sectionId changes — fixes stale data bug
+    useEffect(() => {
+        if (!sectionId) return;
+        setLoading(true);
+        setBlocks([]); // clear immediately so old data never shows
+        fetch(`/api/admin/cms/blocks/${sectionId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) setBlocks(data.blocks);
+            })
+            .catch(() => {})
+            .finally(() => setLoading(false));
+    }, [sectionId]);
 
     const handleCreateBlock = async () => {
         let title = "New Interaction Block";
@@ -131,22 +146,31 @@ export function HeroBlockEditor({ sectionId, sectionType, initialBlocks }: HeroB
                 >
                     <SortableContext items={blocks.map(b => b._id)} strategy={verticalListSortingStrategy}>
                         <div className="pb-32">
-                            {blocks.map((block, index) => (
-                                <SortableBlockItem 
-                                    key={block._id}
-                                    block={block}
-                                    index={index}
-                                    sectionType={sectionType}
-                                    onUpdate={handleUpdateBlockFields}
-                                    onSave={handleSaveBlock}
-                                    onDelete={handleDeleteBlock}
-                                />
-                            ))}
-                            {blocks.length === 0 && (
-                                <div className="py-24 text-center bg-white border-4 border-dashed border-slate-100 rounded-[3rem]">
-                                    <LayoutTemplate className="w-16 h-16 text-slate-100 mx-auto mb-6" />
-                                    <p className="text-slate-300 font-black uppercase tracking-widest text-sm">Void Matrix: Add Data to Begin</p>
+                            {loading ? (
+                                <div className="py-24 flex flex-col items-center justify-center bg-white border border-slate-100 rounded-[3rem]">
+                                    <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-4" />
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Synchronizing Architecture...</p>
                                 </div>
+                            ) : (
+                                <>
+                                    {blocks.map((block, index) => (
+                                        <SortableBlockItem 
+                                            key={block._id}
+                                            block={block}
+                                            index={index}
+                                            sectionType={sectionType}
+                                            onUpdate={handleUpdateBlockFields}
+                                            onSave={handleSaveBlock}
+                                            onDelete={handleDeleteBlock}
+                                        />
+                                    ))}
+                                    {blocks.length === 0 && (
+                                        <div className="py-24 text-center bg-white border-4 border-dashed border-slate-100 rounded-[3rem]">
+                                            <LayoutTemplate className="w-16 h-16 text-slate-100 mx-auto mb-6" />
+                                            <p className="text-slate-300 font-black uppercase tracking-widest text-sm">Void Matrix: Add Data to Begin</p>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     </SortableContext>

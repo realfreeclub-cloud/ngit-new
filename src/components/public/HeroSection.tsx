@@ -60,10 +60,11 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                 className="w-full"
             >
                 {sliderBlocks.map((block, idx) => {
-                    const primaryText = block.button_text || block.buttons?.[0]?.label;
-                    const primaryLink = block.button_link || block.buttons?.[0]?.link;
-                    const secondaryText = block.secondary_button_text || block.buttons?.[1]?.label;
-                    const secondaryLink = block.secondary_button_link || block.buttons?.[1]?.link;
+                    const primaryText = block.cta1Text || block.button_text || block.buttons?.[0]?.label;
+                    const primaryLink = block.cta1Link || block.button_link || block.buttons?.[0]?.link;
+                    const secondaryText = block.cta2Text || block.secondary_button_text || block.buttons?.[1]?.label;
+                    const secondaryLink = block.cta2Link || block.secondary_button_link || block.buttons?.[1]?.link;
+                    const image = block.imageUrl || block.image;
                     
                     const layout = block.layout || "full-background";
                     const imageSize = block.image_size || "full";
@@ -83,15 +84,19 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
 
                     return (
                         <SwiperSlide key={block._id || idx}>
-                            <div className={cn("relative flex items-center transition-all pt-20 pb-16", heightClass)}>
+                            <div className={cn(
+                                "relative flex items-center transition-all pt-20 pb-16", 
+                                heightClass,
+                                !image && (block.bgColor?.includes(' ') ? `bg-gradient-to-r ${block.bgColor}` : block.bgColor || "bg-slate-950")
+                            )}>
                                 {/* Background Image */}
                                 <div className="absolute inset-0 z-0">
                                     <Image
-                                        src={block.image || defaultBlock.image}
+                                        src={image || defaultBlock.image}
                                         alt={block.title || "Hero Image"}
                                         fill
                                         priority={idx === 0}
-                                        className={cn("transition-transform duration-[10s] ease-out", objectFit, imagePos)}
+                                        className={cn("transition-transform [transition-duration:10s] ease-out", objectFit, imagePos)}
                                         style={{ 
                                             objectFit: objectFit as any, 
                                             objectPosition: imagePos,
@@ -99,10 +104,10 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                                         }}
                                     />
                                     {/* Overlays */}
-                                    {!isTextEmpty && layout === 'full-background' && (
+                                    {!isTextEmpty && layout === 'full-background' && image && (
                                         <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px]" />
                                     )}
-                                    {layout === 'full-background' && (
+                                    {!isTextEmpty && layout === 'full-background' && (
                                         <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-950/40 to-transparent" />
                                     )}
                                 </div>
@@ -145,9 +150,10 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                                                 )}
 
                                                 {block.description && (
-                                                    <p className={cn("text-lg md:text-xl text-slate-400 font-medium leading-relaxed max-w-2xl", layout === "centered" ? "mx-auto" : "lg:mx-0")}>
-                                                        {block.description}
-                                                    </p>
+                                                    <div 
+                                                        className={cn("text-lg md:text-xl text-slate-400 font-medium leading-relaxed max-w-2xl prose prose-invert prose-p:leading-relaxed", layout === "centered" ? "mx-auto" : "lg:mx-0")}
+                                                        dangerouslySetInnerHTML={{ __html: block.description }}
+                                                    />
                                                 )}
 
                                                 {(primaryText || secondaryText) && (
@@ -184,7 +190,7 @@ export default function HeroSection({ blocks }: { blocks?: any[] }) {
                                                     whileInView={{ opacity: 1, scale: 1 }}
                                                     className="relative aspect-square rounded-[4rem] overflow-hidden border border-white/10 shadow-2xl group"
                                                 >
-                                                    <Image src={block.image || defaultBlock.image} alt="Visual" fill className="object-cover transition-transform duration-[10s] group-hover:scale-110" />
+                                                    <Image src={block.image || defaultBlock.image} alt="Visual" fill className="object-cover transition-transform [transition-duration:10s] group-hover:scale-110" />
                                                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent" />
                                                 </motion.div>
                                             </div>

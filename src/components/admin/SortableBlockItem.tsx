@@ -10,14 +10,18 @@ import { toast } from "sonner";
 import { uploadImageAction } from "@/app/actions/upload";
 import { 
     Trash2, Save, Image as ImageIcon,
-    Upload, Clock, Move, ChevronDown, ChevronUp
+    Upload, Clock, Move, ChevronDown, ChevronUp,
+    Library
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { MediaLibraryModal } from "./cms/MediaLibraryModal";
+import { RichTextEditor } from "./cms/RichTextEditor";
 
 export function SortableBlockItem({ block, index, onUpdate, onSave, onDelete, sectionType }: any) {
+    const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
     const {
         attributes,
         listeners,
@@ -115,14 +119,36 @@ export function SortableBlockItem({ block, index, onUpdate, onSave, onDelete, se
                                         <span className="text-[10px] font-black uppercase tracking-tighter">No Media Source</span>
                                     </div>
                                 )}
-                                <label className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm opacity-0 group-hover/img:opacity-100 transition-all flex items-center justify-center cursor-pointer">
-                                    <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={uploading} />
-                                    <div className="bg-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 text-slate-900 shadow-xl hover:scale-105 transition-transform">
-                                        {uploading ? <Clock className="w-4 h-4 animate-spin text-blue-500" /> : <Upload className="w-4 h-4 text-blue-500" />}
-                                        {uploading ? "Uploading..." : "Replace Media"}
+                                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm opacity-0 group-hover/img:opacity-100 transition-all flex flex-col items-center justify-center gap-3 cursor-pointer">
+                                    <div className="flex gap-2">
+                                        <label className="cursor-pointer">
+                                            <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={uploading} />
+                                            <div className="bg-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-slate-900 shadow-xl hover:scale-105 transition-transform">
+                                                {uploading ? <Clock className="w-4 h-4 animate-spin text-blue-500" /> : <Upload className="w-4 h-4 text-blue-500" />}
+                                                {uploading ? "Ingesting..." : "Upload"}
+                                            </div>
+                                        </label>
+                                        <button 
+                                            onClick={() => setIsMediaModalOpen(true)}
+                                            className="bg-violet-600 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-white shadow-xl hover:scale-105 transition-transform"
+                                        >
+                                            <Library className="w-4 h-4" />
+                                            Library
+                                        </button>
                                     </div>
-                                </label>
+                                    <span className="text-[9px] text-white/60 font-bold uppercase tracking-widest">Replace Block Media</span>
+                                </div>
                             </div>
+
+                            <MediaLibraryModal 
+                                isOpen={isMediaModalOpen}
+                                onClose={() => setIsMediaModalOpen(false)}
+                                onSelect={(url) => {
+                                    onUpdate(block._id, "image", url);
+                                    setIsMediaModalOpen(false);
+                                    toast.success("Asset linked from library");
+                                }}
+                            />
                             
                             {isHero && (
                                 <div className="grid grid-cols-2 gap-6 p-5 bg-slate-50 rounded-[2rem]">
@@ -234,11 +260,9 @@ export function SortableBlockItem({ block, index, onUpdate, onSave, onDelete, se
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
                                         {sectionType === "WhyChooseSection" ? "Reason Description" : "Narrative / Description"}
                                     </label>
-                                    <Textarea 
-                                        placeholder="Enter full descriptive text for this section..."
-                                        className="rounded-xl bg-slate-50 border-none min-h-[120px] py-4 leading-relaxed font-medium focus-visible:ring-1 focus-visible:ring-blue-500 resize-none" 
-                                        value={block.description || ""} 
-                                        onChange={(e) => onUpdate(block._id, "description", e.target.value)} 
+                                    <RichTextEditor 
+                                        content={block.description || ""} 
+                                        onChange={(html) => onUpdate(block._id, "description", html)} 
                                     />
                                 </div>
                             )}

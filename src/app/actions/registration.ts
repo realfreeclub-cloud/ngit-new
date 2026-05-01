@@ -128,6 +128,7 @@ const SimpleRegistrationSchema = z.object({
     name: z.string().min(2),
     email: z.string().email(),
     password: z.string().min(8),
+    mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
 });
 
 export const registerUser = createSafeAction(
@@ -147,10 +148,24 @@ export const registerUser = createSafeAction(
             name: formData.name,
             email: formData.email,
             password: hashedPassword,
+            mobile: formData.mobile,
             role: UserRole.STUDENT,
             isActive: true, 
         });
 
         return { success: true, userId: user._id.toString() };
+    }
+);
+
+export const getWebsiteUsers = createSafeAction(
+    { roles: [UserRole.ADMIN], requireAuth: true },
+    async () => {
+        await connectDB();
+        const users = await User.find({ role: UserRole.STUDENT })
+            .select("name email mobile isActive createdAt")
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return JSON.parse(JSON.stringify(users));
     }
 );

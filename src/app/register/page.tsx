@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import Link from "next/link";
 import { registerUser } from "@/app/actions/registration";
-import { GraduationCap, ArrowRight, Eye, EyeOff, Loader2, User, Mail, Lock } from "lucide-react";
+import { GraduationCap, ArrowRight, Eye, EyeOff, Loader2, User, Mail, Lock, Phone } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
@@ -18,6 +18,7 @@ export default function RegisterPage() {
         name: "",
         email: "",
         password: "",
+        mobile: "",
     });
 
     const set = (field: string, value: string) =>
@@ -31,12 +32,18 @@ export default function RegisterPage() {
             return;
         }
 
+        if (form.mobile.length < 10) {
+            toast.error("Please enter a valid mobile number");
+            return;
+        }
+
         setLoading(true);
         try {
             const result = await registerUser({
                 name: form.name,
                 email: form.email,
                 password: form.password,
+                mobile: form.mobile,
             });
             if (result.success) {
                 toast.success("Account created successfully!");
@@ -109,6 +116,21 @@ export default function RegisterPage() {
                                         placeholder="you@example.com"
                                         value={form.email}
                                         onChange={(e) => set("email", e.target.value)}
+                                        required
+                                        className="w-full h-16 bg-white/5 border border-white/5 text-white placeholder:text-slate-600 rounded-3xl pl-14 pr-6 text-sm font-black focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all duration-300 group-hover:bg-white/[0.08]"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">Mobile Number</label>
+                                <div className="relative group">
+                                    <Phone className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-hover:text-primary transition-colors" />
+                                    <input
+                                        type="tel"
+                                        placeholder="Enter your mobile number"
+                                        value={form.mobile}
+                                        onChange={(e) => set("mobile", e.target.value)}
                                         required
                                         className="w-full h-16 bg-white/5 border border-white/5 text-white placeholder:text-slate-600 rounded-3xl pl-14 pr-6 text-sm font-black focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all duration-300 group-hover:bg-white/[0.08]"
                                     />

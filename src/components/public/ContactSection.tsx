@@ -6,6 +6,7 @@ import { Phone, Mail, MapPin, Send, Zap, Clock, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { submitLeadAction } from "@/app/actions/cms-leads";
 
 export default function ContactSection({ data, blocks }: { data?: any, blocks?: any[] }) {
     const sectionData = {
@@ -47,9 +48,19 @@ export default function ContactSection({ data, blocks }: { data?: any, blocks?: 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        toast.success("Message sent successfully! We'll get back to you soon.");
-        setFormData({ name: "", email: "", phone: "", message: "" });
+        
+        const res = await submitLeadAction({
+            ...formData,
+            source: "Institutional Website Contact Form"
+        });
+
+        if (res.success) {
+            toast.success(res.message);
+            setFormData({ name: "", email: "", phone: "", message: "" });
+        } else {
+            toast.error(res.error);
+        }
+        
         setIsSubmitting(false);
     };
 

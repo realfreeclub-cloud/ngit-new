@@ -97,11 +97,12 @@ export default function AboutSection({ data, blocks }: { data?: any, blocks?: an
                             </h2>
 
                             <div className="space-y-4">
-                                {descriptionParas.map((para: string, idx: number) => (
-                                    <p key={idx} className="text-lg text-slate-500 font-medium leading-relaxed">
-                                        {para}
-                                    </p>
-                                ))}
+                                {about.description && (
+                                    <div 
+                                        className="text-lg text-slate-500 font-medium leading-relaxed prose prose-slate max-w-none"
+                                        dangerouslySetInnerHTML={{ __html: about.description }}
+                                    />
+                                )}
                             </div>
                         </div>
 

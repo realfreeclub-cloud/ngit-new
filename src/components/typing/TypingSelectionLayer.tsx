@@ -24,7 +24,7 @@ export default function TypingSelectionLayer() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<'English' | 'Hindi'>('English');
   const [selectedLayout, setSelectedLayout] = useState<'English' | 'Remington Gail' | 'Inscript' | 'Phonetic'>('English');
-  const [taxonomy, setTaxonomy] = useState<{words: any[], essays: any[]}>({ words: [], essays: [] });
+  const [taxonomy, setTaxonomy] = useState<{words: any[], essays: any[], current: any[]}>({ words: [], essays: [], current: [] });
   const [loadingTaxonomy, setLoadingTaxonomy] = useState(true);
   const router = useRouter();
 
@@ -32,7 +32,7 @@ export default function TypingSelectionLayer() {
     fetch('/api/typing/practice?type=TAXONOMY')
       .then(res => res.json())
       .then(data => {
-         setTaxonomy({ words: data.words || [], essays: data.essays || [] });
+         setTaxonomy({ words: data.words || [], essays: data.essays || [], current: data.current || [] });
          setLoadingTaxonomy(false);
       })
       .catch(err => {
@@ -108,11 +108,7 @@ export default function TypingSelectionLayer() {
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId);
-    if (categoryId === 'CURRENT') {
-        router.push(`/typing/exam?type=current&lang=${selectedLanguage}&layout=${selectedLayout}`);
-    } else {
-        setStep(3);
-    }
+    setStep(3);
   };
 
   const renderStep0 = () => (
@@ -242,20 +238,38 @@ export default function TypingSelectionLayer() {
   };
 
   const renderStep3 = () => {
-      let options: { id: string, title: string }[] = [];
+      let options: { id: string, title: string, subtitle?: string, isLong?: boolean }[] = [];
       
       if (selectedModule === 'WORD') {
           options = taxonomy.words
             .filter(w => w.category === selectedCategory && w.language === selectedLanguage)
-            .map(w => ({ id: w.value, title: w.name || w.value }));
+            .map(w => ({ id: w._id, title: w.name || w.value, isLong: false }));
       } else if (selectedModule === 'SPECIAL') {
-          options = taxonomy.essays
-            .filter(e => e.topic === selectedCategory && e.language === selectedLanguage)
-            .map(e => ({ id: e.title, title: e.title }));
+          if (selectedCategory === 'CURRENT') {
+              options = taxonomy.current
+                .filter(c => c.language === selectedLanguage)
+                .map(c => ({ 
+                    id: c._id, 
+                    title: c.title, 
+                    subtitle: new Date(c.createdAt).toLocaleDateString(),
+                    isLong: true 
+                }));
+          } else {
+              options = taxonomy.essays
+                .filter(e => e.topic === selectedCategory && e.language === selectedLanguage)
+                .map(e => ({ 
+                    id: e._id, 
+                    title: e.title, 
+                    subtitle: `${e.topic} Essay`,
+                    isLong: true 
+                }));
+          }
       }
 
+      const isLongLayout = options[0]?.isLong;
+
       return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <button 
             onClick={() => setStep(2)}
             className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
@@ -263,22 +277,43 @@ export default function TypingSelectionLayer() {
             <ArrowLeft className="w-4 h-4" /> Back to Categories
           </button>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className={cn("grid gap-4", isLongLayout ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-2 md:grid-cols-4 lg:grid-cols-6")}>
              {options.map((opt) => (
                  <button
                     key={opt.id}
                     onClick={() => {
-                        const modulePath = selectedModule === 'SPECIAL' ? 'essay' : selectedModule?.toLowerCase();
-                        const catParam = selectedModule === 'SPECIAL' 
-                            ? dynamicSpecialCategories.find(e => e.id === selectedCategory)?.topic 
-                            : selectedCategory;
-                        router.push(`/typing/exam?type=${modulePath}&cat=${catParam}&val=${opt.id}&lang=${selectedLanguage}&layout=${selectedLayout}`);
+                        const modulePath = selectedModule === 'SPECIAL' 
+                            ? (selectedCategory === 'CURRENT' ? 'current' : 'essay') 
+                            : selectedModule?.toLowerCase();
+                        router.push(`/typing/exam?type=${modulePath}&val=${opt.id}&lang=${selectedLanguage}&layout=${selectedLayout}`);
                     }}
-                    className="h-20 px-4 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center font-black text-center text-sm hover:bg-primary hover:text-white hover:shadow-xl transition-all active:scale-95"
+                    className={cn(
+                        "rounded-[2rem] bg-white border border-slate-100 shadow-sm flex items-center justify-center font-black text-sm transition-all group active:scale-95",
+                        isLongLayout 
+                            ? "p-6 flex-col items-start text-left h-auto hover:border-primary hover:shadow-xl group-hover:bg-slate-50" 
+                            : "h-20 px-4 hover:bg-primary hover:text-white hover:shadow-xl text-center"
+                    )}
                  >
-                    {opt.title}
+                    {isLongLayout ? (
+                        <div className="flex flex-col items-start w-full">
+                            <span className="text-lg font-bold text-slate-900 group-hover:text-primary leading-tight mb-3 line-clamp-2">{opt.title}</span>
+                            <div className="mt-auto flex items-center justify-between w-full">
+                                <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{opt.subtitle}</span>
+                                <div className="w-8 h-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                                   <ChevronRight className="w-4 h-4" />
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        opt.title
+                    )}
                  </button>
              ))}
+             {options.length === 0 && (
+                 <div className="col-span-full py-16 text-center text-slate-400 font-bold uppercase tracking-widest text-xs border-2 border-dashed border-slate-200 rounded-[2.5rem]">
+                     No practice content found for this selection.
+                 </div>
+             )}
           </div>
         </div>
       )
