@@ -11,7 +11,7 @@ type UploadResult = {
 };
 
 // Configuration
-const UPLOAD_DIR = path.join(process.cwd(), "public/uploads/gallery");
+const UPLOAD_DIR = path.join(process.cwd(), "uploads/gallery");
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
