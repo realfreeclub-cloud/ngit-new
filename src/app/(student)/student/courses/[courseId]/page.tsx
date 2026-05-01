@@ -1,3 +1,4 @@
+import React from "react";
 import { getCourseDetails } from "@/app/actions/courses";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";

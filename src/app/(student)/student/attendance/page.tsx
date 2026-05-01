@@ -1,6 +1,5 @@
 "use client";
-
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { submitAttendance } from "@/app/actions/attendance";
 import {
     QrCode,

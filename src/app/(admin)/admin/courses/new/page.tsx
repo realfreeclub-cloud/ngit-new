@@ -1,6 +1,5 @@
 "use client";
-
-import { useState } from "react";
+import React, { useState } from "react";
 import { createCourse } from "@/services/CourseService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

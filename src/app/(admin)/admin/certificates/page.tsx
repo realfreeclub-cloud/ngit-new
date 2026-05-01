@@ -1,6 +1,5 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { getAdminCertificates, issueCertificate, revokeCertificate, getStudentList, getFormData, getCertificatePDF } from "@/app/actions/certificate";
 import { getAllCourses } from "@/app/actions/courses";
 import { Search, Award, ShieldCheck, XCircle, FileDiff, QrCode, Plus, Loader2, Download } from "lucide-react";

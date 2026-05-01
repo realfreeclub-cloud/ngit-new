@@ -1,6 +1,5 @@
 "use client";
-
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
     ChevronLeft, 
     FileUp, 
@@ -18,7 +17,6 @@ import { useRouter } from "next/navigation";
 import ExcelJS from "exceljs";
 import { bulkInsertQuestions } from "@/app/actions/questions";
 import { getAllCourses } from "@/app/actions/courses";
-import { useEffect } from "react";
 
 export default function ImportQuestionsPage() {
     const router = useRouter();

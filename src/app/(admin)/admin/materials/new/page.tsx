@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -9,7 +9,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createMaterial } from "@/app/actions/materials";
 import { getAllCourses } from "@/app/actions/courses";
-import { useEffect } from "react";
 
 export default function CreateMaterialPage() {
     const router = useRouter();
