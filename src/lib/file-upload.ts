@@ -40,6 +40,9 @@ const validateBuffer = (buffer: Buffer, type: string): boolean => {
 const ensureUploadDir = async () => {
     try {
         await mkdir(UPLOAD_DIR, { recursive: true });
+        // Ensure directory is searchable and readable on VPS
+        const { chmod } = await import("fs/promises");
+        await chmod(UPLOAD_DIR, 0o755);
     } catch (error) {
         console.error("Error creating upload directory:", error);
     }
@@ -93,6 +96,10 @@ export async function saveImage(file: File): Promise<UploadResult> {
         // 8. Save File to Disk
         const filePath = path.join(UPLOAD_DIR, filename);
         await writeFile(filePath, buffer);
+        
+        // 9. Set permissions for VPS serving
+        const { chmod } = await import("fs/promises");
+        await chmod(filePath, 0o644);
 
         // 9. Generate Public URL
         const publicUrl = `/uploads/gallery/${filename}`;
