@@ -31,7 +31,9 @@ export default async function PublicGalleryPage() {
     ]);
     
     const cmsSections = dynamicData.success && dynamicData.sections ? dynamicData.sections : [];
-    const galleryImages = galleryRes.success ? galleryRes.images : [];
+    const galleryImages = galleryRes.success 
+        ? galleryRes.images.filter((img: any) => img.category !== "Banners") 
+        : [];
 
     return (
         <div className="min-h-screen">
