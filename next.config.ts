@@ -63,6 +63,9 @@ const nextConfig = {
     },
     experimental: {
         optimizePackageImports: ["lucide-react", "framer-motion", "@radix-ui/react-icons"],
+        turbopack: {
+            root: ".",
+        },
     },
 } as any;
 
