@@ -6,8 +6,13 @@
 export interface TypingMetrics {
   wpm: number;
   rawWpm: number;
+  grossWpm: number;
+  netWpm: number;
   accuracy: number;
   errorCount: number;
+  wrongWords: number;
+  keystrokes: number;
+  progress: number;
   totalCharacters: number;
 }
 
@@ -44,23 +49,29 @@ export const calculateMetrics = (
   });
 
   // Gross WPM (Raw Speed): (Total Characters / 5) / Time
-  const rawWpm = Math.round((totalCharacters / 5) / timeMinutes);
+  const grossWpm = Math.round((totalCharacters / 5) / timeMinutes);
 
   // Net WPM (Adjusted Speed): Gross WPM - (Errors / Time)
   // Standard Government Formula: Net WPM = ((Total Characters / 5) - Errors) / Time
   const netWpm = Math.round(((totalCharacters / 5) - errors) / timeMinutes);
 
   // Accuracy: ((Correct Characters) / Total Characters) * 100
-  // Note: We use a simplified character-based accuracy for live feedback
   const accuracy = totalCharacters > 0 
     ? Math.max(0, Math.round(((totalCharacters - errors) / totalCharacters) * 100)) 
     : 100;
 
+  const progress = Math.min(100, Math.round((typedWords.length / originalWords.length) * 100));
+
   return {
     wpm: Math.max(0, netWpm),
-    rawWpm: Math.max(0, rawWpm),
+    rawWpm: Math.max(0, grossWpm),
+    grossWpm: Math.max(0, grossWpm),
+    netWpm: Math.max(0, netWpm),
     accuracy,
     errorCount: errors,
+    wrongWords: errors,
+    keystrokes: totalCharacters,
+    progress,
     totalCharacters
   };
 };

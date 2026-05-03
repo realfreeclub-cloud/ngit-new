@@ -7,6 +7,8 @@ import { useTypingEngine } from './hooks/useTypingEngine';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { mapKeyToHindi } from './utils/hindiMapping';
+import { LiveDashboard, TimerDisplay } from './components/LiveDashboard';
+import { Speedometer } from './components/Speedometer';
 
 interface ClassicTypingEngineModuleProps {
   exam?: any;
@@ -21,6 +23,9 @@ interface ClassicTypingEngineModuleProps {
     layout?: 'English' | 'Remington Gail' | 'Inscript' | 'Phonetic';
     autoScroll?: boolean;
     showScrollbar?: boolean;
+    sourcePosition?: 'top' | 'left' | 'right' | 'bottom';
+    disableCopyPaste?: boolean;
+    disableRightClick?: boolean;
   };
   onComplete: (results: any) => void;
   userName?: string;
@@ -73,23 +78,54 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
   const [internalPassage, setInternalPassage] = useState(passage);
   const [internalDuration, setInternalDuration] = useState(config.duration);
 
-  // Load available passages – only when the switcher is shown (official exam mode)
+  const isBookPractice = exam?.category === 'BOOK';
+
+  // Load available exams/passages matching current criteria
   useEffect(() => {
     if (!showExerciseSwitcher) return;
-    fetch('/api/admin/typing/passages')
+    
+    if (isBookPractice && exam?.bookId) {
+        // For Book Practice: fetch sibling chapters from the passages API
+        const bId = typeof exam.bookId === 'object' ? exam.bookId._id : exam.bookId;
+        fetch(`/api/typing/practice?type=BOOK&bookId=${bId}`)
+          .then(res => res.json())
+          .then(data => {
+            if (Array.isArray(data)) {
+               const sorted = data.sort((a: any, b: any) => a.title.localeCompare(b.title));
+               setPassagesList(sorted);
+               const foundIdx = sorted.findIndex((p: any) => p._id?.toString() === exam._id?.toString());
+               if (foundIdx !== -1) setCurrentPassageIndex(foundIdx);
+            }
+          })
+          .catch(e => console.error("Failed to load book chapters", e));
+        return;
+    }
+
+    // For Gov / Special exams: fetch from exams API
+    let query = '';
+    if (exam) {
+        const queryLang = exam.language || config.language;
+        if (exam.govExamId) {
+            query = `?govExamId=${exam.govExamId}&language=${queryLang}`;
+            if (exam.difficulty) query += `&difficulty=${exam.difficulty}`;
+        } else if (exam.category === 'SPECIAL') {
+            query = `?category=SPECIAL&language=${queryLang}`;
+        }
+    }
+
+    fetch(`/api/typing/exams${query}`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-           const sorted = data.sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+           const sorted = data.sort((a,b) => a.title.localeCompare(b.title));
            setPassagesList(sorted);
-           const foundIdx = sorted.findIndex(p => p.content === passage);
-           if (foundIdx !== -1) {
-             setCurrentPassageIndex(foundIdx);
-           }
+           const foundIdx = sorted.findIndex(e => e._id === exam?._id);
+           if (foundIdx !== -1) setCurrentPassageIndex(foundIdx);
         }
       })
-      .catch(e => console.error("Failed to load passages", e));
-  }, [showExerciseSwitcher]);
+      .catch(e => console.error("Failed to load related exercises", e));
+  }, [showExerciseSwitcher, isBookPractice, exam, config.language]);
+
 
   // Sync internal state with props if they change
   useEffect(() => {
@@ -166,9 +202,8 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
       highlightMode: config.highlightMode || 'word',
       autoScroll: config.autoScroll !== undefined ? config.autoScroll : true,
       showScrollbar: config.showScrollbar !== undefined ? config.showScrollbar : true,
+      sourcePosition: config.sourcePosition || 'top',
     });
-    // Start the timer immediately when the page opens or settings change
-    startTest();
     // Scroll window to top so the exam starts from the top area
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [internalPassage, internalDuration, config]);
@@ -201,7 +236,8 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
     const isDeletion = val.length < typedText.length;
 
     // 0. HINDI MAPPING LOGIC
-    if (settings.language === 'Hindi' && !isDeletion && val.length > typedText.length) {
+    const isHindi = settings.language === 'Hindi' || settings.language === 'Unicode Hindi' || settings.language === 'Krutidev Hindi';
+    if (isHindi && !isDeletion && val.length > typedText.length) {
         const lastChar = val.slice(-1);
         if (/[\x00-\x7F]/.test(lastChar) && lastChar !== ' ' && lastChar !== '\n') {
             const mapped = mapKeyToHindi(lastChar, settings.layout);
@@ -308,7 +344,7 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
       {/* Fourth Header (Layout & Language) */}
       <div className="bg-[#007bff] text-white px-6 py-1 flex gap-8 text-xs font-bold border-b-2 border-blue-800">
         <span>Keyboard Layout: {settings.layout}</span>
-        <span>Language: {settings.language} - Mangal Font</span>
+        <span>Language: {settings.language}</span>
       </div>
 
       {/* Exercise and Duration Controls – only in official exam mode */}
@@ -335,7 +371,9 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                        if (currentPassageIndex > 0) {
                           const newIdx = currentPassageIndex - 1;
                           setCurrentPassageIndex(newIdx);
-                          setInternalPassage(passagesList[newIdx].content);
+                          const newItem = passagesList[newIdx];
+                          setInternalPassage(isBookPractice ? (newItem.content || '') : (newItem.passageId?.content || 'No content found'));
+                          updateSettings({ duration: internalDuration, language: newItem.language || config.language });
                        }
                     }}
                     disabled={currentPassageIndex <= 0 || (isActive && !isFinished && typedText.length > 0)}
@@ -346,16 +384,22 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                     onChange={(e) => {
                        const newIdx = Number(e.target.value);
                        setCurrentPassageIndex(newIdx);
-                       setInternalPassage(passagesList[newIdx].content);
+                        const newItem = passagesList[newIdx];
+
+                        setInternalPassage(isBookPractice ? (newItem.content || '') : (newItem.passageId?.content || 'No content found'));
+
+                        updateSettings({ duration: internalDuration, language: newItem.language || config.language });
+
                     }}
                     disabled={isActive && !isFinished && typedText.length > 0}
                     className="border border-gray-400 px-2 py-1 bg-white outline-none flex-1 focus:ring-2 focus:ring-blue-500 min-w-0 truncate cursor-pointer"
                  >
                     {passagesList.length > 0 ? (
                       passagesList.map((p, i) => (
-                        <option key={p._id || i} value={i}>
-                          Exercise: {i + 1}/{passagesList.length} - {p.title?.substring(0, 30)}
-                        </option>
+                         <option key={p._id || i} value={i}>
+                            {isBookPractice ? `Ch. ${i + 1}/${passagesList.length} - ${p.title?.substring(0, 40)}` : `Exercise: ${i + 1}/${passagesList.length} - ${p.title?.substring(0, 30)}`}
+
+                         </option>
                       ))
                     ) : (
                       <option value={0}>Loading Exercises...</option>
@@ -366,7 +410,9 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                        if (currentPassageIndex < passagesList.length - 1) {
                           const newIdx = currentPassageIndex + 1;
                           setCurrentPassageIndex(newIdx);
-                          setInternalPassage(passagesList[newIdx].content);
+                           const newItem = passagesList[newIdx];
+                           setInternalPassage(isBookPractice ? (newItem.content || '') : (newItem.passageId?.content || 'No content found'));
+                           updateSettings({ duration: internalDuration, language: newItem.language || config.language });
                        }
                     }}
                     disabled={currentPassageIndex >= passagesList.length - 1 || (isActive && !isFinished && typedText.length > 0)}
@@ -383,14 +429,17 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
         <div 
             ref={passageContainerRef}
             className="flex-1 relative bg-white border border-gray-400 p-4 overflow-y-auto text-gray-800 leading-relaxed break-words scroll-smooth"
-            style={{ fontSize: `${fontSize}px`, minHeight: '200px' }}
-            onCopy={(e) => e.preventDefault()}
+            style={{ 
+              fontSize: `${fontSize}px`, 
+              minHeight: '200px',
+              scrollbarWidth: settings.showScrollbar ? 'auto' : 'none'
+            }}
+            onCopy={(e) => config.disableCopyPaste !== false && e.preventDefault()}
         >
           {settings.highlightMode !== 'none' ? (
             passageWords.map((word, index) => {
               let className = "transition-all duration-200 ";
               
-              // 1. WORD-BASED HIGHLIGHTING (Official Standard)
               if (settings.highlightMode === 'word') {
                 if (index === activeWordIndex) {
                     className += "text-blue-600 font-bold active-word underline decoration-blue-300 decoration-2 underline-offset-4";
@@ -401,7 +450,6 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                     }
                 }
               } 
-              // 2. LIVE CHARACTER HIGHLIGHTING (Typing Tutor Style)
               else if (settings.highlightMode === 'word_error') {
                  if (index < activeWordIndex) {
                     className += typedWordsArray[index] === word ? "text-emerald-600 font-bold" : "text-rose-600 font-bold underline decoration-rose-400";
@@ -421,7 +469,6 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
                     );
                  }
               }
-              // 3. LETTER-BY-LETTER (Granular)
               else if (settings.highlightMode === 'letter') {
                   if (index < activeWordIndex) {
                     className += "opacity-40 ";
@@ -461,12 +508,17 @@ export const ClassicTypingEngineModule: React.FC<ClassicTypingEngineModuleProps>
             value={typedText}
             onChange={handleTextChange}
             onKeyDown={handleKeyDown}
-            onPaste={(e) => e.preventDefault()}
+            onPaste={(e) => config.disableCopyPaste !== false && e.preventDefault()}
             disabled={isFinished}
             spellCheck={false}
             autoComplete="off"
             className="flex-1 border-2 border-gray-400 p-4 overflow-y-auto outline-none focus:border-blue-600 text-black font-semibold leading-relaxed resize-none shadow-inner transition-colors duration-300"
-            style={{ fontSize: `${fontSize + 2}px`, minHeight: '200px', backgroundColor: bgColor }}
+            style={{ 
+              fontSize: `${fontSize + 2}px`, 
+              minHeight: '200px', 
+              backgroundColor: bgColor,
+              scrollbarWidth: settings.showScrollbar ? 'auto' : 'none'
+            }}
         />
       </div>
 

@@ -12,6 +12,7 @@ interface TypingSettings {
   passageHeight: number;
   showScrollbar: boolean;
   layout: 'English' | 'Remington Gail' | 'Inscript' | 'Phonetic';
+  sourcePosition: 'top' | 'left' | 'right' | 'bottom';
 }
 
 interface TypingState {
@@ -25,9 +26,14 @@ interface TypingState {
   // Real-time Stats
   wpm: number;
   rawWpm: number;
+  grossWpm: number;
+  netWpm: number;
   accuracy: number;
   errorCount: number;
+  wrongWords: number;
   backspaceCount: number;
+  keystrokes: number;
+  progress: number;
   currentWordIndex: number;
   isFullScreen: boolean;
   
@@ -37,7 +43,18 @@ interface TypingState {
   // Actions
   setPassage: (passage: string) => void;
   setTypedText: (text: string) => void;
-  updateMetrics: (wpm: number, rawWpm: number, accuracy: number, errors: number, backspaces: number) => void;
+  updateMetrics: (metrics: {
+    wpm: number;
+    rawWpm: number;
+    grossWpm: number;
+    netWpm: number;
+    accuracy: number;
+    errorCount: number;
+    wrongWords: number;
+    backspaceCount: number;
+    keystrokes: number;
+    progress: number;
+  }) => void;
   tick: () => void;
   startTest: () => void;
   endTest: () => void;
@@ -59,6 +76,7 @@ const initialSettings: TypingSettings = {
   passageHeight: 50, // percentage of total height
   showScrollbar: true,
   layout: 'English',
+  sourcePosition: 'top',
 };
 
 export const useTypingStore = create<TypingState>((set) => ({
@@ -69,9 +87,14 @@ export const useTypingStore = create<TypingState>((set) => ({
   isFinished: false,
   wpm: 0,
   rawWpm: 0,
+  grossWpm: 0,
+  netWpm: 0,
   accuracy: 100,
   errorCount: 0,
+  wrongWords: 0,
   backspaceCount: 0,
+  keystrokes: 0,
+  progress: 0,
   currentWordIndex: 0,
   isFullScreen: false,
   settings: {
@@ -82,8 +105,8 @@ export const useTypingStore = create<TypingState>((set) => ({
 
   setTypedText: (typedText) => set({ typedText }),
 
-  updateMetrics: (wpm, rawWpm, accuracy, errorCount, backspaceCount) => 
-    set({ wpm, rawWpm, accuracy, errorCount, backspaceCount }),
+  updateMetrics: (metrics) => 
+    set((state) => ({ ...state, ...metrics })),
 
   tick: () => set((state) => ({ 
     timeLeft: state.timeLeft > 0 ? state.timeLeft - 1 : 0 
@@ -100,9 +123,14 @@ export const useTypingStore = create<TypingState>((set) => ({
     isFinished: false,
     wpm: 0,
     rawWpm: 0,
+    grossWpm: 0,
+    netWpm: 0,
     accuracy: 100,
     errorCount: 0,
+    wrongWords: 0,
     backspaceCount: 0,
+    keystrokes: 0,
+    progress: 0,
     currentWordIndex: 0,
     isFullScreen: false,
   })),

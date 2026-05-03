@@ -29,6 +29,11 @@ export async function POST(req: Request) {
     // Auto calculate word count
     const wordCount = data.content.trim().split(/\s+/).length;
     
+    // Clear bookId if empty string submitted
+    if (data.bookId === "") {
+      data.bookId = null;
+    }
+    
     const passage = await TypingPassage.create({
       ...data,
       wordCount

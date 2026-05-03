@@ -10,22 +10,19 @@ import Link from "next/link";
 export default function StudentTypingDashboard() {
   const { data: session } = useSession();
   const [results, setResults] = useState<any[]>([]);
-  const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
     if (session) {
-      Promise.all([
-        fetch("/api/typing/results").then(res => res.json()),
-        fetch("/api/typing/exams").then(res => res.json())
-      ]).then(([resultsData, examsData]) => {
-        if (isMounted) {
-          setResults(Array.isArray(resultsData) ? resultsData : []);
-          setExams(Array.isArray(examsData) ? examsData : []);
-          setLoading(false);
-        }
-      }).catch(() => {
+      fetch("/api/typing/results")
+        .then(res => res.json())
+        .then(resultsData => {
+          if (isMounted) {
+            setResults(Array.isArray(resultsData) ? resultsData : []);
+            setLoading(false);
+          }
+        }).catch(() => {
         if (isMounted) setLoading(false);
       });
     }
@@ -50,55 +47,35 @@ export default function StudentTypingDashboard() {
         </div>
       </div>
 
-      {/* 1. Available Exams Section */}
+      {/* 1. Available Exams Section -> Replaced with Gov Exams CTA */}
       <section className="space-y-8">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20">
             <Keyboard className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Available Typing Exams</h2>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Newly assigned for you</p>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Government Exams Practice</h2>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Official Pattern Typing Tests</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {exams.length > 0 ? exams.map((exam) => (
-            <Card key={exam._id} className="p-8 rounded-[2.5rem] border-slate-100 shadow-sm hover:shadow-2xl hover:border-indigo-100 transition-all duration-500 group flex flex-col relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-indigo-500/10 transition-colors" />
-              
-              <div className="flex justify-between items-start mb-8 relative z-10">
-                <div className="p-4 bg-indigo-50 rounded-2xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                  <Keyboard className="w-7 h-7" />
-                </div>
-                <span className="px-4 py-1.5 bg-slate-950 text-white rounded-full text-[9px] font-black uppercase tracking-widest border border-slate-800">
-                  {exam.language || 'English'}
-                </span>
+        <Card className="p-8 md:p-12 rounded-[2.5rem] border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-indigo-500/10 transition-colors" />
+          <div className="relative z-10 space-y-4 max-w-xl text-center md:text-left">
+            <h3 className="text-3xl font-black text-slate-900 tracking-tight">Select your target exam and start practicing today!</h3>
+            <p className="text-slate-500 font-medium text-lg">
+              We now feature a completely updated selection flow for government exams. Choose your exam (SSC, CPCT, UP Police, etc.), language, and difficulty level to find the exact official typing pattern you need.
+            </p>
+          </div>
+          <Link href="/typing/official" className="relative z-10 w-full md:w-auto shrink-0">
+            <button className="w-full md:w-auto h-16 px-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-indigo-600/20 hover:shadow-indigo-600/40 active:scale-95 flex items-center justify-center gap-3">
+              Explore Exams
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                <Target className="w-4 h-4" />
               </div>
-
-              <h3 className="text-xl font-black text-slate-900 mb-4 group-hover:text-indigo-600 transition-colors">{exam.title}</h3>
-              
-              <div className="flex items-center gap-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] mb-10">
-                <span className="flex items-center gap-2"><Zap className="w-4 h-4 text-amber-500" /> {exam.duration} Minutes</span>
-                <span className="w-1 h-1 rounded-full bg-slate-200" />
-                <span className="flex items-center gap-2"><Target className="w-4 h-4 text-emerald-500" /> Ranked</span>
-              </div>
-
-              <Link href={`/typing/exam/${exam._id}`} className="mt-auto">
-                <button className="w-full h-14 bg-slate-900 hover:bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-slate-900/10 active:scale-95">
-                  Launch Official Exam
-                </button>
-              </Link>
-            </Card>
-          )) : (
-            <Card className="col-span-full p-16 rounded-[3rem] bg-slate-50 border-dashed border-2 border-slate-200 flex flex-col items-center justify-center text-center">
-              <div className="w-20 h-20 bg-white rounded-3xl shadow-xl flex items-center justify-center text-slate-200 mb-6">
-                <Keyboard className="w-10 h-10" />
-              </div>
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No new exams assigned at this moment.</p>
-            </Card>
-          )}
-        </div>
+            </button>
+          </Link>
+        </Card>
       </section>
 
       {/* 2. Results History Section */}

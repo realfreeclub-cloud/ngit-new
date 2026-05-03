@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, BookOpen, Keyboard, Clock, Trash2, FileText, Newspaper, Search, BarChart3, Users, LayoutGrid, List, Table as TableIcon, Edit2, Play, Eye, CheckCircle2, X } from "lucide-react";
+import { Plus, BookOpen, Keyboard, Clock, Trash2, FileText, Newspaper, Search, BarChart3, Users, LayoutGrid, List, Table as TableIcon, Edit2, Play, Eye, CheckCircle2, X, Settings2, Globe, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,10 +16,14 @@ export default function AdminTypingDashboard() {
   const [exams, setExams] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [wordSets, setWordSets] = useState<any[]>([]);
-  const [essays, setEssays] = useState<any[]>([]);
-  const [currentPassages, setCurrentPassages] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [books, setBooks] = useState<any[]>([]);
+  const [govExams, setGovExams] = useState<any[]>([]);
+  const [rulePresets, setRulePresets] = useState<any[]>([]);
+  const [languages, setLanguages] = useState<any[]>([]);
+  const [difficulties, setDifficulties] = useState<any[]>([]);
+  const [topics, setTopics] = useState<any[]>([]);
+  const [settings, setSettings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   // UI States
@@ -32,8 +36,15 @@ export default function AdminTypingDashboard() {
   const [showBookModal, setShowBookModal] = useState(false);
   const [showPassageModal, setShowPassageModal] = useState(false);
   const [showWordSetModal, setShowWordSetModal] = useState(false);
-  const [showEssayModal, setShowEssayModal] = useState(false);
-  const [showCurrentModal, setShowCurrentModal] = useState(false);
+  const [showGovExamModal, setShowGovExamModal] = useState(false);
+  const [showRulePresetModal, setShowRulePresetModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("exams");
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showDifficultyModal, setShowDifficultyModal] = useState(false);
+  const [showTopicModal, setShowTopicModal] = useState(false);
+  const [showSpecialTestModal, setShowSpecialTestModal] = useState(false);
+  const [modalSection, setModalSection] = useState("Government");
+  const [showSettingModal, setShowSettingModal] = useState(false);
   const [selectedExam, setSelectedExam] = useState<any>(null);
   
   // Edits
@@ -55,10 +66,14 @@ export default function AdminTypingDashboard() {
       setExams(data.exams || []);
       setCategories(data.categories || []);
       setWordSets(data.wordSets || []);
-      setEssays(data.essays || []);
-      setCurrentPassages(data.current || []);
       setResults(data.results || []);
       setBooks(data.books || []);
+      setGovExams(data.govExams || []);
+      setRulePresets(data.rulePresets || []);
+      setLanguages(data.languages || []);
+      setDifficulties(data.difficulties || []);
+      setTopics(data.topics || []);
+      setSettings(data.settings || []);
       setLoading(false);
     } catch (error) {
       toast.error("Failed to refresh data");
@@ -68,8 +83,14 @@ export default function AdminTypingDashboard() {
 
   const handleDeletePassage = async (id: string) => {
     if (!confirm("Delete passage?")) return;
-    await fetch(`/api/admin/typing/passages/${id}`, { method: "DELETE" });
-    fetchData();
+    try {
+      const res = await fetch(`/api/admin/typing/passages/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(await res.text());
+      toast.success("Passage deleted");
+      fetchData();
+    } catch (err: any) {
+      toast.error("Failed to delete: " + err.message);
+    }
   };
 
   const handleUpdatePassage = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -79,13 +100,16 @@ export default function AdminTypingDashboard() {
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
     try {
-      await fetch(`/api/admin/typing/passages/${editingPassage._id}`, {
+      const res = await fetch(`/api/admin/typing/passages/${editingPassage._id}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
       });
+      if (!res.ok) throw new Error(await res.text());
       toast.success("Updated!");
       setEditingPassage(null);
       setShowPassageModal(false);
       fetchData();
+    } catch (err: any) {
+      toast.error("Failed to update: " + err.message);
     } finally { setSubmitting(false); }
   };
 
@@ -95,13 +119,16 @@ export default function AdminTypingDashboard() {
     const form = e.currentTarget;
     const data = Object.fromEntries(new FormData(form).entries());
     try {
-      await fetch("/api/admin/typing/passages", {
+      const res = await fetch("/api/admin/typing/passages", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
       });
+      if (!res.ok) throw new Error(await res.text());
       toast.success("Added!");
       form.reset();
       setShowPassageModal(false);
       fetchData();
+    } catch (err: any) {
+      toast.error("Failed to add: " + err.message);
     } finally { setSubmitting(false); }
   };
 
@@ -129,6 +156,78 @@ export default function AdminTypingDashboard() {
     await fetch(`/api/admin/typing/exams/${id}`, { method: "DELETE" });
     fetchData();
   };
+
+  const handleAddGovExam = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const data = Object.fromEntries(new FormData(e.currentTarget).entries());
+    await fetch("/api/admin/typing/gov-exams", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+    });
+    toast.success("Added Gov Exam!");
+    setShowGovExamModal(false);
+    fetchData();
+    setSubmitting(false);
+  };
+
+  const handleDeleteGovExam = async (id: string) => {
+    if (!confirm("Delete Government Exam?")) return;
+    await fetch(`/api/admin/typing/gov-exams/${id}`, { method: "DELETE" });
+    fetchData();
+  };
+
+  const handleAddLanguage = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const data = Object.fromEntries(new FormData(e.currentTarget).entries());
+    await fetch("/api/admin/typing/languages", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+    });
+    toast.success("Added!");
+    setShowLanguageModal(false);
+    fetchData();
+    setSubmitting(false);
+  };
+
+  const handleAddDifficulty = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const data = Object.fromEntries(new FormData(e.currentTarget).entries());
+    await fetch("/api/admin/typing/difficulties", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+    });
+    toast.success("Added!");
+    setShowDifficultyModal(false);
+    fetchData();
+    setSubmitting(false);
+  };
+
+  const handleAddTopic = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const data = Object.fromEntries(new FormData(e.currentTarget).entries());
+    await fetch("/api/admin/typing/topics", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+    });
+    toast.success("Added!");
+    setShowTopicModal(false);
+    fetchData();
+    setSubmitting(false);
+  };
+
+  const handleAddRulePreset = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const data = Object.fromEntries(new FormData(e.currentTarget).entries());
+    await fetch("/api/admin/typing/rule-presets", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+    });
+    toast.success("Added!");
+    setShowRulePresetModal(false);
+    fetchData();
+    setSubmitting(false);
+  };
+
 
   const handleAddBook = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -184,40 +283,30 @@ export default function AdminTypingDashboard() {
     fetchData();
   };
 
-  const handleAddEssay = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const content = fd.get('content') as string;
-    const data = {
-        topic: fd.get('topic'), title: fd.get('title'), content, language: fd.get('language'),
-        wordCount: content.split(/\s+/).length,
-    };
-    await fetch("/api/admin/typing/essays", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
-    });
-    setShowEssayModal(false);
+  const handleDeleteRulePreset = async (id: string) => {
+    if (!confirm("Delete Rule Preset?")) return;
+    await fetch(`/api/admin/typing/rule-presets/${id}`, { method: "DELETE" });
     fetchData();
   };
 
-  const handleDeleteEssay = async (id: string) => {
-    await fetch(`/api/admin/typing/essays/${id}`, { method: "DELETE" });
+  const handleDeleteLanguage = async (id: string) => {
+    if (!confirm("Delete Language?")) return;
+    await fetch(`/api/admin/typing/languages/${id}`, { method: "DELETE" });
     fetchData();
   };
 
-  const handleAddCurrent = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const data = Object.fromEntries(new FormData(e.currentTarget).entries());
-    await fetch("/api/admin/typing/current", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
-    });
-    setShowCurrentModal(false);
+  const handleDeleteDifficulty = async (id: string) => {
+    if (!confirm("Delete Difficulty?")) return;
+    await fetch(`/api/admin/typing/difficulties/${id}`, { method: "DELETE" });
     fetchData();
   };
 
-  const handleDeleteCurrent = async (id: string) => {
-    await fetch(`/api/admin/typing/current/${id}`, { method: "DELETE" });
+  const handleDeleteTopic = async (id: string) => {
+    if (!confirm("Delete Topic?")) return;
+    await fetch(`/api/admin/typing/topics/${id}`, { method: "DELETE" });
     fetchData();
   };
+
 
   const fetchResults = async (examId: string) => {
     const res = await fetch(`/api/admin/typing/results?examId=${examId}`);
@@ -231,7 +320,10 @@ export default function AdminTypingDashboard() {
 
   // Filter components
   const filteredExams = exams.filter(e => e.title.toLowerCase().includes(searchQuery.toLowerCase()));
-  const filteredPassages = passages.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredPassages = passages.filter(p => 
+    p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    p.bookId?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (loading) return (
     <div className="flex h-screen items-center justify-center bg-[#f5f7fb]">
@@ -285,16 +377,17 @@ export default function AdminTypingDashboard() {
 
       {/* TABS & CONTENT */}
       <div className="max-w-7xl mx-auto">
-        <Tabs defaultValue="exams" className="w-full">
-          <div className="flex items-center justify-between mb-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <div className="flex items-center justify-between mb-8 overflow-x-auto pb-2">
               <TabsList className="flex w-max h-10 bg-slate-100 rounded-lg p-1 overflow-x-auto scrollbar-hide">
-                <TabsTrigger value="exams" className="rounded-md font-semibold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">Official Exams</TabsTrigger>
-                <TabsTrigger value="passages" className="rounded-md font-semibold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">Library</TabsTrigger>
+                <TabsTrigger value="exams" className="rounded-md font-semibold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">Tests</TabsTrigger>
+                <TabsTrigger value="gov-exams" className="rounded-md font-semibold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">Gov Exams</TabsTrigger>
+                <TabsTrigger value="rule-presets" className="rounded-md font-semibold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">Rule Presets</TabsTrigger>
+                <TabsTrigger value="passages" className="rounded-md font-semibold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">Passages</TabsTrigger>
                 <TabsTrigger value="books" className="rounded-md font-semibold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">Books</TabsTrigger>
-                <TabsTrigger value="categories" className="rounded-md font-semibold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">Categories</TabsTrigger>
-                <TabsTrigger value="words" className="rounded-md font-semibold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">Words</TabsTrigger>
-                <TabsTrigger value="essays" className="rounded-md font-semibold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">Essays</TabsTrigger>
-                <TabsTrigger value="current" className="rounded-md font-semibold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">Current Affairs</TabsTrigger>
+                <TabsTrigger value="special-topics" className="rounded-md font-semibold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">Special Topics</TabsTrigger>
+                <TabsTrigger value="words" className="rounded-md font-semibold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm px-4">Word Lists</TabsTrigger>
+                <TabsTrigger value="config" className="rounded-md font-semibold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 text-indigo-600">Global Config</TabsTrigger>
               </TabsList>
 
               <div className="hidden sm:flex items-center bg-white border border-slate-200 rounded-lg p-1">
@@ -310,33 +403,56 @@ export default function AdminTypingDashboard() {
                     <table className="w-full text-left border-collapse text-sm">
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-200">
-                          <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase">Exam Title</th>
-                          <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase">Category</th>
+                          <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase text-center w-12">#</th>
+                          <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase">Exam / Gov Pattern</th>
+                          <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase">Category / Passage</th>
                           <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase">Lang / Dur</th>
                           <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase">Status</th>
                           <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredExams.map(exam => (
-                          <tr key={exam._id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
-                            <td className="px-6 py-4 font-semibold text-slate-900">{exam.title}</td>
-                            <td className="px-6 py-4"><span className="px-2.5 py-1 bg-slate-100 rounded-md text-[11px] font-bold text-slate-600">{exam.category}</span></td>
-                            <td className="px-6 py-4 text-slate-600 font-medium">{exam.language} • {exam.duration}m</td>
-                            <td className="px-6 py-4">
-                               <span className={cn("px-2.5 py-1 rounded-md text-[11px] font-bold flex w-max items-center gap-1", exam.status === 'Active' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700')}>
-                                  {exam.status === 'Active' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"/>}
-                                  {exam.status}
-                               </span>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                               <div className="flex items-center justify-end gap-2">
-                                  <Button onClick={() => handleManageResults(exam)} variant="ghost" size="sm" className="h-8 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100">Results</Button>
-                                  <button onClick={() => handleDeleteExam(exam._id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4"/></button>
-                               </div>
-                            </td>
-                          </tr>
-                        ))}
+                        {filteredExams.map((exam, index) => {
+                          const linkedGovExam = govExams.find(g => g._id.toString() === exam.govExamId?.toString());
+                          const linkedPassage = passages.find(p => p._id.toString() === exam.passageId?.toString());
+                          const linkedPreset = rulePresets.find(r => r._id.toString() === exam.rulePresetId?.toString());
+
+                          return (
+                            <tr key={exam._id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
+                              <td className="px-6 py-4 text-center text-slate-400 font-mono text-xs">{index + 1}</td>
+                              <td className="px-6 py-4">
+                                <div className="flex flex-col">
+                                  <span className="font-semibold text-slate-900">{exam.title}</span>
+                                  <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{linkedGovExam ? linkedGovExam.title : 'General'}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex flex-col">
+                                  <span className="px-2.5 py-1 bg-slate-100 rounded-md text-[10px] font-bold text-slate-600 w-max mb-1">{exam.category}</span>
+                                  <span className="text-xs text-slate-500 font-medium truncate max-w-[200px]">{linkedPassage ? linkedPassage.title : 'No Passage'}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex flex-col">
+                                   <span className="text-slate-600 font-bold">{exam.language}</span>
+                                   <span className="text-xs text-slate-400 font-medium">{exam.duration}m • {linkedPreset ? linkedPreset.name : 'Custom Rules'}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                 <span className={cn("px-2.5 py-1 rounded-md text-[11px] font-bold flex w-max items-center gap-1", exam.status === 'Active' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700')}>
+                                    {exam.status === 'Active' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"/>}
+                                    {exam.status}
+                                 </span>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                 <div className="flex items-center justify-end gap-2">
+                                    <Button onClick={() => handleManageResults(exam)} variant="ghost" size="sm" className="h-8 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100">Results</Button>
+                                    <button onClick={() => handleDeleteExam(exam._id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4"/></button>
+                                 </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                     {filteredExams.length === 0 && (
@@ -346,10 +462,76 @@ export default function AdminTypingDashboard() {
              </div>
           </TabsContent>
 
+           <TabsContent value="gov-exams" className="mt-0">
+              <div className="mb-4 flex justify-end">
+                 <Button onClick={() => setShowGovExamModal(true)} className="bg-slate-900 hover:bg-black text-white h-9 px-4 rounded-lg text-sm font-semibold shadow-sm"><Plus className="w-4 h-4 mr-2"/> Add Gov Exam</Button>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                 <div className="overflow-x-auto">
+                     <table className="w-full text-left border-collapse text-sm">
+                       <thead>
+                         <tr className="bg-slate-50 border-b border-slate-200">
+                           <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase">Exam Title</th>
+                           <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase">Slug</th>
+                           <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase">Status</th>
+                           <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase text-right">Actions</th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         {govExams.map(exam => (
+                           <tr key={exam._id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
+                             <td className="px-6 py-4 font-semibold text-slate-900">{exam.title}</td>
+                             <td className="px-6 py-4 text-slate-600 font-medium">{exam.slug}</td>
+                             <td className="px-6 py-4">
+                                <span className={cn("px-2.5 py-1 rounded-md text-[11px] font-bold flex w-max items-center gap-1", exam.active ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700')}>
+                                   {exam.active && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"/>}
+                                   {exam.active ? "Active" : "Inactive"}
+                                </span>
+                             </td>
+                             <td className="px-6 py-4 text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                   <button onClick={() => handleDeleteGovExam(exam._id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4"/></button>
+                                </div>
+                             </td>
+                           </tr>
+                         ))}
+                       </tbody>
+                     </table>
+                     {govExams.length === 0 && (
+                       <div className="p-12 text-center text-slate-400">No gov exams found.</div>
+                     )}
+                 </div>
+              </div>
+           </TabsContent>
+           <TabsContent value="rule-presets" className="mt-0">
+              <div className="mb-4 flex justify-end">
+                 <Button onClick={() => setShowRulePresetModal(true)} className="bg-slate-900 hover:bg-black text-white h-9 px-4 rounded-lg text-sm font-semibold shadow-sm"><Plus className="w-4 h-4 mr-2"/> Add Rule Preset</Button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                 {rulePresets.map(preset => (
+                   <div key={preset._id} className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm hover:border-indigo-200 transition-colors group">
+                      <div className="flex justify-between items-start mb-3">
+                         <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center"><Settings2 className="w-5 h-5"/></div>
+                         <button onClick={() => handleDeleteRulePreset(preset._id)} className="text-slate-300 group-hover:text-rose-600 transition-colors"><Trash2 className="w-4 h-4"/></button>
+                      </div>
+                      <h3 className="font-bold text-slate-900 text-lg mb-1">{preset.name}</h3>
+                      <div className="flex flex-wrap gap-2 mt-3">
+                         <span className="px-2 py-0.5 bg-slate-50 border border-slate-100 rounded text-[10px] font-bold text-slate-500 uppercase">BKSP: {preset.backspaceMode}</span>
+                         <span className="px-2 py-0.5 bg-slate-50 border border-slate-100 rounded text-[10px] font-bold text-slate-500 uppercase">HL: {preset.highlightMode}</span>
+                         {preset.disableCopyPaste && <span className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded text-[10px] font-bold uppercase">No Copy</span>}
+                      </div>
+                   </div>
+                 ))}
+              </div>
+              {rulePresets.length === 0 && (
+                <div className="p-12 text-center text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">No rule presets defined. Create one to standardize exam patterns.</div>
+              )}
+           </TabsContent>
+
           {/* ... Add Passages Tab Content ... */}
           <TabsContent value="passages" className="mt-0">
              <div className="mb-4 flex justify-end">
-                <Button onClick={() => { setEditingPassage(null); setShowPassageModal(true); }} className="bg-slate-900 hover:bg-black text-white h-9 px-4 rounded-lg text-sm font-semibold shadow-sm"><Plus className="w-4 h-4 mr-2"/> Add Passage</Button>
+                <Button onClick={() => { setEditingPassage(null); setModalSection("Government"); setShowPassageModal(true); }} className="bg-slate-900 hover:bg-black text-white h-9 px-4 rounded-lg text-sm font-semibold shadow-sm"><Plus className="w-4 h-4 mr-2"/> Add Passage</Button>
              </div>
              <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                 <table className="w-full text-left border-collapse text-sm">
@@ -359,6 +541,7 @@ export default function AdminTypingDashboard() {
                       <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase">Language</th>
                       <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase">Difficulty</th>
                       <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase">Words</th>
+                      <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase">Section</th>
                       <th className="px-6 py-3 font-bold text-slate-500 text-xs uppercase text-right">Actions</th>
                     </tr>
                   </thead>
@@ -369,9 +552,19 @@ export default function AdminTypingDashboard() {
                          <td className="px-6 py-3 text-slate-600">{p.language}</td>
                          <td className="px-6 py-3 text-slate-600"><span className={cn("text-[11px] font-bold px-2 py-0.5 rounded", p.difficulty==='Easy'?'bg-emerald-50 text-emerald-700':p.difficulty==='Medium'?'bg-amber-50 text-amber-700':'bg-rose-50 text-rose-700')}>{p.difficulty}</span></td>
                          <td className="px-6 py-3 text-slate-600 font-medium">{p.wordCount}</td>
+                          <td className="px-6 py-3">
+                             <span className={cn(
+                               "text-[10px] font-black uppercase px-2 py-0.5 rounded-full border",
+                               p.section === 'Special' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' :
+                               p.section === 'Book' || (p.bookId) ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                               'bg-slate-50 text-slate-600 border-slate-100'
+                             )}>
+                               {p.section === 'Book' || p.bookId ? 'Book' : p.section === 'Special' ? 'Special' : 'Official'}
+                             </span>
+                          </td>
                          <td className="px-6 py-3 text-right">
                            <div className="flex items-center justify-end gap-1">
-                             <button onClick={() => { setEditingPassage(p); setShowPassageModal(true); }} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md"><Edit2 className="w-4 h-4"/></button>
+                             <button onClick={() => { setEditingPassage(p); setModalSection(p.section || (p.bookId ? 'Book' : 'Government')); setShowPassageModal(true); }} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md"><Edit2 className="w-4 h-4"/></button>
                              <button onClick={() => handleDeletePassage(p._id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md"><Trash2 className="w-4 h-4"/></button>
                            </div>
                          </td>
@@ -389,7 +582,10 @@ export default function AdminTypingDashboard() {
              </div>
              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {books.map(book => {
-                   const chapters = passages.filter(p => p.bookId && p.bookId.toString() === book._id.toString());
+                   const chapters = passages.filter(p => {
+  const pBookId = typeof p.bookId === 'object' ? p.bookId?._id : p.bookId;
+  return pBookId && pBookId.toString() === book._id.toString();
+});
                    return (
                      <div key={book._id} className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm hover:border-indigo-200 transition-colors">
                         <div className="flex justify-between items-start mb-3">
@@ -398,25 +594,143 @@ export default function AdminTypingDashboard() {
                         </div>
                         <h3 className="font-bold text-slate-900 text-lg mb-1">{book.name}</h3>
                         <p className="text-sm text-slate-500 font-medium mb-4">{chapters.length} Chapters Assigned</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full text-[10px] font-black uppercase tracking-widest h-8"
+                          onClick={() => {
+                             setActiveTab("passages");
+                             setSearchQuery(book.name);
+                          }}
+                        >
+                          View Chapters
+                        </Button>
                      </div>
                    );
                 })}
              </div>
-          </TabsContent>
+           </TabsContent>           <TabsContent value="special-topics" className="mt-0 space-y-6">
+              <div className="flex justify-between items-center">
+                 <h2 className="text-lg font-bold text-slate-900">Special Topics & Current Affairs</h2>
+                 <Button onClick={() => setShowSpecialTestModal(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white h-9 px-4 rounded-lg text-sm font-semibold shadow-sm"><Plus className="w-4 h-4 mr-2"/> Add Special Test</Button>
+              </div>
 
-          <TabsContent value="categories" className="mt-0">
-             <div className="mb-4 flex justify-end">
-                <Button onClick={() => setShowCategoryModal(true)} className="bg-slate-900 hover:bg-black text-white h-9 px-4 rounded-lg text-sm font-semibold shadow-sm"><Plus className="w-4 h-4 mr-2"/> Add Category</Button>
-             </div>
-             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {categories.map(cat => (
-                   <div key={cat._id} className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-center justify-between group">
-                      <span className="font-bold text-slate-800">{cat.name}</span>
-                      <button onClick={() => handleDeleteCategory(cat._id)} className="text-slate-300 group-hover:text-rose-500"><Trash2 className="w-4 h-4"/></button>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                 {/* Special Exams List */}
+                 <div className="md:col-span-2 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                    <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                       <h3 className="font-bold text-slate-900 text-sm">Active Special Tests</h3>
+                       <Badge variant="outline" className="text-[10px] uppercase font-black">{exams.filter(e => e.category === 'SPECIAL').length} Tests</Badge>
+                    </div>
+                    <div className="overflow-x-auto">
+                       <table className="w-full text-left text-xs">
+                          <thead>
+                             <tr className="bg-slate-50/50 border-b border-slate-200">
+                                <th className="px-6 py-3 font-bold text-slate-500 uppercase">Title</th>
+                                <th className="px-6 py-3 font-bold text-slate-500 uppercase">Lang</th>
+                                <th className="px-6 py-3 font-bold text-slate-500 uppercase">Status</th>
+                                <th className="px-6 py-3 font-bold text-slate-500 uppercase text-right">Actions</th>
+                             </tr>
+                          </thead>
+                          <tbody>
+                             {exams.filter(e => e.category === 'SPECIAL').map(e => (
+                                <tr key={e._id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50">
+                                   <td className="px-6 py-3 font-bold text-slate-900">{e.title}</td>
+                                   <td className="px-6 py-3 text-slate-500">{e.language}</td>
+                                   <td className="px-6 py-3">
+                                      <span className={cn("px-2 py-0.5 rounded-full font-bold text-[10px] uppercase", e.status==='Active' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500')}>
+                                         {e.status}
+                                      </span>
+                                   </td>
+                                   <td className="px-6 py-3 text-right flex justify-end gap-1">
+                                      <button onClick={() => { setSelectedExam(e); fetchResults(e._id); }} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md"><Eye className="w-3.5 h-3.5"/></button>
+                                      <button onClick={async () => { if(confirm("Delete?")) { await fetch(`/api/admin/typing/exams/${e._id}`, {method: "DELETE"}); fetchData(); } }} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md"><Trash2 className="w-3.5 h-3.5"/></button>
+                                   </td>
+                                </tr>
+                             ))}
+                             {exams.filter(e => e.category === 'SPECIAL').length === 0 && (
+                                <tr><td colSpan={4} className="p-12 text-center text-slate-400 italic">No special tests found. Use 'Create Test' and select 'SPECIAL' category.</td></tr>
+                             )}
+                          </tbody>
+                       </table>
+                    </div>
+                 </div>
+
+                 {/* Topics Management (Metadata) */}
+                 <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 flex flex-col h-full">
+                    <div className="flex items-center justify-between mb-6">
+                       <div>
+                         <h3 className="font-bold text-slate-900 text-sm">Topic Categories</h3>
+                         <p className="text-[10px] text-slate-500 font-medium">Used for organizing current affairs and special tests</p>
+                       </div>
+                       <Button onClick={() => setShowTopicModal(true)} variant="outline" size="sm" className="h-8 text-[10px] font-black uppercase tracking-widest"><Plus className="w-3.5 h-3.5 mr-1"/> Add</Button>
+                    </div>
+                    <div className="space-y-2 flex-1 max-h-[400px] overflow-y-auto pr-1 scrollbar-hide">
+                       {topics.length > 0 ? topics.map(t => (
+                          <div key={t._id} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl group hover:border-indigo-200 transition-all">
+                             <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-white border border-slate-100 rounded-lg flex items-center justify-center text-indigo-600 shadow-sm"><Newspaper className="w-4 h-4"/></div>
+                                <span className="text-xs font-bold text-slate-700">{t.name}</span>
+                             </div>
+                             <button onClick={() => handleDeleteTopic(t._id)} className="p-1.5 text-slate-300 hover:text-rose-600 hover:bg-white rounded-md transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
+                          </div>
+                       )) : <div className="flex flex-col items-center justify-center py-12 text-slate-400"><AlertCircle className="w-8 h-8 mb-2 opacity-20"/><p className="text-[10px] font-bold uppercase tracking-widest">No topics found</p></div>}
+                    </div>
+                 </div>
+              </div>
+           </TabsContent>
+
+           <TabsContent value="config" className="mt-0">
+             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {/* Languages Section */}
+                <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+                   <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-slate-900 text-sm">Languages</h3>
+                      <Button onClick={() => setShowLanguageModal(true)} variant="outline" size="sm" className="h-7 text-[9px] font-black uppercase tracking-widest"><Plus className="w-3 h-3 mr-1"/> Add</Button>
                    </div>
-                ))}
+                   <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 scrollbar-hide">
+                      {languages.length > 0 ? languages.map(l => (
+                         <div key={l._id} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg group">
+                            <span className="text-xs font-semibold text-slate-700">{l.name}</span>
+                            <button onClick={() => handleDeleteLanguage(l._id)} className="text-slate-300 group-hover:text-rose-500"><Trash2 className="w-3.5 h-3.5"/></button>
+                         </div>
+                      )) : <p className="text-[10px] text-slate-400 italic">No languages.</p>}
+                   </div>
+                </div>
+
+                {/* Difficulties Section */}
+                <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+                   <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-slate-900 text-sm">Difficulties</h3>
+                      <Button onClick={() => setShowDifficultyModal(true)} variant="outline" size="sm" className="h-7 text-[9px] font-black uppercase tracking-widest"><Plus className="w-3 h-3 mr-1"/> Add</Button>
+                   </div>
+                   <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 scrollbar-hide">
+                      {difficulties.length > 0 ? difficulties.map(d => (
+                         <div key={d._id} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg group">
+                            <span className="text-xs font-semibold text-slate-700">{d.name}</span>
+                            <button onClick={() => handleDeleteDifficulty(d._id)} className="text-slate-300 group-hover:text-rose-500"><Trash2 className="w-3.5 h-3.5"/></button>
+                         </div>
+                      )) : <p className="text-[10px] text-slate-400 italic">No difficulties.</p>}
+                   </div>
+                </div>
+
+                {/* Categories Section */}
+                <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+                   <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-slate-900 text-sm">Categories</h3>
+                      <Button onClick={() => setShowCategoryModal(true)} variant="outline" size="sm" className="h-7 text-[9px] font-black uppercase tracking-widest"><Plus className="w-3 h-3 mr-1"/> Add</Button>
+                   </div>
+                   <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 scrollbar-hide">
+                      {categories.length > 0 ? categories.map(c => (
+                         <div key={c._id} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg group">
+                            <span className="text-xs font-semibold text-slate-700">{c.name}</span>
+                            <button onClick={() => handleDeleteCategory(c._id)} className="text-slate-300 group-hover:text-rose-500"><Trash2 className="w-3.5 h-3.5"/></button>
+                         </div>
+                      )) : <p className="text-[10px] text-slate-400 italic">No categories.</p>}
+                   </div>
+                </div>
              </div>
-          </TabsContent>
+           </TabsContent>
 
           <TabsContent value="words" className="mt-0">
              <div className="mb-4 flex justify-end">
@@ -435,44 +749,6 @@ export default function AdminTypingDashboard() {
                 ))}
              </div>
           </TabsContent>
-
-          <TabsContent value="essays" className="mt-0">
-             <div className="mb-4 flex justify-end">
-                <Button onClick={() => setShowEssayModal(true)} className="bg-slate-900 hover:bg-black text-white h-9 px-4 rounded-lg text-sm font-semibold shadow-sm"><Plus className="w-4 h-4 mr-2"/> Add Essay</Button>
-             </div>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {essays.map(essay => (
-                   <div key={essay._id} className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm group">
-                      <div className="flex justify-between items-start mb-2">
-                         <h3 className="font-bold text-slate-900 text-lg leading-tight">{essay.title}</h3>
-                         <button onClick={() => handleDeleteEssay(essay._id)} className="text-slate-300 group-hover:text-rose-500"><Trash2 className="w-4 h-4"/></button>
-                      </div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{essay.topic} • {essay.language} • {essay.wordCount} Words</p>
-                   </div>
-                ))}
-             </div>
-          </TabsContent>
-
-          <TabsContent value="current" className="mt-0">
-             <div className="mb-4 flex justify-end">
-                <Button onClick={() => setShowCurrentModal(true)} className="bg-slate-900 hover:bg-black text-white h-9 px-4 rounded-lg text-sm font-semibold shadow-sm"><Plus className="w-4 h-4 mr-2"/> Post News</Button>
-             </div>
-             <div className="space-y-4">
-                {currentPassages.map(cp => (
-                   <div key={cp._id} className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm group">
-                      <div className="flex justify-between items-start mb-3">
-                         <div>
-                            <h3 className="font-bold text-slate-900 text-lg leading-tight">{cp.title}</h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{new Date(cp.createdAt).toLocaleDateString()} • {cp.language}</p>
-                         </div>
-                         <button onClick={() => handleDeleteCurrent(cp._id)} className="text-slate-300 group-hover:text-rose-500"><Trash2 className="w-4 h-4"/></button>
-                      </div>
-                      <p className="text-sm text-slate-600 line-clamp-2">{cp.content}</p>
-                   </div>
-                ))}
-             </div>
-          </TabsContent>
-
         </Tabs>
       </div>
 
@@ -502,10 +778,39 @@ export default function AdminTypingDashboard() {
                    <div className="space-y-1.5">
                      <label className="text-xs font-bold text-slate-600 uppercase">Category</label>
                      <select name="category" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                       <option value="">Select...</option>
-                       {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                        <option value="">Select...</option>
+                        <option value="SPECIAL">Special Topic / Current Affairs</option>
+                        {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
                      </select>
                    </div>
+                   <div className="space-y-1.5">
+                     <label className="text-xs font-bold text-slate-600 uppercase">Gov Exam</label>
+                     <select name="govExamId" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                       <option value="">None (General)</option>
+                       {govExams.map(g => <option key={g._id} value={g._id}>{g.title}</option>)}
+                     </select>
+                   </div>
+                   <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-600 uppercase">Difficulty</label>
+                      <select name="difficulty" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                         {difficulties.length > 0 ? difficulties.map(d => <option key={d._id} value={d.name}>{d.name}</option>) : (
+                           <><option value="Easy">Easy</option><option value="Medium">Medium</option><option value="Hard">Hard</option></>
+                         )}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-600 uppercase">Rule Preset (Overrides individual rules)</label>
+                      <select name="rulePresetId" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                         <option value="">No Preset (Use individual settings)</option>
+                         {rulePresets.map(r => <option key={r._id} value={r._id}>{r.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-600 uppercase">Source Position</label>
+                      <select name="sourcePosition" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                         <option value="top">Top</option><option value="left">Left</option><option value="right">Right</option><option value="bottom">Bottom</option>
+                      </select>
+                    </div>
                    <div className="space-y-1.5">
                      <label className="text-xs font-bold text-slate-600 uppercase">Passage</label>
                      <select name="passageId" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
@@ -518,11 +823,25 @@ export default function AdminTypingDashboard() {
                      <input type="number" name="duration" defaultValue={10} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
                    </div>
                    <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Language</label>
-                     <select name="language" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                        <option value="English">English</option><option value="Hindi">Hindi</option>
-                     </select>
+                     <label className="text-xs font-bold text-slate-600 uppercase">Word Limit (0 = Unlimited)</label>
+                     <input type="number" name="wordLimit" defaultValue={0} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
                    </div>
+                   <div className="space-y-1.5">
+                       <label className="text-xs font-bold text-slate-600 uppercase">Language</label>
+                       <select name="language" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                          <option value="English">English</option>
+                          <option value="Hindi">Hindi (Mangal)</option>
+                          <option value="Unicode Hindi">Unicode Hindi</option>
+                          <option value="Krutidev Hindi">Krutidev Hindi</option>
+                       </select>
+                     </div>
+                     <div className="space-y-1.5">
+                       <label className="text-xs font-bold text-slate-600 uppercase">Typing Engine Design</label>
+                       <select name="typingEngineType" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                          <option value="classic">Classic (Standard)</option>
+                          <option value="modern">Modern (High-End Analytics)</option>
+                       </select>
+                     </div>
                    <div className="space-y-1.5">
                      <label className="text-xs font-bold text-slate-600 uppercase">Backspace Mode</label>
                      <select name="backspaceMode" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
@@ -539,6 +858,32 @@ export default function AdminTypingDashboard() {
                 <div className="pt-4 flex justify-end gap-3">
                    <Button type="button" variant="outline" onClick={() => setShowExamModal(false)}>Cancel</Button>
                    <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Create Exam</Button>
+                </div>
+             </form>
+          </div>
+        </div>
+      )}
+
+      {/* GOV EXAM MODAL */}
+      {showGovExamModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-slate-900">Add Government Exam</h2>
+                <button onClick={() => setShowGovExamModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
+             </div>
+             <form onSubmit={handleAddGovExam} className="p-6 space-y-4">
+                <div className="space-y-1.5">
+                   <label className="text-xs font-bold text-slate-600 uppercase">Exam Title</label>
+                   <input name="title" required placeholder="e.g. SSC CGL" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                </div>
+                <div className="space-y-1.5">
+                   <label className="text-xs font-bold text-slate-600 uppercase">Logo URL (Optional)</label>
+                   <input name="logo" placeholder="https://..." className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                </div>
+                <div className="pt-4 flex justify-end gap-3">
+                   <Button type="button" variant="outline" onClick={() => setShowGovExamModal(false)}>Cancel</Button>
+                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Save</Button>
                 </div>
              </form>
           </div>
@@ -595,7 +940,11 @@ export default function AdminTypingDashboard() {
                 <h2 className="text-xl font-bold text-slate-900">{editingPassage ? "Edit Passage" : "Add Passage"}</h2>
                 <button onClick={() => setShowPassageModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
              </div>
-             <form onSubmit={editingPassage ? handleUpdatePassage : handleAddPassage} className="p-6 space-y-4">
+             <form 
+               key={editingPassage?._id || 'new-passage'}
+               onSubmit={editingPassage ? handleUpdatePassage : handleAddPassage} 
+               className="p-6 space-y-4"
+             >
                 <div className="space-y-1.5">
                    <label className="text-xs font-bold text-slate-600 uppercase">Title</label>
                    <input name="title" defaultValue={editingPassage?.title} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
@@ -613,6 +962,28 @@ export default function AdminTypingDashboard() {
                         <option value="Easy">Easy</option><option value="Medium">Medium</option><option value="Hard">Hard</option>
                      </select>
                    </div>
+                   <div className="space-y-1.5">
+                     <label className="text-xs font-bold text-slate-600 uppercase">Target Section</label>
+                     <select 
+                       name="section" 
+                       defaultValue={modalSection} 
+                       onChange={(e) => setModalSection(e.target.value)}
+                       className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none"
+                     >
+                        <option value="Government">Government Exam</option>
+                        <option value="Special">Special Topic / Current</option>
+                        <option value="Book">Book Chapter</option>
+                     </select>
+                   </div>
+                   {modalSection === 'Book' && (
+                     <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-300">
+                       <label className="text-xs font-bold text-slate-600 uppercase">Assign to Book</label>
+                       <select name="bookId" defaultValue={editingPassage?.bookId || ""} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                          <option value="">Select Book...</option>
+                          {books.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
+                       </select>
+                     </div>
+                   )}
                 </div>
                 <div className="space-y-1.5">
                    <label className="text-xs font-bold text-slate-600 uppercase">Passage Content</label>
@@ -719,71 +1090,190 @@ export default function AdminTypingDashboard() {
           </div>
         </div>
       )}
-
-      {/* ESSAY MODAL */}
-      {showEssayModal && (
+      {/* LANGUAGE MODAL */}
+      {showLanguageModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-             <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
-                <h2 className="text-xl font-bold text-slate-900">Add Essay</h2>
-                <button onClick={() => setShowEssayModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-slate-900">Add Language</h2>
+                <button onClick={() => setShowLanguageModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
              </div>
-             <form onSubmit={handleAddEssay} className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Topic</label>
-                     <input name="topic" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                   </div>
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Title</label>
-                     <input name="title" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                   </div>
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Language</label>
-                     <select name="language" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                        <option value="English">English</option><option value="Hindi">Hindi</option>
-                     </select>
-                   </div>
-                </div>
+             <form onSubmit={handleAddLanguage} className="p-6 space-y-4">
                 <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase">Content</label>
-                   <textarea name="content" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none h-48 resize-none" />
+                   <label className="text-xs font-bold text-slate-600 uppercase">Language Name</label>
+                   <input name="name" required placeholder="e.g. Punjabi, Bengali" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
                 </div>
                 <div className="pt-4 flex justify-end gap-3">
-                   <Button type="button" variant="outline" onClick={() => setShowEssayModal(false)}>Cancel</Button>
-                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Save Essay</Button>
+                   <Button type="button" variant="outline" onClick={() => setShowLanguageModal(false)}>Cancel</Button>
+                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Create Language</Button>
                 </div>
              </form>
           </div>
         </div>
       )}
 
-      {/* CURRENT AFFAIRS MODAL */}
-      {showCurrentModal && (
+      {/* DIFFICULTY MODAL */}
+      {showDifficultyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-             <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
-                <h2 className="text-xl font-bold text-slate-900">Post Current Affairs</h2>
-                <button onClick={() => setShowCurrentModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-slate-900">Add Difficulty</h2>
+                <button onClick={() => setShowDifficultyModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
              </div>
-             <form onSubmit={handleAddCurrent} className="p-6 space-y-4">
+             <form onSubmit={handleAddDifficulty} className="p-6 space-y-4">
                 <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase">Headline</label>
-                   <input name="title" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                </div>
-                <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase">Language</label>
-                   <select name="language" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                      <option value="English">English</option><option value="Hindi">Hindi</option>
-                   </select>
-                </div>
-                <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase">News Content</label>
-                   <textarea name="content" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none h-48 resize-none" />
+                   <label className="text-xs font-bold text-slate-600 uppercase">Difficulty Name</label>
+                   <input name="name" required placeholder="e.g. Ultra Hard, Beginner" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
                 </div>
                 <div className="pt-4 flex justify-end gap-3">
-                   <Button type="button" variant="outline" onClick={() => setShowCurrentModal(false)}>Cancel</Button>
-                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Post News</Button>
+                   <Button type="button" variant="outline" onClick={() => setShowDifficultyModal(false)}>Cancel</Button>
+                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Create Difficulty</Button>
+                </div>
+             </form>
+          </div>
+        </div>
+      )}
+
+      {/* TOPIC MODAL */}
+      {showTopicModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-slate-900">Add Special Topic</h2>
+                <button onClick={() => setShowTopicModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
+             </div>
+             <form onSubmit={handleAddTopic} className="p-6 space-y-4">
+                <div className="space-y-1.5">
+                   <label className="text-xs font-bold text-slate-600 uppercase">Topic Name</label>
+                   <input name="name" required placeholder="e.g. Constitution, Legal, Sports" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                </div>
+                <div className="pt-4 flex justify-end gap-3">
+                   <Button type="button" variant="outline" onClick={() => setShowTopicModal(false)}>Cancel</Button>
+                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Create Topic</Button>
+                </div>
+             </form>
+          </div>
+        </div>
+      )}
+
+      {/* RULE PRESET MODAL */}
+      {showRulePresetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-slate-900">Add Rule Preset</h2>
+                <button onClick={() => setShowRulePresetModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
+             </div>
+             <form onSubmit={handleAddRulePreset} className="p-6 space-y-5">
+                <div className="space-y-1.5">
+                   <label className="text-xs font-bold text-slate-600 uppercase">Preset Name</label>
+                   <input name="name" required placeholder="e.g. SSC Pattern, High Court Pattern" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-600 uppercase">Backspace</label>
+                    <select name="backspaceMode" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                       <option value="enabled">Enabled</option>
+                       <option value="disabled">Disabled</option>
+                       <option value="one-word">One Word Only</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-600 uppercase">Highlighting</label>
+                    <select name="highlightMode" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                       <option value="enabled">Enabled</option>
+                       <option value="disabled">Disabled</option>
+                       <option value="current">Current Only</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <input type="checkbox" name="disableCopyPaste" id="disableCopyPaste" defaultChecked className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
+                    <label htmlFor="disableCopyPaste" className="text-sm font-semibold text-slate-700 cursor-pointer">Disable Copy / Paste / Right Click</label>
+                </div>
+                <div className="pt-4 flex justify-end gap-3">
+                   <Button type="button" variant="outline" onClick={() => setShowRulePresetModal(false)}>Cancel</Button>
+                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Create Preset</Button>
+                </div>
+             </form>
+          </div>
+        </div>
+      )}
+      {/* SPECIAL TEST MODAL */}
+      {showSpecialTestModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+             <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
+                <h2 className="text-xl font-bold text-slate-900">Add Special Topic Test</h2>
+                <button onClick={() => setShowSpecialTestModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
+             </div>
+             <form onSubmit={async (e) => {
+                e.preventDefault();
+                setSubmitting(true);
+                const fd = new FormData(e.currentTarget);
+                const data = Object.fromEntries(fd.entries());
+                // Force SPECIAL category and General mode
+                const finalData = { 
+                    ...data, 
+                    category: 'SPECIAL', 
+                    examMode: 'General',
+                    status: 'Active',
+                    typingEngineType: 'classic',
+                    startTime: new Date("2020-01-01"),
+                    endTime: new Date("2030-01-01")
+                };
+                await fetch("/api/admin/typing/exams", {
+                    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(finalData)
+                });
+                toast.success("Special Test Added!");
+                setShowSpecialTestModal(false);
+                fetchData();
+                setSubmitting(false);
+             }} className="p-6 space-y-5">
+                <div className="space-y-1.5">
+                   <label className="text-xs font-bold text-slate-600 uppercase">Test Title</label>
+                   <input name="title" required placeholder="e.g. Current Affairs - May 2026" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-5">
+                   <div className="space-y-1.5">
+                     <label className="text-xs font-bold text-slate-600 uppercase">Topic Category</label>
+                     <select name="topic" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                        <option value="General">General</option>
+                        {topics.map(t => <option key={t._id} value={t.name}>{t.name}</option>)}
+                     </select>
+                   </div>
+                   <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-600 uppercase">Language</label>
+                      <select name="language" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                         <option value="English">English</option>
+                         <option value="Hindi">Hindi</option>
+                      </select>
+                   </div>
+                   <div className="space-y-1.5 col-span-2">
+                     <label className="text-xs font-bold text-slate-600 uppercase">Select Passage</label>
+                     <select name="passageId" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                       <option value="">Select Passage...</option>
+                       {passages.filter(p => p.section === 'Special').map(p => <option key={p._id} value={p._id}>{p.title} ({p.language})</option>)}
+                     </select>
+                   </div>
+                   <div className="space-y-1.5">
+                     <label className="text-xs font-bold text-slate-600 uppercase">Duration (Min)</label>
+                     <input type="number" name="duration" defaultValue={10} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                   </div>
+                   <div className="space-y-1.5">
+                     <label className="text-xs font-bold text-slate-600 uppercase">Difficulty</label>
+                     <select name="difficulty" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                        <option value="Medium">Medium</option>
+                        <option value="Easy">Easy</option>
+                        <option value="Hard">Hard</option>
+                     </select>
+                   </div>
+                </div>
+
+                <div className="pt-4 flex justify-end gap-3">
+                   <Button type="button" variant="outline" onClick={() => setShowSpecialTestModal(false)}>Cancel</Button>
+                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Save Special Test</Button>
                 </div>
              </form>
           </div>

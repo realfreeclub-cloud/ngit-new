@@ -7,6 +7,7 @@ export interface ITypingPassage {
   wordCount: number;
   difficulty: "Easy" | "Medium" | "Hard";
   bookId?: mongoose.Types.ObjectId;
+  section: "Government" | "Special" | "Book";
   duration?: number;
   createdAt: Date;
   updatedAt: Date;
@@ -20,10 +21,14 @@ const TypingPassageSchema = new Schema<ITypingPassage>(
     wordCount: { type: Number, required: true },
     difficulty: { type: String, enum: ["Easy", "Medium", "Hard"], default: "Medium" },
     bookId: { type: Schema.Types.ObjectId, ref: "TypingBook" },
+    section: { type: String, enum: ["Government", "Special", "Book"], default: "Government" },
     duration: { type: Number, default: 10 },
   },
   { timestamps: true }
 );
 
-const TypingPassage = models.TypingPassage || model("TypingPassage", TypingPassageSchema);
+if (models.TypingPassage) {
+  delete (models as any).TypingPassage;
+}
+const TypingPassage = model<ITypingPassage>("TypingPassage", TypingPassageSchema);
 export default TypingPassage;

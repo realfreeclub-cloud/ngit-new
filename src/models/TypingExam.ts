@@ -13,6 +13,11 @@ export interface ITypingExam {
   showScrollbar: boolean;
   examMode: "SSC" | "CPCT" | "Court" | "General";
   bookId?: mongoose.Types.ObjectId;
+  govExamId?: mongoose.Types.ObjectId; // References GovExam
+  rulePresetId?: mongoose.Types.ObjectId; // References TypingRulePreset
+  difficulty?: "Easy" | "Medium" | "Hard";
+  sourcePosition?: "top" | "left" | "right" | "bottom";
+  typingEngineType?: "classic" | "modern";
   startTime: Date;
   endTime: Date;
   status: "Draft" | "Active" | "Expired";
@@ -25,7 +30,7 @@ const TypingExamSchema = new Schema<ITypingExam>(
   {
     title: { type: String, required: true },
     category: { type: String, required: true },
-    language: { type: String, enum: ["English", "Hindi"], default: "English" },
+    language: { type: String, enum: ["English", "Hindi", "Unicode Hindi", "Krutidev Hindi"], default: "English" },
     passageId: { type: Schema.Types.ObjectId, ref: "TypingPassage", required: true },
     duration: { type: Number, required: true },
     wordLimit: { type: Number, default: 0 },
@@ -33,8 +38,13 @@ const TypingExamSchema = new Schema<ITypingExam>(
     highlightMode: { type: String, enum: ["word", "word_error", "letter", "none"], default: "word" },
     autoScroll: { type: Boolean, default: true },
     showScrollbar: { type: Boolean, default: true },
-    examMode: { type: String, enum: ["SSC", "CPCT", "Court", "General"], default: "General" },
+    examMode: { type: String, enum: ["SSC", "CPCT", "Court", "General", "Steno"], default: "General" },
     bookId: { type: Schema.Types.ObjectId, ref: "TypingBook" },
+    govExamId: { type: Schema.Types.ObjectId, ref: "GovExam" },
+    rulePresetId: { type: Schema.Types.ObjectId, ref: "TypingRulePreset" },
+    difficulty: { type: String, enum: ["Easy", "Medium", "Hard"], default: "Medium" },
+    sourcePosition: { type: String, enum: ["top", "left", "right", "bottom"], default: "top" },
+    typingEngineType: { type: String, enum: ["classic", "modern"], default: "classic" },
     startTime: { type: Date, required: true },
     endTime: { type: Date, required: true },
     status: { type: String, enum: ["Draft", "Active", "Expired"], default: "Draft" },

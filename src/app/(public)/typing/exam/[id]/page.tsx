@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { ClassicTypingEngineModule } from "@/modules/typing/ClassicTypingEngineModule";
+import { ModernTypingEngineModule } from "@/modules/typing/ModernTypingEngineModule";
 import { toast } from "sonner";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronDown, ArrowRight, Keyboard, FileText, Timer } from "lucide-react";
 import { format } from "date-fns";
@@ -20,23 +21,53 @@ export default function TypingExamPage() {
   const [isAgreed, setIsAgreed] = useState(false);
   const router = useRouter();
   const { data: session, status } = useSession();
+  const searchParams = useSearchParams();
 
-  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
   const initialLang = searchParams?.get("lang") || "English";
   const initialLayout = searchParams?.get("layout") || "English";
 
   const [selectedLanguage, setSelectedLanguage] = useState<'English' | 'Hindi'>(initialLang as any);
   const [selectedLayout, setSelectedLayout] = useState<'English' | 'Remington Gail' | 'Inscript' | 'Phonetic'>(initialLayout as any);
 
-  const engineConfig = React.useMemo(() => ({
-    title: exam?.title || "",
-    duration: exam?.duration || 10,
-    backspaceMode: exam?.backspaceMode || "full",
-    highlightMode: exam?.highlightMode || "word",
-    wordLimit: exam?.wordLimit || 0,
-    language: selectedLanguage,
-    layout: selectedLayout as any
-  }), [exam, selectedLanguage, selectedLayout]);
+  useEffect(() => {
+    if (initialLang) setSelectedLanguage(initialLang as any);
+    if (initialLayout) setSelectedLayout(initialLayout as any);
+  }, [initialLang, initialLayout]);
+
+  const engineConfig = React.useMemo(() => {
+    // If a rule preset exists, it overrides the individual exam settings
+    const preset = exam?.rulePresetId;
+    
+    return {
+      title: exam?.title || "",
+      duration: exam?.duration || 10,
+      backspaceMode: preset?.backspaceMode || exam?.backspaceMode || "full",
+      highlightMode: preset?.highlightMode || exam?.highlightMode || "word",
+      wordLimit: preset?.wordLimit || exam?.wordLimit || 0,
+      autoScroll: preset?.autoScroll !== undefined ? preset.autoScroll : (exam?.autoScroll !== undefined ? exam.autoScroll : true),
+      showScrollbar: preset?.showScrollbar !== undefined ? preset.showScrollbar : (exam?.showScrollbar !== undefined ? exam.showScrollbar : true),
+      examMode: preset?.examMode || exam?.examMode || "General",
+      sourcePosition: exam?.sourcePosition || "top",
+      
+      // Extended Rules from Preset
+      paragraphLock: preset?.paragraphLock || false,
+      fixedFormatting: preset?.fixedFormatting || false,
+      allowTabs: preset?.allowTabs || false,
+      allowParagraphs: preset?.allowParagraphs || false,
+      autoStart: preset?.autoStart || false,
+      pauseOnIdle: preset?.pauseOnIdle || false,
+      hardStop: preset?.hardStop !== undefined ? preset.hardStop : true,
+      autoSubmit: preset?.autoSubmit !== undefined ? preset.autoSubmit : true,
+      disableCopyPaste: preset?.disableCopyPaste !== undefined ? preset.disableCopyPaste : true,
+      disableRightClick: preset?.disableRightClick !== undefined ? preset.disableRightClick : true,
+      fullscreenMode: preset?.fullscreenMode || false,
+      blurDetection: preset?.blurDetection || false,
+      keyboardRestriction: preset?.keyboardRestriction || false,
+      
+      language: selectedLanguage,
+      layout: selectedLayout as any
+    };
+  }, [exam, selectedLanguage, selectedLayout]);
 
   useEffect(() => {
     if (!id) return;
@@ -54,6 +85,11 @@ export default function TypingExamPage() {
               console.warn(`Exam with ID ${id} not found in active exams list.`);
             }
             setExam(found);
+            
+            // If we have language and layout in URL (from Step-by-Step flow), jump to engine
+            if (initialLang && initialLayout) {
+               setStep(3);
+            }
           } else {
             console.error("Received non-array data from exams API:", data);
             toast.error("Format error: Could not load exam details");
@@ -218,7 +254,7 @@ export default function TypingExamPage() {
                             Select Keyboard
                         </h4>
                         <div className="grid grid-cols-1 gap-3">
-                            {['Remington Gail', 'Inscript', 'Phonetic'].map((lay) => (
+                            {['Remington Gail', 'Remington CBI', 'Inscript', 'Krutidev', 'Unicode'].map((lay) => (
                                 <button 
                                     key={lay}
                                     onClick={() => setSelectedLayout(lay as any)}
@@ -230,7 +266,7 @@ export default function TypingExamPage() {
                                     <div>
                                         <p className="font-black text-sm">{lay}</p>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase">
-                                            {lay === 'Remington Gail' ? 'Professional' : lay === 'Inscript' ? 'Government' : 'Easy'}
+                                            {lay === 'Remington Gail' ? 'Professional' : lay === 'Inscript' ? 'Government' : lay === 'Unicode' ? 'Standard' : 'Official'}
                                         </p>
                                     </div>
                                     {selectedLayout === lay && <div className="w-2 h-2 rounded-full bg-slate-900" />}
@@ -328,13 +364,23 @@ export default function TypingExamPage() {
         </div>
       )}
 
-      <ClassicTypingEngineModule 
-        exam={exam}
-        passage={exam.passageId?.content || "Passage not linked properly from admin panel. Please assign a passage to this exam."} 
-        config={engineConfig}
-        onComplete={handleComplete}
-        userName={session?.user?.name || "STUDENT"}
-      />
+      {exam?.typingEngineType === "modern" ? (
+        <ModernTypingEngineModule 
+          exam={exam}
+          passage={exam.passageId?.content || "Passage not linked properly."} 
+          config={engineConfig}
+          onComplete={handleComplete}
+          userName={session?.user?.name || "STUDENT"}
+        />
+      ) : (
+        <ClassicTypingEngineModule 
+          exam={exam}
+          passage={exam.passageId?.content || "Passage not linked properly."} 
+          config={engineConfig}
+          onComplete={handleComplete}
+          userName={session?.user?.name || "STUDENT"}
+        />
+      )}
     </div>
   );
 }

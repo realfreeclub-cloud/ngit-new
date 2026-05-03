@@ -8,9 +8,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trophy, RotateCcw, ArrowLeft, Target, Zap, AlertCircle } from "lucide-react";
 
+import { ClassicTypingEngineModule } from "@/modules/typing/ClassicTypingEngineModule";
+
 function TypingPracticeContent() {
   const searchParams = useSearchParams();
-  const type = searchParams.get("type");
+  const type = searchParams.get("type"); // e.g., 'book', 'word', 'essay', 'current'
   const cat = searchParams.get("cat");
   const val = searchParams.get("val");
   const lang = searchParams.get("lang") || "English";
@@ -117,13 +119,24 @@ function TypingPracticeContent() {
     );
   }
 
+  const isBook = type?.toLowerCase() === 'book';
+
   return (
     <div className="min-h-screen bg-white">
-      <TypingEngineModule 
-        passage={content?.content || ""} 
-        config={engineConfig}
-        onComplete={handleComplete}
-      />
+      {isBook ? (
+          <ClassicTypingEngineModule 
+            exam={content?.rawExamData} // Passed if available
+            passage={content?.content || ""} 
+            config={engineConfig}
+            onComplete={handleComplete}
+          />
+      ) : (
+          <TypingEngineModule 
+            passage={content?.content || ""} 
+            config={engineConfig}
+            onComplete={handleComplete}
+          />
+      )}
     </div>
   );
 }

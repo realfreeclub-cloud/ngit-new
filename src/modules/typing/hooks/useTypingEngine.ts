@@ -26,13 +26,18 @@ export const useTypingEngine = () => {
       const metrics = calculateMetrics(typedText, passage, elapsedMinutes);
 
       // Update the global store with live stats
-      updateMetrics(
-        metrics.wpm,
-        metrics.rawWpm,
-        metrics.accuracy,
-        metrics.errorCount,
-        0 // Backspace count tracking can be added here if needed
-      );
+      updateMetrics({
+        wpm: metrics.wpm,
+        rawWpm: metrics.rawWpm,
+        grossWpm: metrics.grossWpm,
+        netWpm: metrics.netWpm,
+        accuracy: metrics.accuracy,
+        errorCount: metrics.errorCount,
+        wrongWords: metrics.wrongWords,
+        backspaceCount: 0, // Could be synced from state if needed
+        keystrokes: metrics.keystrokes,
+        progress: metrics.progress
+      });
     }
   }, [typedText, timeLeft, isActive, isFinished, passage, settings.duration, updateMetrics]);
 };

@@ -12,15 +12,20 @@ export async function GET(req: Request) {
     await connectDB();
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
-    const lang = searchParams.get("lang");
+    const lang = searchParams.get("language") || searchParams.get("lang");
     const bookId = searchParams.get("bookId");
+    const govExamId = searchParams.get("govExamId");
+    const difficulty = searchParams.get("difficulty");
     
     const now = new Date();
-    const query: any = {
-      status: "Active",
-      startTime: { $lte: now },
-      endTime: { $gte: now }
-    };
+    const query: any = { status: "Active" };
+
+    // Only apply date constraints for general timed exams, 
+    // allow practice flow to access all active tests.
+    if (!govExamId && !bookId) {
+        query.startTime = { $lte: now };
+        query.endTime = { $gte: now };
+    }
 
     if (category && category !== "All") {
       query.category = category;
@@ -34,10 +39,19 @@ export async function GET(req: Request) {
       query.bookId = bookId;
     }
 
+    if (govExamId && govExamId !== "null" && govExamId !== "undefined") {
+      query.govExamId = govExamId;
+    }
+
+    if (difficulty) {
+      query.difficulty = difficulty;
+    }
+
     const exams = await TypingExam.find(query)
     .populate("passageId")
     .populate({ path: "bookId", strictPopulate: false })
-    .sort({ startTime: 1 });
+    .populate({ path: "rulePresetId", strictPopulate: false })
+    .sort({ createdAt: -1 });
 
     // Add participant count to each exam
     const examsWithCounts = await Promise.all(exams.map(async (exam) => {

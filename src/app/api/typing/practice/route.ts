@@ -5,6 +5,7 @@ import WordSet, { IWordSet } from "@/models/WordSet";
 import PracticeEssay, { IPracticeEssay } from "@/models/PracticeEssay";
 import CurrentPassage, { ICurrentPassage } from "@/models/CurrentPassage";
 import TypingPassage from "@/models/TypingPassage";
+import "@/models/TypingBook";
 
 export async function GET(req: Request) {
   try {
@@ -28,22 +29,34 @@ export async function GET(req: Request) {
         if (!mongoose.Types.ObjectId.isValid(val as string)) {
             return NextResponse.json({ error: "Invalid chapter ID" }, { status: 400 });
         }
-        const passage = await TypingPassage.findById(val).lean() as any;
+        const passage = await TypingPassage.findById(val)
+            .populate({ path: 'bookId', model: 'TypingBook', select: '_id name' })
+            .lean() as any;
         if (!passage) return NextResponse.json({ error: "Chapter not found" }, { status: 404 });
         return NextResponse.json({
             title: passage.title,
             content: passage.content,
             duration: 10,
             backspaceMode: 'full',
-            highlightMode: 'word'
+            highlightMode: 'word',
+            rawExamData: {
+                _id: passage._id,
+                title: passage.title,
+                bookId: passage.bookId,  // populated { _id, name }
+                language: passage.language,
+                category: 'BOOK'
+            }
         });
     }
 
     if (type === 'TAXONOMY') {
-        const words = await WordSet.find().select('_id category value name language').lean();
-        const essays = await PracticeEssay.find().select('_id topic title language').lean();
-        const current = await CurrentPassage.find().select('_id title language createdAt').sort({ createdAt: -1 }).lean();
-        return NextResponse.json({ words, essays, current });
+        const [words, essays, current, books] = await Promise.all([
+          WordSet.find().select('_id category value name language').lean(),
+          PracticeEssay.find().select('_id topic title language').lean(),
+          CurrentPassage.find().select('_id title language createdAt').sort({ createdAt: -1 }).lean(),
+          require("@/models/TypingBook").default.find().select('_id name').lean()
+        ]);
+        return NextResponse.json({ words, essays, current, books });
     }
 
     if (type === 'WORD') {

@@ -5,8 +5,12 @@ export interface ITypingResult {
   examId: mongoose.Types.ObjectId;
   wpm: number;
   rawWpm: number;
+  grossWpm?: number;
+  netWpm?: number;
   accuracy: number;
   errorCount: number;
+  wrongWords?: number;
+  keystrokes?: number;
   totalCharacters: number;
   timeTaken: number; // in seconds
   submittedText: string;
@@ -21,8 +25,12 @@ const TypingResultSchema = new Schema<ITypingResult>(
     examId: { type: Schema.Types.ObjectId, ref: "TypingExam", required: true },
     wpm: { type: Number, required: true },
     rawWpm: { type: Number, required: true },
+    grossWpm: { type: Number },
+    netWpm: { type: Number },
     accuracy: { type: Number, required: true },
     errorCount: { type: Number, required: true },
+    wrongWords: { type: Number },
+    keystrokes: { type: Number },
     totalCharacters: { type: Number, required: true },
     timeTaken: { type: Number, required: true },
     submittedText: { type: String, required: true },

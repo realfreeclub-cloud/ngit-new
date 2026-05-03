@@ -14,25 +14,58 @@ import {
   Award
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
-
-type Module = 'WORD' | 'SPECIAL' | 'OFFICIAL';
-
 export default function TypingSelectionLayer() {
+  type Module = 'WORD' | 'SPECIAL' | 'OFFICIAL' | 'BOOK';
   const [step, setStep] = useState(1);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<'English' | 'Hindi'>('English');
   const [selectedLayout, setSelectedLayout] = useState<'English' | 'Remington Gail' | 'Inscript' | 'Phonetic'>('English');
-  const [taxonomy, setTaxonomy] = useState<{words: any[], essays: any[], current: any[]}>({ words: [], essays: [], current: [] });
+  const [taxonomy, setTaxonomy] = useState<{words: any[], essays: any[], current: any[], books: any[]}>({ words: [], essays: [], current: [], books: [] });
   const [loadingTaxonomy, setLoadingTaxonomy] = useState(true);
+  const [specialExams, setSpecialExams] = useState<any[]>([]);
+  const [bookChapters, setBookChapters] = useState<any[]>([]);
+  const [loadingContent, setLoadingContent] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (selectedModule === 'SPECIAL') {
+        setLoadingContent(true);
+        fetch(`/api/typing/exams?category=SPECIAL&lang=${selectedLanguage}`)
+          .then(res => res.json())
+          .then(data => {
+              if (Array.isArray(data)) setSpecialExams(data);
+              setLoadingContent(false);
+          })
+          .catch(() => setLoadingContent(false));
+    }
+  }, [selectedModule, selectedLanguage]);
+
+  useEffect(() => {
+    if (selectedModule === 'BOOK' && selectedCategory) {
+        setLoadingContent(true);
+        fetch(`/api/typing/practice?type=BOOK&bookId=${selectedCategory}&lang=${selectedLanguage}`)
+          .then(res => res.json())
+          .then(data => {
+              if (Array.isArray(data)) setBookChapters(data);
+              setLoadingContent(false);
+          })
+          .catch(() => setLoadingContent(false));
+    }
+  }, [selectedModule, selectedCategory, selectedLanguage]);
 
   useEffect(() => {
     fetch('/api/typing/practice?type=TAXONOMY')
       .then(res => res.json())
       .then(data => {
-         setTaxonomy({ words: data.words || [], essays: data.essays || [], current: data.current || [] });
+         setTaxonomy({ 
+             words: data.words || [], 
+             essays: data.essays || [], 
+             current: data.current || [],
+             books: data.books || []
+         });
          setLoadingTaxonomy(false);
       })
       .catch(err => {
@@ -52,9 +85,9 @@ export default function TypingSelectionLayer() {
     },
     {
       id: 'SPECIAL' as Module,
-      title: 'Special Topic / Current',
-      description: 'Typed long-form passages on historical and social topics, plus daily news.',
-      icon: BookOpen,
+      title: 'Special Topic / Current Affairs',
+      description: 'Practice with specialized essays and stay updated with daily news passages.',
+      icon: Newspaper,
       color: 'bg-emerald-500',
       lightColor: 'bg-emerald-50'
     },
@@ -68,8 +101,8 @@ export default function TypingSelectionLayer() {
     },
     {
         id: 'OFFICIAL' as Module,
-        title: 'All exams',
-        description: 'Take standard SSC, Railway, and State Police exams.',
+        title: 'Government Exams',
+        description: 'Take standard SSC, Railway, UPSSSC, and State Police exams.',
         icon: Award,
         color: 'bg-slate-900',
         lightColor: 'bg-slate-100'
@@ -77,6 +110,11 @@ export default function TypingSelectionLayer() {
   ];
 
   // Compute dynamic categories
+  const dynamicBookCategories = taxonomy.books.map(b => ({
+    id: b._id,
+    title: b.name,
+    description: `Practice chapters from ${b.name}.`
+  }));
   const dynamicWordCategories = Array.from(new Set(taxonomy.words.filter(w => w.language === selectedLanguage).map(w => w.category))).map(cat => ({
     id: cat,
     title: cat === 'A-Z' ? 'A to Z Words' : cat === 'Length' ? 'Word Length' : String(cat),
@@ -93,13 +131,22 @@ export default function TypingSelectionLayer() {
     }))
   ];
 
+  const { data: session } = useSession();
+
   const handleModuleSelect = (moduleId: Module) => {
     if (moduleId === 'OFFICIAL') {
+        if (!session) {
+            router.push(`/api/auth/signin?callbackUrl=/typing/official?lang=${selectedLanguage}`);
+            return;
+        }
         router.push(`/typing/official?lang=${selectedLanguage}`); 
         return;
     }
-    if ((moduleId as string) === 'BOOK') {
-        router.push(`/typing/books?lang=${selectedLanguage}`); 
+    if (moduleId === 'SPECIAL') {
+        setSelectedModule(moduleId);
+        // Skip categories, go straight to tests list
+        setSelectedCategory('SPECIAL'); 
+        setStep(3);
         return;
     }
     setSelectedModule(moduleId);
@@ -180,20 +227,20 @@ export default function TypingSelectionLayer() {
         >
           <ArrowLeft className="w-4 h-4" /> Change Language/Layout
       </button>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {modules.map((m) => (
           <Card 
             key={m.id}
             onClick={() => handleModuleSelect(m.id)}
-            className="group cursor-pointer p-8 rounded-[2.5rem] border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col relative overflow-hidden"
+            className="group cursor-pointer p-6 rounded-[2rem] border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 flex flex-col relative overflow-hidden"
           >
-            <div className={cn("w-16 h-16 rounded-3xl flex items-center justify-center text-white mb-8 shadow-lg", m.color)}>
-              <m.icon className="w-8 h-8" />
+            <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg", m.color)}>
+              <m.icon className="w-7 h-7" />
             </div>
-            <h3 className="text-2xl font-black text-slate-900 mb-4 group-hover:text-primary transition-colors">{m.title}</h3>
-            <p className="text-sm font-bold text-slate-400 leading-relaxed mb-8">{m.description}</p>
-            <div className="mt-auto flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary">
-              Get Started <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <h3 className="text-xl font-black text-slate-900 mb-3 group-hover:text-primary transition-colors">{m.title}</h3>
+            <p className="text-[11px] font-bold text-slate-400 leading-relaxed mb-6 line-clamp-2">{m.description}</p>
+            <div className="mt-auto flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary">
+              Get Started <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </div>
           </Card>
         ))}
@@ -202,11 +249,19 @@ export default function TypingSelectionLayer() {
   );
 
   const renderStep2 = () => {
+    // Hard bypass for Special Topics to ensure categories are never shown
+    if (selectedModule === 'SPECIAL') {
+        setStep(3);
+        return null;
+    }
+
     if (loadingTaxonomy) {
       return <div className="text-center py-20 text-slate-400 font-bold animate-pulse">Loading Library...</div>;
     }
 
-    const categories = selectedModule === 'WORD' ? dynamicWordCategories : dynamicSpecialCategories;
+    const categories = selectedModule === 'WORD' ? dynamicWordCategories : 
+                       selectedModule === 'BOOK' ? dynamicBookCategories :
+                       dynamicSpecialCategories;
     
     return (
       <div className="space-y-8">
@@ -238,6 +293,10 @@ export default function TypingSelectionLayer() {
   };
 
   const renderStep3 = () => {
+      if (loadingContent) {
+          return <div className="text-center py-20 text-slate-400 font-bold animate-pulse">Loading Content...</div>;
+      }
+
       let options: { id: string, title: string, subtitle?: string, isLong?: boolean }[] = [];
       
       if (selectedModule === 'WORD') {
@@ -245,25 +304,19 @@ export default function TypingSelectionLayer() {
             .filter(w => w.category === selectedCategory && w.language === selectedLanguage)
             .map(w => ({ id: w._id, title: w.name || w.value, isLong: false }));
       } else if (selectedModule === 'SPECIAL') {
-          if (selectedCategory === 'CURRENT') {
-              options = taxonomy.current
-                .filter(c => c.language === selectedLanguage)
-                .map(c => ({ 
-                    id: c._id, 
-                    title: c.title, 
-                    subtitle: new Date(c.createdAt).toLocaleDateString(),
-                    isLong: true 
-                }));
-          } else {
-              options = taxonomy.essays
-                .filter(e => e.topic === selectedCategory && e.language === selectedLanguage)
-                .map(e => ({ 
-                    id: e._id, 
-                    title: e.title, 
-                    subtitle: `${e.topic} Essay`,
-                    isLong: true 
-                }));
-          }
+          options = specialExams.map(e => ({
+              id: e._id,
+              title: e.title,
+              subtitle: 'Special Topic',
+              isLong: true
+          }));
+      } else if (selectedModule === 'BOOK') {
+          options = bookChapters.map(c => ({
+              id: c._id,
+              title: c.title,
+              subtitle: 'Chapter Practice',
+              isLong: true
+          }));
       }
 
       const isLongLayout = options[0]?.isLong;
@@ -271,10 +324,10 @@ export default function TypingSelectionLayer() {
       return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <button 
-            onClick={() => setStep(2)}
+            onClick={() => setStep(selectedModule === 'SPECIAL' ? 1 : 2)}
             className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
           >
-            <ArrowLeft className="w-4 h-4" /> Back to Categories
+            <ArrowLeft className="w-4 h-4" /> Back to {selectedModule === 'SPECIAL' ? 'Modules' : 'Categories'}
           </button>
           
           <div className={cn("grid gap-4", isLongLayout ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-2 md:grid-cols-4 lg:grid-cols-6")}>
@@ -282,9 +335,11 @@ export default function TypingSelectionLayer() {
                  <button
                     key={opt.id}
                     onClick={() => {
-                        const modulePath = selectedModule === 'SPECIAL' 
-                            ? (selectedCategory === 'CURRENT' ? 'current' : 'essay') 
-                            : selectedModule?.toLowerCase();
+                        if (selectedModule === 'SPECIAL') {
+                            router.push(`/typing/exam/${opt.id}?lang=${selectedLanguage}&layout=${selectedLayout}`);
+                            return;
+                        }
+                        const modulePath = selectedModule?.toLowerCase();
                         router.push(`/typing/exam?type=${modulePath}&val=${opt.id}&lang=${selectedLanguage}&layout=${selectedLayout}`);
                     }}
                     className={cn(

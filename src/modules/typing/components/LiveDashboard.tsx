@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useTypingStore } from '@/store/useTypingStore';
 import { cn } from "@/lib/utils";
-import { Target, Zap, AlertCircle, BarChart3, Clock, Maximize, Minimize } from 'lucide-react';
+import { Target, Zap, AlertCircle, BarChart3, Clock, Maximize, Minimize, Keyboard } from 'lucide-react';
 
 /**
  * StatCard Component (Private)
@@ -30,27 +30,31 @@ const StatCard = ({ icon: Icon, label, value, hexColor, unit }: any) => (
  * Metrics: WPM, Accuracy, Errors, and DPH (Depressions Per Hour)
  */
 export const LiveDashboard: React.FC = () => {
-  const { wpm, accuracy, errorCount, typedText, timeLeft, settings, isActive, isFinished } = useTypingStore();
-
-  // Calculate DPH (Depressions Per Hour)
-  // Formula: (Total Characters / Elapsed Time in Seconds) * 3600
-  const dph = useMemo(() => {
-    const elapsedSeconds = (settings.duration * 60) - timeLeft;
-    if (elapsedSeconds <= 0 || (!isActive && !isFinished)) return 0;
-    return Math.round((typedText.length / elapsedSeconds) * 3600);
-  }, [typedText.length, timeLeft, settings.duration, isActive, isFinished]);
+  const { 
+    wpm, netWpm, grossWpm, accuracy, errorCount, wrongWords, 
+    progress, keystrokes, timeLeft, settings, isActive, isFinished 
+  } = useTypingStore();
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
       {/* Net Speed */}
       <StatCard 
         icon={Zap} 
-        label="Net Speed" 
-        value={wpm} 
+        label="Net WPM" 
+        value={netWpm} 
         unit="WPM" 
         hexColor="#4f46e5" // Indigo 600
       />
       
+      {/* Gross Speed */}
+      <StatCard 
+        icon={BarChart3} 
+        label="Gross WPM" 
+        value={grossWpm} 
+        unit="WPM" 
+        hexColor="#0ea5e9" // Sky 500
+      />
+
       {/* Accuracy */}
       <StatCard 
         icon={Target} 
@@ -60,19 +64,28 @@ export const LiveDashboard: React.FC = () => {
         hexColor="#059669" // Emerald 600
       />
       
-      {/* Errors */}
+      {/* Progress */}
+      <StatCard 
+        icon={Clock} 
+        label="Progress" 
+        value={progress} 
+        unit="%" 
+        hexColor="#8b5cf6" // Violet 500
+      />
+
+      {/* Wrong Words */}
       <StatCard 
         icon={AlertCircle} 
-        label="Total Errors" 
-        value={errorCount} 
+        label="Wrong Words" 
+        value={wrongWords} 
         hexColor="#e11d48" // Rose 600
       />
       
-      {/* Depressions Per Hour (DPH) */}
+      {/* Keystrokes */}
       <StatCard 
-        icon={BarChart3} 
-        label="DPH Rate" 
-        value={dph} 
+        icon={Keyboard} 
+        label="Keystrokes" 
+        value={keystrokes} 
         hexColor="#d97706" // Amber 600
       />
     </div>
