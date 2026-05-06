@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IQuiz extends Document {
     title: string;
+    logo?: string;
     courseId: mongoose.Types.ObjectId;
     examCode?: string;
     batchIds?: mongoose.Types.ObjectId[];
@@ -45,6 +46,7 @@ export interface IQuiz extends Document {
 const QuizSchema = new Schema<IQuiz>(
     {
         title: { type: String, required: true },
+        logo: { type: String },
         description: { type: String },
         courseId: { type: Schema.Types.ObjectId, ref: "Course", required: true },
         examCode: { type: String },
@@ -58,8 +60,8 @@ const QuizSchema = new Schema<IQuiz>(
             availableLanguages: [{ type: String, default: "en" }],
         },
         schedule: {
-            startDate: { type: Date, required: true },
-            endDate: { type: Date, required: true },
+            startDate: { type: Date },
+            endDate: { type: Date },
             gracePeriodMinutes: { type: Number, default: 0 },
         },
         security: {

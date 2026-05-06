@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getCourses } from "@/services/CourseService";
 import { Button } from "@/components/ui/button";
 import {
     Plus, Search, BookOpen, Users,
-    CheckCircle, XCircle, Settings, Layers
+    CheckCircle, XCircle, Settings, Layers, Trash2
 } from "lucide-react";
 import Link from "next/link";
+import { deleteCourse, getCourses } from "@/services/CourseService";
+import { toast } from "sonner";
 
 export default function AdminCoursesPage() {
     const [courses, setCourses] = useState<any[]>([]);
@@ -24,6 +25,25 @@ export default function AdminCoursesPage() {
         }
         load();
     }, []);
+
+    const loadCourses = async () => {
+        setLoading(true);
+        const data = await getCourses();
+        setCourses(data);
+        setFiltered(data);
+        setLoading(false);
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this course? All associated data will be removed.")) return;
+        const res = await deleteCourse(id);
+        if (res.success) {
+            toast.success("Course deleted successfully");
+            loadCourses();
+        } else {
+            toast.error(res.error || "Failed to delete course");
+        }
+    };
 
     useEffect(() => {
         const q = query.toLowerCase();
@@ -149,23 +169,32 @@ export default function AdminCoursesPage() {
                                     </span>
                                 </div>
 
-                                {/* Actions */}
-                                <div className="mt-5 grid grid-cols-2 gap-2">
-                                    {/* Manage Content → curriculum tab */}
-                                    <Link href={`/admin/courses/${course._id}`} className="flex-1">
-                                        <Button variant="outline" className="w-full rounded-2xl font-bold gap-2 border-2 hover:border-primary/40 hover:text-primary">
-                                            <BookOpen className="w-4 h-4" />
-                                            Manage Content
-                                        </Button>
-                                    </Link>
-                                    {/* Edit → settings tab via query param */}
-                                    <Link href={`/admin/courses/${course._id}?tab=settings`} className="flex-1">
-                                        <Button className="w-full rounded-2xl font-bold gap-2 shadow-lg shadow-primary/20">
-                                            <Settings className="w-4 h-4" />
-                                            Edit
-                                        </Button>
-                                    </Link>
-                                </div>
+                                 {/* Actions */}
+                                 <div className="mt-5 grid grid-cols-2 gap-2">
+                                     {/* Manage Content → curriculum tab */}
+                                     <Link href={`/admin/courses/${course._id}`} className="flex-1">
+                                         <Button variant="outline" className="w-full h-11 rounded-2xl font-bold gap-2 border-2 hover:border-primary/40 hover:text-primary transition-all">
+                                             <BookOpen className="w-4 h-4" />
+                                             Content
+                                         </Button>
+                                     </Link>
+                                     {/* Edit → settings tab via query param */}
+                                     <div className="flex gap-2">
+                                         <Link href={`/admin/courses/${course._id}?tab=settings`} className="flex-1">
+                                             <Button className="w-full h-11 rounded-2xl font-bold gap-2 shadow-lg shadow-primary/20 transition-all">
+                                                 <Settings className="w-4 h-4" />
+                                                 Edit
+                                             </Button>
+                                         </Link>
+                                         <Button 
+                                             variant="ghost" 
+                                             className="h-11 w-11 shrink-0 rounded-2xl border-2 border-slate-100 text-rose-500 hover:bg-rose-50 hover:border-rose-100 transition-all"
+                                             onClick={() => handleDelete(course._id)}
+                                         >
+                                             <Trash2 className="w-4 h-4" />
+                                         </Button>
+                                     </div>
+                                 </div>
                             </div>
                         </div>
                     ))}

@@ -52,3 +52,14 @@ export async function getCourses(page: number = 1, limit: number = 20) {
         return [];
     }
 }
+
+export async function deleteCourse(id: string) {
+    try {
+        await connectDB();
+        await Course.findByIdAndDelete(id);
+        revalidatePath("/admin/courses");
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}

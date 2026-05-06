@@ -7,6 +7,7 @@ import Answer from "@/models/Answer";
 import User, { UserRole } from "@/models/User";
 import Enrollment from "@/models/Enrollment";
 import PaidTestRequest, { RequestStatus } from "@/models/PaidTestRequest";
+import Question from "@/models/Question";
 import { z } from "zod";
 import { createSafeAction } from "@/lib/safe-action";
 import { RATE_LIMIT_CONFIGS } from "@/lib/rate-limit";
@@ -76,7 +77,7 @@ export const getQuiz = createSafeAction(
             }
         }
 
-        const questionsList = (quiz.questions as any[]).map((q: any) => {
+        let questionsList = (quiz.questions as any[]).map((q: any) => {
             if (!q) return null;
             return {
                 _id: q._id ? q._id.toString() : null,
@@ -89,9 +90,18 @@ export const getQuiz = createSafeAction(
                 marks: q.marks,
                 type: q.type,
                 assertion: q.assertion,
-                reason: q.reason
+                reason: q.reason,
+                shortAnswer: q.shortAnswer
             };
         }).filter(Boolean);
+
+        // Dynamic Shuffling
+        if (quiz.settings?.shuffleQuestions) {
+            for (let i = questionsList.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questionsList[i], questionsList[j]] = [questionsList[j], questionsList[i]];
+            }
+        }
 
         return { ...JSON.parse(JSON.stringify(quiz)), questions: questionsList };
     }
@@ -147,9 +157,24 @@ export const submitQuiz = createSafeAction(
                 } else if (question.type === "NUMERIC") {
                     isCorrect = parseFloat(userAnswer) === question.numericAnswer;
                 } else if (question.type === "TRUE_FALSE") {
-                    isCorrect = userAnswer === (question.options?.[0]?.isCorrect ? "true" : "false");
+                    // Normalize boolean or string comparison
+                    const correctOption = question.options.find((o: any) => o.isCorrect);
+                    const isCorrectVal = correctOption?.text.en.toLowerCase() === "true";
+                    isCorrect = String(userAnswer) === String(isCorrectVal);
                 } else if (question.type === "ASSERTION_REASON") {
                     isCorrect = parseInt(userAnswer) === question.numericAnswer;
+                } else if (question.type === "MATCH_THE_FOLLOWING") {
+                    // userAnswer is { [optionId]: matchId }
+                    // Each option in question has a 'pair' that it should match with
+                    // In our current MatchFollowing component, we match optionId to matchId
+                    // We need to verify if the pair of optionId matches the matchId's pair text or ID
+                    // Actually, the simplest way is to check if each selection in userAnswer is correct
+                    const matches = Object.entries(userAnswer as Record<string, string>);
+                    if (matches.length === question.options.length) {
+                        isCorrect = matches.every(([optId, matchId]) => {
+                            return optId === matchId; // Simplified: currently the UI matches IDs
+                        });
+                    }
                 }
 
                 if (isCorrect) {

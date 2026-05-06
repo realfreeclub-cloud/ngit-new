@@ -29,3 +29,46 @@ export async function DELETE(
     return NextResponse.json({ error: error.message || "Failed to delete exam" }, { status: 500 });
   }
 }
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: any }
+) {
+  try {
+    const { id } = await params;
+    const session = await getServerSession(authOptions);
+    if (session?.user?.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const data = await req.json();
+    await connectDB();
+
+    // Sanitize and handle optional IDs
+    const updateData = { ...data };
+    if (!updateData.govExamId || updateData.govExamId === "" || updateData.govExamId === "None") {
+        updateData.govExamId = null;
+    }
+    if (!updateData.rulePresetId || updateData.rulePresetId === "" || updateData.rulePresetId === "None") {
+        updateData.rulePresetId = null;
+    }
+    if (!updateData.bookId || updateData.bookId === "" || updateData.bookId === "None") {
+        updateData.bookId = null;
+    }
+
+    const updatedExam = await TypingExam.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedExam) {
+      return NextResponse.json({ error: "Exam not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(updatedExam);
+  } catch (error: any) {
+    console.error("Exam Update Error:", error);
+    return NextResponse.json({ error: error.message || "Failed to update exam" }, { status: 500 });
+  }
+}

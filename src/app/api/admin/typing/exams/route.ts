@@ -31,12 +31,21 @@ export async function POST(req: Request) {
     await connectDB();
     const data = await req.json();
     
+    // Sanitize ObjectIds (convert empty strings to null to avoid BSON casting errors)
+    const sanitizedData = { ...data };
+    const idFields = ["rulePresetId", "govExamId", "bookId", "passageId"];
+    idFields.forEach(field => {
+      if (sanitizedData[field] === "") {
+        sanitizedData[field] = null;
+      }
+    });
+
     // Auto-fill missing required fields
     const examData = {
-      ...data,
-      startTime: data.startTime || new Date(),
-      endTime: data.endTime || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
-      status: data.status || "Active",
+      ...sanitizedData,
+      startTime: sanitizedData.startTime || new Date(),
+      endTime: sanitizedData.endTime || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+      status: sanitizedData.status || "Active",
     };
 
     const exam = await TypingExam.create(examData);

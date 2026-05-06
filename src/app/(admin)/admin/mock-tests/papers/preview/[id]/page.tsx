@@ -39,6 +39,7 @@ export default function EditPaperSetPage({ params }: { params: Promise<{ id: str
 
     // Filtering for question bank
     const [searchQ, setSearchQ] = useState("");
+    const [useBlueprintFilters, setUseBlueprintFilters] = useState(true);
 
     useEffect(() => {
         const init = async () => {
@@ -83,6 +84,43 @@ export default function EditPaperSetPage({ params }: { params: Promise<{ id: str
         });
     };
 
+    const selectAllFiltered = () => {
+        const newQuestions = [...formData.questions];
+        let newTotalMarks = formData.totalMarks;
+
+        filteredPool.forEach(q => {
+            if (!newQuestions.includes(q._id)) {
+                newQuestions.push(q._id);
+                newTotalMarks += q.marks;
+            }
+        });
+
+        setFormData({
+            ...formData,
+            questions: newQuestions,
+            totalQuestions: newQuestions.length,
+            totalMarks: newTotalMarks
+        });
+        toast.success(`Added ${filteredPool.length} questions to the set.`);
+    };
+
+    const deselectAllFiltered = () => {
+        const filteredIds = filteredPool.map(q => q._id);
+        const remainingQuestions = formData.questions.filter((qid: string) => !filteredIds.includes(qid));
+        
+        // Calculate new marks
+        const remainingObjects = allQuestions.filter(q => remainingQuestions.includes(q._id));
+        const newTotalMarks = remainingObjects.reduce((acc, q) => acc + q.marks, 0);
+
+        setFormData({
+            ...formData,
+            questions: remainingQuestions,
+            totalQuestions: remainingQuestions.length,
+            totalMarks: newTotalMarks
+        });
+        toast.info("Removed filtered questions from selection.");
+    };
+
     const handleAutoGenerate = () => {
         const pool = allQuestions.filter(q => 
             (!formData.courseId || q.courseId?._id === formData.courseId) &&
@@ -109,8 +147,16 @@ export default function EditPaperSetPage({ params }: { params: Promise<{ id: str
     };
 
     const handleSubmit = async () => {
-        if (!formData.name || !formData.courseId || formData.questions.length === 0) {
-            toast.error("Please fill required fields and select questions.");
+        if (!formData.name) {
+            toast.error("Please provide a Template Name.");
+            return;
+        }
+        if (!formData.courseId) {
+            toast.error("Please select a Target Course.");
+            return;
+        }
+        if (formData.questions.length === 0) {
+            toast.error("Please select at least one question for the paper set.");
             return;
         }
 
@@ -126,9 +172,12 @@ export default function EditPaperSetPage({ params }: { params: Promise<{ id: str
     };
 
     const filteredPool = allQuestions.filter(q => {
-        const matchesCourse = !formData.courseId || (q.courseId?._id === formData.courseId || q.courseId === formData.courseId);
-        const matchesExamCode = !formData.examCode || q.examCode === formData.examCode;
-        const matchesSubject = !formData.subject || q.subject?.toLowerCase() === formData.subject?.toLowerCase();
+        const qCourseId = q.courseId?._id || q.courseId;
+        const formCourseId = formData.courseId?._id || formData.courseId;
+
+        const matchesCourse = !useBlueprintFilters || !formCourseId || qCourseId === formCourseId;
+        const matchesExamCode = !useBlueprintFilters || !formData.examCode || q.examCode === formData.examCode;
+        const matchesSubject = !useBlueprintFilters || !formData.subject || q.subject?.toLowerCase() === formData.subject?.toLowerCase();
         const matchesSearch = !searchQ || q.content?.en?.toLowerCase().includes(searchQ.toLowerCase());
         return matchesCourse && matchesExamCode && matchesSubject && matchesSearch;
     });
@@ -170,7 +219,7 @@ export default function EditPaperSetPage({ params }: { params: Promise<{ id: str
 
                         <div className="space-y-6">
                             <div className="space-y-1">
-                                <Label className="font-bold text-slate-700 ml-1">Template Name</Label>
+                                <Label className="font-bold text-slate-700 ml-1">Template Name <span className="text-rose-500">*</span></Label>
                                 <Input 
                                     className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold" 
                                     value={formData.name}
@@ -179,7 +228,7 @@ export default function EditPaperSetPage({ params }: { params: Promise<{ id: str
                             </div>
 
                             <div className="space-y-1">
-                                <Label className="font-bold text-slate-700 ml-1">Target Course</Label>
+                                <Label className="font-bold text-slate-700 ml-1">Target Course <span className="text-rose-500">*</span></Label>
                                 <select 
                                     className="w-full h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-slate-900"
                                     value={formData.courseId}
@@ -243,20 +292,47 @@ export default function EditPaperSetPage({ params }: { params: Promise<{ id: str
                 {/* Right Panel: List */}
                 <div className="lg:col-span-2 space-y-8">
                     <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm flex flex-col h-[750px]">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
                             <div>
                                 <h2 className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-1">Select Questions</h2>
-                                <p className="text-slate-400 font-bold uppercase tracking-widest text-[9px]">Filter and toggle questions from your global bank</p>
+                                <p className="text-slate-400 font-bold uppercase tracking-widest text-[9px]">Filter and toggle questions from your global bank ({filteredPool.length} items)</p>
                             </div>
-                            <div className="relative flex-1 max-w-sm">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                <Input 
-                                    className="pl-12 h-12 rounded-xl bg-slate-50 border-none font-bold"
-                                    placeholder="Search global bank..."
-                                    value={searchQ}
-                                    onChange={(e) => setSearchQ(e.target.value)}
-                                />
+                            <div className="flex flex-col sm:flex-row items-center gap-3 flex-1 max-w-xl">
+                                <div className="relative flex-1 w-full">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <Input 
+                                        className="pl-12 h-12 rounded-xl bg-slate-50 border-none font-bold"
+                                        placeholder="Search global bank..."
+                                        value={searchQ}
+                                        onChange={(e) => setSearchQ(e.target.value)}
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100 whitespace-nowrap">
+                                    <Switch checked={useBlueprintFilters} onCheckedChange={setUseBlueprintFilters} />
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Filter by Blueprint</span>
+                                </div>
                             </div>
+                        </div>
+
+                        <div className="flex gap-2 mb-6">
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="rounded-xl font-bold text-xs gap-2"
+                                onClick={selectAllFiltered}
+                                disabled={filteredPool.length === 0}
+                            >
+                                <CheckCircle2 className="w-4 h-4" /> Select All Filtered
+                            </Button>
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="rounded-xl font-bold text-xs gap-2 text-rose-500 hover:text-rose-600"
+                                onClick={deselectAllFiltered}
+                                disabled={formData.questions.length === 0}
+                            >
+                                <Trash2 className="w-4 h-4" /> Clear Current Selection
+                            </Button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto pr-4 space-y-3 custom-scrollbar">

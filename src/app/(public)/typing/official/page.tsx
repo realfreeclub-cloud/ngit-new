@@ -13,21 +13,24 @@ export default async function TypingExamsPage({ searchParams: searchParamsPromis
   await connectDB();
   const exams = await GovExam.find({ active: true }).sort({ title: 1 });
 
-  // Get test counts per exam, filtered by language if requested
-  const matchStage: any = { status: "Active" };
-  if (searchParams.lang) {
-    matchStage.language = searchParams.lang;
-  }
+  // Get test counts per exam and attach to exam object
+  const examsWithCounts = await Promise.all(exams.map(async (exam) => {
+    const count = await TypingExam.countDocuments({ 
+      govExamId: exam._id,
+      status: "Active"
+    });
+    return { 
+      ...exam.toObject(), 
+      _id: exam._id.toString(),
+      testCount: count 
+    };
+  }));
 
-  const examCounts = await TypingExam.aggregate([
-    { $match: matchStage },
-    { $group: { _id: "$govExamId", count: { $sum: 1 } } }
-  ]);
-  const countMap = Object.fromEntries(examCounts.map((e: any) => [e._id?.toString(), e.count]));
-
-  const currentLang = searchParams.lang || "All";
-
-  const activeExams = exams.filter(exam => (countMap[exam._id.toString()] || 0) > 0);
+  // Filter to only show exams with at least 1 active test
+  // and sort by test count (highest first) so available exams are on top
+  const activeExams = examsWithCounts
+    .filter(exam => exam.testCount > 0)
+    .sort((a, b) => b.testCount - a.testCount);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 font-sans py-12 px-4 sm:px-6 lg:px-8">
@@ -62,7 +65,7 @@ export default async function TypingExamsPage({ searchParams: searchParamsPromis
                           <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Active</span>
                        </div>
                        <div className="bg-indigo-50 text-indigo-700 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest border border-indigo-100">
-                         {countMap[exam._id.toString()] || 0} Tests
+                         {exam.testCount} Tests
                        </div>
                   </div>
 

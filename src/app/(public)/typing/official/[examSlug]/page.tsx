@@ -64,6 +64,12 @@ export default async function LanguageSelectionPage({ params: paramsPromise }: {
               </div>
             </Link>
           ))}
+          {languages.length === 0 && (
+            <div className="col-span-full py-12 text-center bg-white rounded-[2rem] border border-dashed border-slate-200">
+               <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No active tests available for this exam yet.</p>
+               <p className="text-slate-500 mt-2 font-medium">Please check back later or try another exam.</p>
+            </div>
+          )}
         </div>
         
       </div>

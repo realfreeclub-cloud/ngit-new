@@ -2,17 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-    PlusCircle,
-    FileText,
-    Clock,
-    Edit,
-    Search
-} from "lucide-react";
+import { Trash2, PlusCircle, FileText, Clock, Edit, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { toast } from "sonner";
-import { getAdminQuizzes, toggleQuizStatus } from "@/app/actions/admin-quizzes";
+import { getAdminQuizzes, toggleQuizStatus, deleteAdminQuiz } from "@/app/actions/admin-quizzes";
 
 export default function AdminQuizzesPage() {
     const [quizzes, setQuizzes] = useState<any[]>([]);
@@ -117,7 +111,11 @@ export default function AdminQuizzesPage() {
                                                         {quiz.courseId?.title || "Standalone"}
                                                     </p>
                                                     <div className="flex gap-1">
-                                                        {quiz.isMockTest && <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none text-[8px] px-1.5 h-3.5">MOCK</Badge>}
+                                                        {quiz.isMockTest ? (
+                                                            <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none text-[8px] px-1.5 h-3.5">MOCK</Badge>
+                                                        ) : (
+                                                            <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none text-[8px] px-1.5 h-3.5">REGULAR</Badge>
+                                                        )}
                                                         {quiz.isPublished ? <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none text-[8px] px-1.5 h-3.5">LIVE</Badge> : <Badge className="bg-slate-100 text-slate-400 hover:bg-slate-100 border-none text-[8px] px-1.5 h-3.5">DRAFT</Badge>}
                                                     </div>
                                                 </div>
@@ -164,6 +162,22 @@ export default function AdminQuizzesPage() {
                                             <Button variant="ghost" size="sm" className="h-8 w-8 md:h-9 md:w-9 p-0 rounded-lg md:rounded-xl text-slate-400 hover:text-primary" asChild>
                                                 <Link href={`/admin/mock-tests/edit/${quiz._id}`}><Edit className="w-4 h-4 text-slate-600" /></Link>
                                             </Button>
+                                            <Button 
+                                                 onClick={async () => {
+                                                     if (confirm("Are you sure you want to delete this test?")) {
+                                                         const res = await deleteAdminQuiz(quiz._id);
+                                                         if (res.success) {
+                                                             toast.success("Deleted successfully");
+                                                             window.location.reload();
+                                                         }
+                                                     }
+                                                 }}
+                                                 variant="ghost" 
+                                                 size="sm" 
+                                                 className="h-8 w-8 md:h-9 md:w-9 p-0 rounded-lg md:rounded-xl text-slate-400 hover:text-rose-600"
+                                             >
+                                                 <Trash2 className="w-4 h-4" />
+                                             </Button>
                                         </div>
                                     </td>
                                 </tr>

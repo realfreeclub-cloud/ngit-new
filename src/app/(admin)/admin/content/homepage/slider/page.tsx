@@ -382,9 +382,25 @@ export default function HeroSliderAdminPage() {
                     placeholder="e.g. Shape Your Future at NGIT"
                     className="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 font-medium"
                   />
-                  <p className="text-[9px] text-slate-400 mt-2 italic">
-                    💡 <b>Pro Tip:</b> For full-width images without cropping, use <b>1920x800px</b> (or 2.4:1 ratio).
-                  </p>
+                  <div className="mt-3 p-3 bg-indigo-50 border border-indigo-100 rounded-xl space-y-2">
+                    <div className="flex items-center gap-2 text-indigo-600 font-bold text-[10px] uppercase tracking-wider">
+                      <Sparkles className="w-3 h-3" /> Recommended Image Settings
+                    </div>
+                    <ul className="text-[10px] text-indigo-900/70 space-y-1.5 font-medium">
+                      <li className="flex gap-2">
+                        <span className="text-indigo-400">•</span>
+                        <span><b>Best Resolution:</b> 1920 x 840 pixels (2.3:1 ratio) for perfect desktop/tablet balance.</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="text-indigo-400">•</span>
+                        <span><b>Safe Area:</b> Keep important text or faces in the <b>center 60%</b> of the image to avoid being cut off on mobile phones.</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="text-indigo-400">•</span>
+                        <span><b>Optimization:</b> Use <b>WebP</b> format if possible to keep page load speed under 2 seconds.</span>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
 
                 {/* Subtitle */}

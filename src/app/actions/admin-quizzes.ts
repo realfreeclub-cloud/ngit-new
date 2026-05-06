@@ -10,11 +10,27 @@ import { revalidatePath } from "next/cache";
 export async function getAdminQuizzes() {
     try {
         await connectDB();
-        const quizzes = await Quiz.find({ isMockTest: true })
+        const quizzes = await Quiz.find({})
             .populate("courseId", "title")
             .sort({ createdAt: -1 })
             .lean();
         return { success: true, quizzes: JSON.parse(JSON.stringify(quizzes)) };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function deleteAdminQuiz(id: string) {
+    try {
+        await connectDB();
+        const session = await getServerSession(authOptions);
+        if (!session || session.user.role !== "ADMIN") throw new Error("Unauthorized");
+
+        await Quiz.findByIdAndDelete(id);
+        revalidatePath("/admin/mock-tests/list");
+        revalidatePath("/exams");
+        revalidatePath("/");
+        return { success: true };
     } catch (error: any) {
         return { success: false, error: error.message };
     }

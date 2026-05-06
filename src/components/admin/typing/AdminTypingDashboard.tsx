@@ -49,6 +49,8 @@ export default function AdminTypingDashboard() {
   
   // Edits
   const [editingPassage, setEditingPassage] = useState<any>(null);
+  const [editingGovExam, setEditingGovExam] = useState<any>(null);
+  const [editingExam, setEditingExam] = useState<any>(null);
   const [adminLanguage, setAdminLanguage] = useState("English");
   const [adminLayout, setAdminLayout] = useState("Inscript");
   const [submitting, setSubmitting] = useState(false);
@@ -139,16 +141,35 @@ export default function AdminTypingDashboard() {
     const data: any = Object.fromEntries(new FormData(form).entries());
     data.autoScroll = (form.elements.namedItem('autoScroll') as HTMLInputElement)?.checked;
     data.showScrollbar = (form.elements.namedItem('showScrollbar') as HTMLInputElement)?.checked;
-    try {
+
+    // Auto-inherit language and difficulty from passage to avoid "overwrite" issues
+    const selectedPassage = passages.find(p => p._id === data.passageId);
+    if (selectedPassage) {
+      data.language = selectedPassage.language;
+      data.difficulty = selectedPassage.difficulty;
+    }
+
+    if (editingExam) {
+      const res = await fetch(`/api/admin/typing/exams/${editingExam._id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        toast.success("Exam Updated!");
+        setShowExamModal(false);
+        setEditingExam(null);
+        fetchData();
+      } else toast.error((await res.json()).error);
+    } else {
       const res = await fetch("/api/admin/typing/exams", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
       });
       if (res.ok) {
-        toast.success("Scheduled!");
+        toast.success("Exam Created!");
         setShowExamModal(false);
         fetchData();
       } else toast.error((await res.json()).error);
-    } finally { setSubmitting(false); }
+    }
+    setSubmitting(false);
   };
 
   const handleDeleteExam = async (id: string) => {
@@ -160,12 +181,24 @@ export default function AdminTypingDashboard() {
   const handleAddGovExam = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
-    const data = Object.fromEntries(new FormData(e.currentTarget).entries());
-    await fetch("/api/admin/typing/gov-exams", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
-    });
-    toast.success("Added Gov Exam!");
+    const fd = new FormData(e.currentTarget);
+    const data: any = Object.fromEntries(fd.entries());
+    data.active = fd.get('active') === 'on';
+
+    if (editingGovExam) {
+      await fetch(`/api/admin/typing/gov-exams/${editingGovExam._id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+      });
+      toast.success("Updated Gov Exam!");
+    } else {
+      await fetch("/api/admin/typing/gov-exams", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+      });
+      toast.success("Added Gov Exam!");
+    }
+    
     setShowGovExamModal(false);
+    setEditingGovExam(null);
     fetchData();
     setSubmitting(false);
   };
@@ -447,6 +480,7 @@ export default function AdminTypingDashboard() {
                               <td className="px-6 py-4 text-right">
                                  <div className="flex items-center justify-end gap-2">
                                     <Button onClick={() => handleManageResults(exam)} variant="ghost" size="sm" className="h-8 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100">Results</Button>
+                                    <button onClick={() => { setEditingExam(exam); setShowExamModal(true); }} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"><Edit2 className="w-4 h-4"/></button>
                                     <button onClick={() => handleDeleteExam(exam._id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4"/></button>
                                  </div>
                               </td>
@@ -490,6 +524,7 @@ export default function AdminTypingDashboard() {
                              </td>
                              <td className="px-6 py-4 text-right">
                                 <div className="flex items-center justify-end gap-2">
+                                   <button onClick={() => { setEditingGovExam(exam); setShowGovExamModal(true); }} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"><Edit2 className="w-4 h-4"/></button>
                                    <button onClick={() => handleDeleteGovExam(exam._id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4"/></button>
                                 </div>
                              </td>
@@ -757,14 +792,14 @@ export default function AdminTypingDashboard() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
              <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
-                <h2 className="text-xl font-bold text-slate-900">Configure New Exam</h2>
-                <button onClick={() => setShowExamModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
+                <h2 className="text-xl font-bold text-slate-900">{editingExam ? "Edit Exam Settings" : "Configure New Exam"}</h2>
+                <button onClick={() => { setShowExamModal(false); setEditingExam(null); }} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
              </div>
              <form onSubmit={handleAddExam} className="p-6 space-y-5">
                 <div className="grid grid-cols-2 gap-5">
                    <div className="space-y-1.5">
                      <label className="text-xs font-bold text-slate-600 uppercase">Exam Mode</label>
-                     <select name="examMode" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                     <select name="examMode" defaultValue={editingExam?.examMode || "General"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
                        <option value="General">General Practice</option>
                        <option value="SSC">SSC</option>
                        <option value="CPCT">CPCT</option>
@@ -772,35 +807,27 @@ export default function AdminTypingDashboard() {
                      </select>
                    </div>
                    <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Title</label>
-                     <input name="title" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                   </div>
+                      <label className="text-xs font-bold text-slate-600 uppercase">Title</label>
+                      <input name="title" defaultValue={editingExam?.title} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                    </div>
                    <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Category</label>
-                     <select name="category" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                        <option value="">Select...</option>
-                        <option value="SPECIAL">Special Topic / Current Affairs</option>
-                        {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
-                     </select>
-                   </div>
+                      <label className="text-xs font-bold text-slate-600 uppercase">Category</label>
+                      <select name="category" defaultValue={editingExam?.category} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                         <option value="">Select...</option>
+                         <option value="SPECIAL">Special Topic / Current Affairs</option>
+                         {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                      </select>
+                    </div>
                    <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Gov Exam</label>
-                     <select name="govExamId" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                       <option value="">None (General)</option>
-                       {govExams.map(g => <option key={g._id} value={g._id}>{g.title}</option>)}
-                     </select>
-                   </div>
-                   <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-600 uppercase">Difficulty</label>
-                      <select name="difficulty" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                         {difficulties.length > 0 ? difficulties.map(d => <option key={d._id} value={d.name}>{d.name}</option>) : (
-                           <><option value="Easy">Easy</option><option value="Medium">Medium</option><option value="Hard">Hard</option></>
-                         )}
+                      <label className="text-xs font-bold text-slate-600 uppercase">Gov Exam</label>
+                      <select name="govExamId" defaultValue={editingExam?.govExamId} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                        <option value="">None (General)</option>
+                        {govExams.map(g => <option key={g._id} value={g._id}>{g.title}</option>)}
                       </select>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-600 uppercase">Rule Preset (Overrides individual rules)</label>
-                      <select name="rulePresetId" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                      <select name="rulePresetId" defaultValue={editingExam?.rulePresetId} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
                          <option value="">No Preset (Use individual settings)</option>
                          {rulePresets.map(r => <option key={r._id} value={r._id}>{r.name}</option>)}
                       </select>
@@ -812,78 +839,83 @@ export default function AdminTypingDashboard() {
                       </select>
                     </div>
                    <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Passage</label>
-                     <select name="passageId" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                       <option value="">Select Passage...</option>
-                       {passages.map(p => <option key={p._id} value={p._id}>{p.title} ({p.language})</option>)}
-                     </select>
-                   </div>
+                      <label className="text-xs font-bold text-slate-600 uppercase">Passage</label>
+                      <select name="passageId" defaultValue={editingExam?.passageId} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                        <option value="">Select Passage...</option>
+                        {passages.map(p => <option key={p._id} value={p._id}>{p.title} ({p.language})</option>)}
+                      </select>
+                    </div>
                    <div className="space-y-1.5">
                      <label className="text-xs font-bold text-slate-600 uppercase">Duration (Min)</label>
                      <input type="number" name="duration" defaultValue={10} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
                    </div>
                    <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Word Limit (0 = Unlimited)</label>
-                     <input type="number" name="wordLimit" defaultValue={0} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                   </div>
-                   <div className="space-y-1.5">
-                       <label className="text-xs font-bold text-slate-600 uppercase">Language</label>
-                       <select name="language" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                          <option value="English">English</option>
-                          <option value="Hindi">Hindi (Mangal)</option>
-                          <option value="Unicode Hindi">Unicode Hindi</option>
-                          <option value="Krutidev Hindi">Krutidev Hindi</option>
-                       </select>
-                     </div>
+                      <label className="text-xs font-bold text-slate-600 uppercase">Word Limit (0 = Unlimited)</label>
+                      <input type="number" name="wordLimit" defaultValue={editingExam?.wordLimit || 0} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                    </div>
                      <div className="space-y-1.5">
                        <label className="text-xs font-bold text-slate-600 uppercase">Typing Engine Design</label>
-                       <select name="typingEngineType" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                          <option value="classic">Classic (Standard)</option>
-                          <option value="modern">Modern (High-End Analytics)</option>
-                       </select>
+                        <select name="typingEngineType" defaultValue={editingExam?.typingEngineType || "classic"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                           <option value="classic">Classic (Standard)</option>
+                           <option value="modern">Modern (High-End Analytics)</option>
+                        </select>
                      </div>
                    <div className="space-y-1.5">
                      <label className="text-xs font-bold text-slate-600 uppercase">Backspace Mode</label>
-                     <select name="backspaceMode" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                        <option value="full">Full Access</option><option value="word">Word Only</option><option value="disabled">Disabled</option>
-                     </select>
+                      <select name="backspaceMode" defaultValue={editingExam?.backspaceMode || "full"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                         <option value="full">Full Access</option><option value="word">Word Only</option><option value="disabled">Disabled</option>
+                      </select>
                    </div>
                    <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Highlight Mode</label>
-                     <select name="highlightMode" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                        <option value="word">Active Word</option><option value="none">None (Blind)</option>
-                     </select>
-                   </div>
+                      <label className="text-xs font-bold text-slate-600 uppercase">Highlight Mode</label>
+                      <select name="highlightMode" defaultValue={editingExam?.highlightMode || "word"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                         <option value="word">Active Word</option>
+                         <option value="word_error">Word with Error Tracking</option>
+                         <option value="letter">Character by Character</option>
+                         <option value="none">None (Blind Typing)</option>
+                      </select>
+                    </div>
+                   <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-600 uppercase">Status</label>
+                      <select name="status" defaultValue={editingExam?.status || "Active"} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                         <option value="Active">Active (Visible)</option>
+                         <option value="Draft">Draft (Hidden)</option>
+                         <option value="Expired">Expired</option>
+                      </select>
+                    </div>
                 </div>
                 <div className="pt-4 flex justify-end gap-3">
-                   <Button type="button" variant="outline" onClick={() => setShowExamModal(false)}>Cancel</Button>
-                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Create Exam</Button>
+                   <Button type="button" variant="outline" onClick={() => { setShowExamModal(false); setEditingExam(null); }}>Cancel</Button>
+                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">{editingExam ? "Update Exam" : "Create Exam"}</Button>
                 </div>
              </form>
           </div>
         </div>
       )}
 
-      {/* GOV EXAM MODAL */}
       {showGovExamModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
              <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-slate-900">Add Government Exam</h2>
-                <button onClick={() => setShowGovExamModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
+                <h2 className="text-xl font-bold text-slate-900">{editingGovExam ? "Edit Government Exam" : "Add Government Exam"}</h2>
+                <button onClick={() => { setShowGovExamModal(false); setEditingGovExam(null); }} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X className="w-5 h-5"/></button>
              </div>
              <form onSubmit={handleAddGovExam} className="p-6 space-y-4">
                 <div className="space-y-1.5">
                    <label className="text-xs font-bold text-slate-600 uppercase">Exam Title</label>
-                   <input name="title" required placeholder="e.g. SSC CGL" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                   <input name="title" defaultValue={editingGovExam?.title} required placeholder="e.g. SSC CGL" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
                 </div>
                 <div className="space-y-1.5">
                    <label className="text-xs font-bold text-slate-600 uppercase">Logo URL (Optional)</label>
-                   <input name="logo" placeholder="https://..." className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                   <input name="logo" defaultValue={editingGovExam?.logo} placeholder="https://..." className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <input type="checkbox" name="active" id="gov-active" defaultChecked={editingGovExam ? editingGovExam.active : true} className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
+                    <label htmlFor="gov-active" className="text-sm font-semibold text-slate-700 cursor-pointer">Active / Visible to Students</label>
                 </div>
                 <div className="pt-4 flex justify-end gap-3">
-                   <Button type="button" variant="outline" onClick={() => setShowGovExamModal(false)}>Cancel</Button>
-                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Save</Button>
+                   <Button type="button" variant="outline" onClick={() => { setShowGovExamModal(false); setEditingGovExam(null); }}>Cancel</Button>
+                   <Button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">Save Changes</Button>
                 </div>
              </form>
           </div>
@@ -1222,6 +1254,13 @@ export default function AdminTypingDashboard() {
                     startTime: new Date("2020-01-01"),
                     endTime: new Date("2030-01-01")
                 };
+
+                // Auto-inherit language and difficulty from passage
+                const selectedPassage = passages.find(p => p._id === data.passageId);
+                if (selectedPassage) {
+                    finalData.language = selectedPassage.language;
+                    finalData.difficulty = selectedPassage.difficulty;
+                }
                 await fetch("/api/admin/typing/exams", {
                     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(finalData)
                 });
@@ -1244,31 +1283,16 @@ export default function AdminTypingDashboard() {
                      </select>
                    </div>
                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-600 uppercase">Language</label>
-                      <select name="language" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                         <option value="English">English</option>
-                         <option value="Hindi">Hindi</option>
+                      <label className="text-xs font-bold text-slate-600 uppercase">Select Passage</label>
+                      <select name="passageId" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
+                        <option value="">Select Passage...</option>
+                        {passages.filter(p => p.section === 'Special').map(p => <option key={p._id} value={p._id}>{p.title} ({p.language})</option>)}
                       </select>
                    </div>
-                   <div className="space-y-1.5 col-span-2">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Select Passage</label>
-                     <select name="passageId" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                       <option value="">Select Passage...</option>
-                       {passages.filter(p => p.section === 'Special').map(p => <option key={p._id} value={p._id}>{p.title} ({p.language})</option>)}
-                     </select>
-                   </div>
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Duration (Min)</label>
-                     <input type="number" name="duration" defaultValue={10} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
-                   </div>
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-600 uppercase">Difficulty</label>
-                     <select name="difficulty" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none">
-                        <option value="Medium">Medium</option>
-                        <option value="Easy">Easy</option>
-                        <option value="Hard">Hard</option>
-                     </select>
-                   </div>
+                    <div className="space-y-1.5 col-span-2">
+                      <label className="text-xs font-bold text-slate-600 uppercase">Duration (Min)</label>
+                      <input type="number" name="duration" defaultValue={10} required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none" />
+                    </div>
                 </div>
 
                 <div className="pt-4 flex justify-end gap-3">

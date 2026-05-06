@@ -4,10 +4,12 @@ import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Keyboard, XCircle, Scissors, AlertCircle, Timer, Download, Target, ArrowLeft, Calendar, Globe } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 export default function TypingResultDetails({ params }: { params: { id: string } }) {
+  const router = useRouter();
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [errorFormulaOn, setErrorFormulaOn] = useState(true);
@@ -99,12 +101,15 @@ export default function TypingResultDetails({ params }: { params: { id: string }
       <div className="max-w-6xl mx-auto px-4 print:px-0">
         
         <div className="flex justify-between items-center mb-8 print:hidden">
-          <Link href="/student/results" className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 font-bold transition-colors group">
+          <button 
+            onClick={() => router.back()} 
+            className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 font-bold transition-colors group"
+          >
             <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:-translate-x-1 transition-transform border border-slate-100">
                 <ArrowLeft className="w-4 h-4" />
             </div>
-            Back to Dashboard
-          </Link>
+            Go Back
+          </button>
           <button 
               onClick={() => window.print()}
               className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-2xl font-black shadow-xl shadow-slate-200 hover:bg-black transition-all active:scale-95"

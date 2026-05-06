@@ -40,6 +40,7 @@ export default function NewMockTestPage() {
     const [formData, setFormData] = useState<any>({
         title: "",
         description: "",
+        logo: "",
         courseId: "",
         examCode: "M1-R5",
         isMockTest: false,
@@ -99,8 +100,16 @@ export default function NewMockTestPage() {
     };
 
     const handleSubmit = async () => {
-        if (!formData.title || !formData.courseId || !formData.paperSetId || !formData.schedule.startDate || !formData.schedule.endDate) {
-            toast.error("Please fill all required fields including schedule.");
+        if (!formData.title) {
+            toast.error("Please provide a Mock Test Title.");
+            return;
+        }
+        if (!formData.courseId) {
+            toast.error("Please select a Target Course.");
+            return;
+        }
+        if (!formData.paperSetId) {
+            toast.error("Please select a Paper Set Blueprint.");
             return;
         }
 
@@ -172,6 +181,17 @@ export default function NewMockTestPage() {
                                     value={formData.description}
                                     onChange={(e) => setFormData({...formData, description: e.target.value})}
                                 />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="font-bold text-slate-700 ml-2">Exam Header Logo URL (Optional)</Label>
+                                <Input 
+                                    className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold placeholder:text-slate-300"
+                                    placeholder="e.g. https://your-site.com/logo.png"
+                                    value={formData.logo}
+                                    onChange={(e) => setFormData({...formData, logo: e.target.value})}
+                                />
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-4">If left blank, the default N-GIT logo will be used.</p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-50">
@@ -257,7 +277,6 @@ export default function NewMockTestPage() {
                                     className="h-12 rounded-xl bg-slate-50 border-none px-4 font-bold" 
                                     value={formData.schedule.startDate}
                                     onChange={(e) => setFormData({...formData, schedule: { ...formData.schedule, startDate: e.target.value }})}
-                                    required
                                 />
                             </div>
                             <div className="space-y-2">
@@ -267,7 +286,6 @@ export default function NewMockTestPage() {
                                     className="h-12 rounded-xl bg-slate-50 border-none px-4 font-bold" 
                                     value={formData.schedule.endDate}
                                     onChange={(e) => setFormData({...formData, schedule: { ...formData.schedule, endDate: e.target.value }})}
-                                    required
                                 />
                             </div>
                         </div>

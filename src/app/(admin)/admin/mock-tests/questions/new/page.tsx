@@ -14,6 +14,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createQuestion } from "@/app/actions/questions";
 import { getAllCourses } from "@/app/actions/courses";
+import { getCategories, getPaperTypes } from "@/app/actions/admin/mock-metadata";
+import MetadataManager from "@/components/admin/mock-tests/MetadataManager";
 
 const QUESTION_TYPES = [
     { value: "MCQ_SINGLE", label: "Single Correct MCQ" },
@@ -24,11 +26,14 @@ const QUESTION_TYPES = [
     { value: "DESCRIPTIVE", label: "Descriptive" },
     { value: "MATCH_THE_FOLLOWING", label: "Match the Following" },
     { value: "ASSERTION_REASON", label: "Assertion / Reason" },
+    { value: "TYPING", label: "Typing Test" },
 ];
 
 export default function NewQuestionPage() {
     const router = useRouter();
     const [courses, setCourses] = useState<any[]>([]);
+    const [categories, setCategories] = useState<any[]>([]);
+    const [paperTypes, setPaperTypes] = useState<any[]>([]);
     const [submitting, setSubmitting] = useState(false);
     
     // Form State
@@ -58,6 +63,24 @@ export default function NewQuestionPage() {
     useEffect(() => {
         loadCourses();
     }, []);
+
+    useEffect(() => {
+        if (formData.courseId) {
+            loadMetadata();
+        } else {
+            setCategories([]);
+            setPaperTypes([]);
+        }
+    }, [formData.courseId]);
+
+    const loadMetadata = async () => {
+        const [catRes, ptRes] = await Promise.all([
+            getCategories(formData.courseId),
+            getPaperTypes(formData.courseId)
+        ]);
+        if (catRes.success) setCategories(catRes.categories);
+        if (ptRes.success) setPaperTypes(ptRes.paperTypes);
+    };
 
     const loadCourses = async () => {
         const res = await getAllCourses();
@@ -160,30 +183,45 @@ export default function NewQuestionPage() {
                             {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
                         </select>
                     </div>
-                    {courses.find(c => c._id === formData.courseId)?.title?.toLowerCase().includes("o level") && (
-                        <div className="space-y-2">
-                            <Label className="font-bold text-slate-700 ml-1">Exam Code</Label>
-                            <select 
-                                className="w-full h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
-                                value={formData.examCode}
-                                onChange={(e) => setFormData({...formData, examCode: e.target.value})}
-                            >
-                                <option value="">Select Code</option>
-                                <option value="M1-R5.1">M1-R5.1</option>
-                                <option value="M2-R5.1">M2-R5.1</option>
-                                <option value="M3-R5.1">M3-R5.1</option>
-                                <option value="M4-R5.1">M4-R5.1</option>
-                            </select>
-                        </div>
-                    )}
                     <div className="space-y-2">
-                        <Label className="font-bold text-slate-700 ml-1">Topic Tag</Label>
-                        <Input 
-                            placeholder="e.g. Thermodynamics"
-                            className="h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold shadow-none"
+                        <div className="flex items-center justify-between px-1">
+                            <Label className="font-bold text-slate-700">Exam Code / Paper Type</Label>
+                            <MetadataManager 
+                                type="PAPER_TYPE" 
+                                courseId={formData.courseId} 
+                                onUpdate={loadMetadata} 
+                            />
+                        </div>
+                        <select 
+                            className="w-full h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
+                            value={formData.examCode}
+                            onChange={(e) => setFormData({...formData, examCode: e.target.value})}
+                            disabled={!formData.courseId}
+                        >
+                            <option value="">Select Code</option>
+                            {/* Keep legacy defaults for O Level if needed, but usually better to manage via UI */}
+                            {paperTypes.map(pt => <option key={pt._id} value={pt.name}>{pt.name}</option>)}
+                        </select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between px-1">
+                            <Label className="font-bold text-slate-700">Topic Tag / Category</Label>
+                            <MetadataManager 
+                                type="CATEGORY" 
+                                courseId={formData.courseId} 
+                                onUpdate={loadMetadata} 
+                            />
+                        </div>
+                        <select 
+                            className="w-full h-14 rounded-2xl bg-slate-50 border-none px-5 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
                             value={formData.topic}
-                            onChange={(e) => setFormData({...formData, topic: e.target.value, subject: e.target.value})} // syncing subject & topic for simpler UX
-                        />
+                            onChange={(e) => setFormData({...formData, topic: e.target.value, subject: e.target.value})}
+                            disabled={!formData.courseId}
+                        >
+                            <option value="">Select Category</option>
+                            {categories.map(cat => <option key={cat._id} value={cat.name}>{cat.name}</option>)}
+                        </select>
                     </div>
                 </div>
 
@@ -411,6 +449,30 @@ export default function NewQuestionPage() {
                                     ))}
                                 </div>
                             </div>
+                        </div>
+                    )}
+
+                    {/* Typing Test */}
+                    {formData.type === "TYPING" && (
+                        <div className="space-y-4">
+                            <div className="bg-amber-50 p-6 rounded-2xl border border-amber-100 flex gap-4 items-start mb-4">
+                                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                                    <Info className="w-5 h-5 text-amber-600" />
+                                </div>
+                                <div>
+                                    <h4 className="font-black text-amber-900 text-lg">Typing Practice Passage</h4>
+                                    <p className="text-amber-700/80 font-medium leading-relaxed mt-1">
+                                        Enter the master text passage that students will type. The system will track WPM, Accuracy, and Errors. Use the "Question Content" area above for instructions (e.g. "Type the following passage...").
+                                    </p>
+                                </div>
+                            </div>
+                            <Label className="font-bold text-slate-700 text-lg">Master Text (Passage)</Label>
+                            <Textarea 
+                                placeholder="Paste the official typing passage here..."
+                                className="min-h-[300px] rounded-[1.5rem] bg-white border border-slate-200 p-6 font-mono text-base focus-visible:ring-primary/20 shadow-sm leading-relaxed"
+                                value={formData.shortAnswer || ""}
+                                onChange={(e) => setFormData({...formData, shortAnswer: e.target.value})}
+                            />
                         </div>
                     )}
 
