@@ -143,31 +143,41 @@ export default function AdminTypingDashboard() {
     data.showScrollbar = (form.elements.namedItem('showScrollbar') as HTMLInputElement)?.checked;
 
     // Auto-inherit language and difficulty from passage to avoid "overwrite" issues
-    const selectedPassage = passages.find(p => p._id === data.passageId);
+    const selectedPassage = passages.find(p => String(p._id) === String(data.passageId));
     if (selectedPassage) {
       data.language = selectedPassage.language;
       data.difficulty = selectedPassage.difficulty;
     }
 
-    if (editingExam) {
-      const res = await fetch(`/api/admin/typing/exams/${editingExam._id}`, {
-        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
-      });
-      if (res.ok) {
-        toast.success("Exam Updated!");
-        setShowExamModal(false);
-        setEditingExam(null);
-        fetchData();
-      } else toast.error((await res.json()).error);
-    } else {
-      const res = await fetch("/api/admin/typing/exams", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
-      });
-      if (res.ok) {
-        toast.success("Exam Created!");
-        setShowExamModal(false);
-        fetchData();
-      } else toast.error((await res.json()).error);
+    try {
+      if (editingExam) {
+        const res = await fetch(`/api/admin/typing/exams/${editingExam._id}`, {
+          method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+        });
+        if (res.ok) {
+          toast.success("Exam Updated!");
+          setShowExamModal(false);
+          setEditingExam(null);
+          fetchData();
+        } else {
+          const errData = await res.json().catch(() => ({ error: "Server error (Non-JSON response)" }));
+          toast.error(errData.error || "Failed to update exam");
+        }
+      } else {
+        const res = await fetch("/api/admin/typing/exams", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+        });
+        if (res.ok) {
+          toast.success("Exam Created!");
+          setShowExamModal(false);
+          fetchData();
+        } else {
+          const errData = await res.json().catch(() => ({ error: "Server error (Non-JSON response)" }));
+          toast.error(errData.error || "Failed to create exam");
+        }
+      }
+    } catch (err) {
+      toast.error("Network error. Please check your connection.");
     }
     setSubmitting(false);
   };
@@ -1245,7 +1255,7 @@ export default function AdminTypingDashboard() {
                 const fd = new FormData(e.currentTarget);
                 const data = Object.fromEntries(fd.entries());
                 // Force SPECIAL category and General mode
-                const finalData = { 
+                const finalData: any = { 
                     ...data, 
                     category: 'SPECIAL', 
                     examMode: 'General',
@@ -1256,17 +1266,27 @@ export default function AdminTypingDashboard() {
                 };
 
                 // Auto-inherit language and difficulty from passage
-                const selectedPassage = passages.find(p => p._id === data.passageId);
+                const selectedPassage = passages.find(p => String(p._id) === String(data.passageId));
                 if (selectedPassage) {
                     finalData.language = selectedPassage.language;
                     finalData.difficulty = selectedPassage.difficulty;
                 }
-                await fetch("/api/admin/typing/exams", {
-                    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(finalData)
-                });
-                toast.success("Special Test Added!");
-                setShowSpecialTestModal(false);
-                fetchData();
+
+                try {
+                    const res = await fetch("/api/admin/typing/exams", {
+                        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(finalData)
+                    });
+                    if (res.ok) {
+                        toast.success("Special Test Added!");
+                        setShowSpecialTestModal(false);
+                        fetchData();
+                    } else {
+                        const errData = await res.json().catch(() => ({ error: "Server error" }));
+                        toast.error(errData.error || "Failed to add special test");
+                    }
+                } catch (err) {
+                    toast.error("Network error");
+                }
                 setSubmitting(false);
              }} className="p-6 space-y-5">
                 <div className="space-y-1.5">

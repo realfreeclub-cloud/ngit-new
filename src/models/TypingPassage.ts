@@ -3,7 +3,7 @@ import mongoose, { Schema, model, models } from "mongoose";
 export interface ITypingPassage {
   title: string;
   content: string;
-  language: "English" | "Hindi";
+  language: "English" | "Hindi" | "Unicode Hindi" | "Krutidev Hindi";
   wordCount: number;
   difficulty: "Easy" | "Medium" | "Hard";
   bookId?: mongoose.Types.ObjectId;
@@ -17,7 +17,7 @@ const TypingPassageSchema = new Schema<ITypingPassage>(
   {
     title: { type: String, required: true },
     content: { type: String, required: true },
-    language: { type: String, enum: ["English", "Hindi"], default: "English" },
+    language: { type: String, enum: ["English", "Hindi", "Unicode Hindi", "Krutidev Hindi"], default: "English" },
     wordCount: { type: Number, required: true },
     difficulty: { type: String, enum: ["Easy", "Medium", "Hard"], default: "Medium" },
     bookId: { type: Schema.Types.ObjectId, ref: "TypingBook" },
